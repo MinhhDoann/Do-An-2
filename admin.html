@@ -199,11 +199,11 @@
                         <table id="tblTransport">
                             <thead>
                                 <tr>
-                                    <th>#</th>
-                                    <th>Ref</th>
-                                    <th>Type</th>
-                                    <th>Vehicle</th>
-                                    <th>ETA</th>
+                                    <th>STT</th>
+                                    <th>Mã tham chiếu</th>
+                                    <th>Loại xe</th>
+                                    <th>Biển kiểm soát</th>
+                                    <th>Thời gian dự kiến</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -212,11 +212,11 @@
 
                     <div class="card">
                         <h3>Tạo Lịch trình</h3>
-                        <div class="form-row"><input id="tRef" placeholder="Ref / Booking" /></div>
+                        <div class="form-row"><input id="tRef" placeholder="Mã tham chiếu / Booking" /></div>
                         <div class="form-row"><select id="tType">
-                                <option>Trucking</option>
-                                <option>Rail</option>
-                                <option>Feeder</option>
+                                <option>Vận tải đường bộ</option>
+                                <option>Đường sắt</option>
+                                <option>Phương tiện trung chuyển</option>
                             </select></div>
                         <div class="form-row"><input id="tVehicle" placeholder="Số xe / Vessel" /></div>
                         <div class="form-row"><input id="tETA" type="date" /></div>
@@ -245,18 +245,18 @@
                         <h3>Chứng từ</h3>
                         <input id="docRef" placeholder="Ref / B/L" />
                         <select id="docType">
-                            <option>BL</option>
-                            <option>Invoice</option>
-                            <option>Packing List</option>
-                            <option>CO</option>
+                            <option>Vận đơn</option>
+                            <option>Hóa đơn</option>
+                            <option>Phiếu đóng gói</option>
+                            <option>Chứng nhận xuất xứ</option>
                         </select>
                         <div style="margin-top:8px"><button class="btn" id="saveDoc">Lưu chứng từ</button></div>
                         <hr />
                         <table id="tblDocs">
                             <thead>
                                 <tr>
-                                    <th>#</th>
-                                    <th>Ref</th>
+                                    <th>STT</th>
+                                    <th>Mã tham chiếu</th>
                                     <th>Loại</th>
                                     <th>Trạng thái</th>
                                 </tr>
@@ -268,8 +268,7 @@
                     <div class="card">
                         <h3>Upload chứng từ (mô phỏng)</h3>
                         <input type="file" id="fileDoc" />
-                        <div class="small" style="margin-top:6px">Tệp sẽ được đọc và lưu tên trong localStorage (mô
-                            phỏng)</div>
+                        <div class="small" style="margin-top:6px">Tệp sẽ được đọc và lưu tên trong localStorage (mô phỏng)</div>
                     </div>
                 </div>
             </section>
@@ -302,7 +301,7 @@
                         <table id="tblPartners">
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th>STT</th>
                                     <th>Tên</th>
                                     <th>Loại</th>
                                     <th>Liên hệ</th>
@@ -316,10 +315,10 @@
                         <h3>Thêm Đối tác</h3>
                         <div class="form-row"><input id="pName" placeholder="Tên" /></div>
                         <div class="form-row"><select id="pType">
-                                <option>Shipper</option>
-                                <option>Consignee</option>
-                                <option>Carrier</option>
-                                <option>Forwarder</option>
+                                <option>Người gửi</option>
+                                <option>Người nhận</option>
+                                <option>Đơn vị vận chuyển</option>
+                                <option>Người giao nhận</option>
                             </select></div>
                         <div class="form-row"><input id="pContact" placeholder="SĐT / Email" /></div>
                         <div style="display:flex;gap:8px"><button class="btn" id="savePartner">Lưu</button></div>
@@ -335,10 +334,10 @@
                         <table id="tblStaff">
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th>STT</th>
                                     <th>Tên</th>
-                                    <th>Role</th>
-                                    <th>Phone</th>
+                                    <th>Vai trò</th>
+                                    <th>SĐT</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -350,9 +349,9 @@
                         <table id="tblEquip">
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th>STT</th>
                                     <th>Tên</th>
-                                    <th>Type</th>
+                                    <th>Loại thiết bị</th>
                                     <th>Trạng thái</th>
                                 </tr>
                             </thead>
