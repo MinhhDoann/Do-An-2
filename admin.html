@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Dashboard Quản lý Container Logistics - Mẫu</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="brand">Container Logistics - Quản lý</div>
+            <ul class="nav" id="mainNav">
+                <li><button data-section="dashboard" class="active">Tổng quan</button></li>
+                <li><button data-section="containers">Quản lý Container</button></li>
+                <li><button data-section="cargo">Hàng trong Container</button></li>
+                <li><button data-section="transport">Vận tải</button></li>
+                <li><button data-section="depot">Cảng & Depot</button></li>
+                <li><button data-section="docs">Chứng từ & Hải quan</button></li>
+                <li><button data-section="finance">Tài chính & Chi phí</button></li>
+                <li><button data-section="partners">Khách hàng & Đối tác</button></li>
+                <li><button data-section="staff">Nhân sự & Thiết bị</button></li>
+                <li><button data-section="it">CNTT & Hệ thống</button></li>
+            </ul>
+            <div style="position:absolute;bottom:18px;left:20px;font-size:13px;opacity:.9">Container Logictic</div>
+        </aside>
+
+        <main class="content">
+            <div class="header">
+                <h2 id="sectionTitle">Tổng quan</h2>
+                <div class="header-right">
+                    <div class="search">
+                        <input id="globalSearch" placeholder="Tìm kiếm..." />
+                        <button class="btn" id="exportBtn">Export JSON</button>
+                    </div>
+                    <div class="user-menu">
+                        <div class="user-icon" id="userIcon">👤</div>
+                        <div class="dropdown" id="userDropdown">
+                            <p><strong>Admin</strong></p>
+                            <button id="logoutBtn" class="btn">Đăng xuất</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+
+</body>
+<script src="script.js"></script>
+
+</html>
