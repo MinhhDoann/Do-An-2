@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Dashboard Quản lý Container Logistics - Mẫu</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="brand">Container Logistics - Quản lý</div>
+            <ul class="nav" id="mainNav">
+                <li><button data-section="dashboard" class="active">Tổng quan</button></li>
+                <li><button data-section="containers">Quản lý Container</button></li>
+                <li><button data-section="cargo">Hàng trong Container</button></li>
+                <li><button data-section="transport">Vận tải</button></li>
+                <li><button data-section="depot">Cảng & Depot</button></li>
+                <li><button data-section="docs">Chứng từ & Hải quan</button></li>
+                <li><button data-section="finance">Tài chính & Chi phí</button></li>
+                <li><button data-section="partners">Khách hàng & Đối tác</button></li>
+                <li><button data-section="staff">Nhân sự & Thiết bị</button></li>
+                <li><button data-section="it">CNTT & Hệ thống</button></li>
+            </ul>
+            <div style="position:absolute;bottom:18px;left:20px;font-size:13px;opacity:.9">Container Logictic</div>
+        </aside>
+
+        <main class="content">
+            <div class="header">
+                <h2 id="sectionTitle">Tổng quan</h2>
+                <div class="header-right">
+                    <div class="search">
+                        <input id="globalSearch" placeholder="Tìm kiếm..." />
+                        <button class="btn" id="exportBtn">Export JSON</button>
+                    </div>
+                    <div class="user-menu">
+                        <div class="user-icon" id="userIcon">👤</div>
+                        <div class="dropdown" id="userDropdown">
+                            <p><strong>Admin</strong></p>
+                            <button id="logoutBtn" class="btn">Đăng xuất</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- Sections -->
+            <section id="dashboard" class="card-section">
+                <div class="grid">
+                    <div class="card top-stats">
+                        <div class="stat">
+                            <div class="small">Total Containers</div>
+                            <div id="stat-containers">0</div>
+                        </div>
+                        <div class="stat">
+                            <div class="small">In Transit</div>
+                            <div id="stat-intransit">0</div>
+                        </div>
+                        <div class="stat">
+                            <div class="small">Pending Docs</div>
+                            <div id="stat-docs">0</div>
+                        </div>
+                    </div>
+
+                    <div class="card full-width">
+                        <h3 class="small">Quick Actions</h3>
+                        <div style="display:flex;gap:8px;margin-top:8px">
+                            <button class="btn" onclick="showSection('containers')">+ Thêm Container</button>
+                            <button class="btn" onclick="showSection('cargo')">+ Thêm Lô Hàng</button>
+                            <button class="btn" onclick="showSection('transport')">+ Tạo Lịch Trình</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h4>Recent Containers</h4>
+                        <table id="recentContainers">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Container</th>
+                                    <th>Loại</th>
+                                    <th>Vị trí</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <div class="card">
+                        <h4>Recent Bookings / Docs</h4>
+                        <table id="recentDocs">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Ref</th>
+                                    <th>Loại</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            
+
+        </main>
+    </div>
+
+
+</body>
+<script src="script.js"></script>
+
+</html>
