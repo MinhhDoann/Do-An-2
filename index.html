@@ -1,44 +1,342 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
-
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Đăng nhập - Container Logistics</title>
-    <link rel="stylesheet" href="login.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Quản lý Logistics</title>
+    <link rel="stylesheet" href="Index.css">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1995/1995574.png" type="image/png">
+
 </head>
-
 <body>
-    <div class="login-wrapper">
-        <div class="login-card">
-            <h2>Đăng nhập</h2>
-            <form id="loginForm">
-                <div class="form-row">
-                    <label>Email</label>
-                    <input type="email" id="email" placeholder="Nhập email" required>
-                </div>
+    <!-- ====== HEADER / BANNER ====== -->
+    <header class="banner">
+        <div class="banner-left">
+            <img src="https://cdn-icons-png.flaticon.com/512/1995/1995574.png" alt="Logo" class="logo">
+            <h1>Hệ thống Quản lý Logistics</h1>
+        </div>
+        <div class="banner-right">
+            <button class="login-btn">Đăng nhập</button>
+        </div>
+    </header>
 
-                <div class="form-row">
-                    <label>Mật khẩu</label>
-                    <input type="password" id="password" placeholder="Nhập mật khẩu" required>
-                </div>
+    <!-- ====== CONTAINER ====== -->
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2>Danh mục</h2>
+            <ul class="tree-menu">
+                <li class="menu-item">
+                    <a class="menu-toggle">📦 Quản lý Hàng hóa</a>
+                    <ul class="sub-menu">
+                        <li><a onclick="showModule('containers')" class="active">Container</a></li>
+                        <li><a onclick="showModule('containerhistory')">Lịch sử Container</a></li>
+                    </ul>
+                </li>
+                <li class="menu-item">
+                    <a class="menu-toggle">🏭 Quản lý Kho bãi</a>
+                    <ul class="sub-menu">
+                        <li><a onclick="showModule('warehouses')">Kho lưu trữ</a></li>
+                    </ul>
+                </li>
+                <li class="menu-item">
+                    <a class="menu-toggle">🚚 Quản lý Vận chuyển</a>
+                    <ul class="sub-menu">
+                        <li><a onclick="showModule('vehicles')">Phương tiện</a></li>
+                        <li><a onclick="showModule('transports')">Vận chuyển</a></li>
+                    </ul>
+                </li>
+                <li class="menu-item">
+                    <a class="menu-toggle">👥 Quản lý Khách hàng</a>
+                    <ul class="sub-menu">
+                        <li><a onclick="showModule('customers')">Khách hàng</a></li>
+                        <li><a onclick="showModule('contracts')">Hợp đồng</a></li>
+                    </ul>
+                </li>
+                <li class="menu-item">
+                    <a class="menu-toggle">💰 Quản lý Tài chính</a>
+                    <ul class="sub-menu">
+                        <li><a onclick="showModule('costs')">Chi phí</a></li>
+                        <li><a onclick="showModule('invoices')">Hóa đơn</a></li>
+                        <li><a onclick="showModule('payments')">Thanh toán</a></li>
+                    </ul>
+                </li>
+                <li class="menu-item">
+                    <a class="menu-toggle">🌐 Quản lý IoT</a>
+                    <ul class="sub-menu">
+                        <li><a onclick="showModule('sensors')">Cảm biến</a></li>
+                        <li><a onclick="showModule('alerts')">Cảnh báo</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
 
-                <div class="form-row">
-                    <label>Vai trò</label>
-                    <select id="role" required>
-                        <option value="">-- Chọn vai trò --</option>
-                        <option value="admin">Admin</option>
-                        <option value="staff">Nhân viên</option>
-                    </select>
-                </div>
+        <!-- Main content -->
+        <div class="main-content">
 
-                <button type="submit" class="btn">Đăng nhập</button>
+            <!-- ====== CONTAINERS ====== -->
+            <div id="containers" class="module-content active">
+                <div class="header">
+                    <h2>📦 Quản lý Container</h2>
+                    <button onclick="openModal('add','containers')">Thêm Container</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Loại hàng</th>
+                            <th>Trọng lượng (kg)</th>
+                            <th>Trạng thái</th>
+                            <th>Kho</th>
+                            <th>Phương tiện</th>
+                            <th>Khách hàng</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div id="containerhistory" class="module-content">
+                <div class="header">
+                  <h2>📜 Lịch sử Container</h2>
+                  <button onclick="openModal('add','containerhistory')">Thêm Lịch sử</button>
+                </div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Container</th>
+                      <th>Hành động</th>
+                      <th>Thời gian</th>
+                      <th>Vị trí</th>
+                      <th>Tác vụ</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>              
+        
+            <!-- ====== WAREHOUSES ====== -->
+            <div id="warehouses" class="module-content">
+                <div class="header">
+                    <h2>🏭 Quản lý Kho hàng</h2>
+                    <button onclick="openModal('add','warehouses')">Thêm Kho</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên kho</th>
+                            <th>Sức chứa (tấn)</th>
+                            <th>Vị trí</th>
+                            <th>Người phụ trách</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        
+            <!-- ====== CUSTOMERS ====== -->
+            <div id="customers" class="module-content">
+                <div class="header">
+                    <h2>👥 Quản lý Khách hàng</h2>
+                    <button onclick="openModal('add','customers')">Thêm Khách hàng</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên khách hàng</th>
+                            <th>Email</th>
+                            <th>Số điện thoại</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        
+            <!-- ====== VEHICLES ====== -->
+            <div id="vehicles" class="module-content active">
+                <div class="header">
+                    <h2>🚚 Quản lý Phương tiện</h2>
+                    <button onclick="openModal('add','vehicles')">Thêm Phương tiện</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Loại xe</th>
+                            <th>Biển số xe</th>
+                            <th>Hình ảnh</th>
+                            <th>Tải trọng (tấn)</th>
+                            <th>Trạng thái</th>
+                            <th>Mô tả chi tiết</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>       
+        
+            <!-- ====== TRANSPORTS ====== -->
+            <div id="transports" class="module-content">
+                <div class="header">
+                    <h2>🚢 Quản lý Vận chuyển</h2>
+                    <button onclick="openModal('add','transports')">Thêm Lịch trình</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Cảng đi</th>
+                            <th>Cảng đến</th>
+                            <th>Lịch trình</th>
+                            <th>Trạng thái</th>
+                            <th>Phương tiện</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        
+            <!-- ====== CONTRACTS ====== -->
+            <div id="contracts" class="module-content">
+                <div class="header">
+                    <h2>📄 Quản lý Hợp đồng</h2>
+                    <button onclick="openModal('add','contracts')">Thêm Hợp đồng</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Khách hàng</th>
+                            <th>Ngày ký</th>
+                            <th>Ngày hết hạn</th>
+                            <th>Giá trị</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        
+            <!-- ====== COSTS ====== -->
+            <div id="costs" class="module-content">
+                <div class="header">
+                    <h2>💰 Quản lý Chi phí</h2>
+                    <button onclick="openModal('add','costs')">Thêm Chi phí</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Hợp đồng</th>
+                            <th>Loại chi phí</th>
+                            <th>Số tiền</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        
+            <!-- ====== INVOICES ====== -->
+            <div id="invoices" class="module-content">
+                <div class="header">
+                    <h2>🧾 Quản lý Hóa đơn</h2>
+                    <button onclick="openModal('add','invoices')">Thêm Hóa đơn</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Hợp đồng</th>
+                            <th>Số tiền</th>
+                            <th>Ngày phát hành</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        
+            <!-- ====== PAYMENTS ====== -->
+            <div id="payments" class="module-content">
+                <div class="header">
+                    <h2>💳 Quản lý Thanh toán</h2>
+                    <button onclick="openModal('add','payments')">Thêm Thanh toán</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Hóa đơn</th>
+                            <th>Số tiền</th>
+                            <th>Phương thức</th>
+                            <th>Thời gian</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        
+            <!-- ====== SENSORS ====== -->
+            <div id="sensors" class="module-content">
+                <div class="header">
+                    <h2>🌡️ Dữ liệu Cảm biến</h2>
+                    <button onclick="openModal('add','sensors')">Thêm Dữ liệu</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Container</th>
+                            <th>Nhiệt độ (°C)</th>
+                            <th>Độ ẩm (%)</th>
+                            <th>Tọa độ GPS</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        
+            <!-- ====== ALERTS ====== -->
+            <div id="alerts" class="module-content">
+                <div class="header">
+                    <h2>⚠️ Cảnh báo Hệ thống</h2>
+                    <button onclick="openModal('add','alerts')">Thêm Cảnh báo</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Container</th>
+                            <th>Loại cảnh báo</th>
+                            <th>Thời gian</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>      
+        </div>        
+    </div>
+    <div id="dynamicModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Thêm</h2>
+            <form id="dynamicForm">
+                <input type="hidden" id="entityId">
+                <div id="formFields"></div>
+                <button type="submit" class="save-btn">Lưu</button>
             </form>
-            <div id="loginMessage" class="small"></div>
         </div>
     </div>
-
-    <script src="login.js"></script>
+    <script type="module" src="js/index.js"></script>
 </body>
-
 </html>
