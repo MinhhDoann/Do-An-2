@@ -8,12 +8,32 @@
 body {
     margin: 0;
     font-family: Inter, Segoe UI, Roboto, Arial;
-    background: var(--bg);
+    background: url('img/nen.jpg') center/cover no-repeat fixed;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
+    position: relative;
 }
+
+body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(3px);
+    z-index: 0;
+}
+
+.login-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+}
+
 
 .login-wrapper {
     display: flex;
