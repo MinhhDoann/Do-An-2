@@ -1,18 +1,18 @@
 // ====== DỮ LIỆU MẪU MẶC ĐỊNH ======
 export const defaultData = {
     customers: [
-        { id: 1, name: 'Công ty A', email: 'contact@a.com', phone: '0901234567' },
-        { id: 2, name: 'Công ty B', email: 'contact@b.com', phone: '0902345678' },
-        { id: 3, name: 'Công ty C', email: 'contact@c.com', phone: '0903456789' }
+        { id: 'KH001', name: 'Công ty A', email: 'contact@a.com', phone: '0901234567' },
+        { id: 'KH002', name: 'Công ty B', email: 'contact@b.com', phone: '0902345678' },
+        { id: 'KH003', name: 'Công ty C', email: 'contact@c.com', phone: '0903456789' }
     ],
     contracts: [
-        { id: 1, customerId: 1, signDate: '2025-01-01', expiryDate: '2025-12-31', value: 50000000 },
-        { id: 2, customerId: 2, signDate: '2025-02-01', expiryDate: '2025-12-31', value: 75000000 },
-        { id: 3, customerId: 3, signDate: '2025-03-01', expiryDate: '2025-12-31', value: 60000000 }
+        { id: 'HD001', customerId: 'KH001', signDate: '2025-01-01', expiryDate: '2025-12-31', value: 50000000 },
+        { id: 'HD002', customerId: 'KH002', signDate: '2025-02-01', expiryDate: '2025-12-31', value: 75000000 },
+        { id: 'HD003', customerId: 'KH003', signDate: '2025-03-01', expiryDate: '2025-12-31', value: 60000000 }
     ],
     vehicles: [
         {
-            id: 1,
+            id: 'XE001',
             vehicleType: 'Xe tải',
             licensePlate: '51H-12345',
             image: 'car-white.jpg',
@@ -21,7 +21,7 @@ export const defaultData = {
             description: 'Xe tải 10 tấn chuyên chở hàng hóa nội thành TP.HCM.'
         },
         {
-            id: 2,
+            id: 'XE002',
             vehicleType: 'Xe container',
             licensePlate: '51H-67890',
             image: 'car-orange.jpg',
@@ -30,7 +30,7 @@ export const defaultData = {
             description: 'Xe container 15 tấn đang vận chuyển hàng tuyến Bắc - Nam.'
         },
         {
-            id: 3,
+            id: 'XE003',
             vehicleType: 'Xe tải nhỏ',
             licensePlate: '51H-54321',
             image: 'car-yellow.jpg',
@@ -38,50 +38,50 @@ export const defaultData = {
             status: 'Đang sửa chữa',
             description: 'Xe tải 8 tấn đang được bảo trì tại xưởng trung tâm.'
         }
-    ],  
+    ],
     containers: [
-        { id: 1, itemTypeId: 1, weight: 5000, status: 'Lưu kho', warehouseId: 1, vehicleId: 1, customerId: 1 },
-        { id: 2, itemTypeId: 2, weight: 3000, status: 'Đang vận chuyển', warehouseId: 1, vehicleId: 2, customerId: 2 },
-        { id: 3, itemTypeId: 3, weight: 4000, status: 'Lưu kho', warehouseId: 2, vehicleId: 3, customerId: 3 }
+        { id: 'CTN001', itemTypeId: 'HH001', weight: 5000, status: 'Lưu kho', warehouseId: 'KHO001', vehicleId: 'XE001', customerId: 'KH001' },
+        { id: 'CTN002', itemTypeId: 'HH002', weight: 3000, status: 'Đang vận chuyển', warehouseId: 'KHO001', vehicleId: 'XE002', customerId: 'KH002' },
+        { id: 'CTN003', itemTypeId: 'HH003', weight: 4000, status: 'Lưu kho', warehouseId: 'KHO002', vehicleId: 'XE003', customerId: 'KH003' }
     ],
     containerhistory: [
-        { id: 1, containerId: 1, action: 'Nhập kho', time: '2025-10-01 08:00', location: 'Kho HCM' },
-        { id: 2, containerId: 2, action: 'Vận chuyển', time: '2025-10-02 09:00', location: 'Cảng HN' }
+        { id: 'LS001', containerId: 'CTN001', action: 'Nhập kho', time: '2025-10-01 08:00', location: 'Kho HCM' },
+        { id: 'LS002', containerId: 'CTN002', action: 'Vận chuyển', time: '2025-10-02 09:00', location: 'Cảng HN' }
     ],
     warehouses: [
-        { id: 1, name: 'Kho HCM', capacity: 1000, location: 'TP.HCM', manager: 'Nguyễn Văn A' },
-        { id: 2, name: 'Kho HN', capacity: 800, location: 'Hà Nội', manager: 'Trần Thị B' },
-        { id: 3, name: 'Kho DN', capacity: 600, location: 'Đà Nẵng', manager: 'Lê Văn C' }
+        { id: 'KHO001', name: 'Kho HCM', capacity: 1000, location: 'TP.HCM', manager: 'Nguyễn Văn A' },
+        { id: 'KHO002', name: 'Kho HN', capacity: 800, location: 'Hà Nội', manager: 'Trần Thị B' },
+        { id: 'KHO003', name: 'Kho DN', capacity: 600, location: 'Đà Nẵng', manager: 'Lê Văn C' }
     ],
     transports: [
-        { id: 1, fromPort: 'Cảng HCM', toPort: 'Cảng HN', schedule: '2025-10-05', status: 'Lên kế hoạch', vehicleId: 1 },
-        { id: 2, fromPort: 'Cảng HN', toPort: 'Cảng ĐN', schedule: '2025-10-06', status: 'Đang thực hiện', vehicleId: 2 },
-        { id: 3, fromPort: 'Cảng ĐN', toPort: 'Cảng HCM', schedule: '2025-10-07', status: 'Hoàn thành', vehicleId: 3 }
+        { id: 'VC001', fromPort: 'Cảng HCM', toPort: 'Cảng HN', schedule: '2025-10-05', status: 'Lên kế hoạch', vehicleId: 'XE001' },
+        { id: 'VC002', fromPort: 'Cảng HN', toPort: 'Cảng ĐN', schedule: '2025-10-06', status: 'Đang thực hiện', vehicleId: 'XE002' },
+        { id: 'VC003', fromPort: 'Cảng ĐN', toPort: 'Cảng HCM', schedule: '2025-10-07', status: 'Hoàn thành', vehicleId: 'XE003' }
     ],
     costs: [
-        { id: 1, contractId: 1, costType: 'Vận chuyển container C001', amount: 1000000 },
-        { id: 2, contractId: 1, costType: 'Bảo trì container C001', amount: 500000 },
-        { id: 3, contractId: 2, costType: 'Lưu kho container C002', amount: 300000 }
+        { id: 'CP001', contractId: 'HD001', costType: 'Vận chuyển container CTN001', amount: 1000000 },
+        { id: 'CP002', contractId: 'HD001', costType: 'Bảo trì container CTN001', amount: 500000 },
+        { id: 'CP003', contractId: 'HD002', costType: 'Lưu kho container CTN002', amount: 300000 }
     ],
     invoices: [
-        { id: 1, contractId: 1, amount: 1500000, issueDate: '2025-09-10' },
-        { id: 2, contractId: 2, amount: 300000, issueDate: '2025-09-15' },
-        { id: 3, contractId: 3, amount: 25000000, issueDate: '2025-09-20' }
+        { id: 'HDN001', contractId: 'HD001', amount: 1500000, issueDate: '2025-09-10' },
+        { id: 'HDN002', contractId: 'HD002', amount: 300000, issueDate: '2025-09-15' },
+        { id: 'HDN003', contractId: 'HD003', amount: 25000000, issueDate: '2025-09-20' }
     ],
     payments: [
-        { id: 1, invoiceId: 1, amount: 1500000, method: 'Chuyển khoản', time: '2025-09-11T09:00' },
-        { id: 2, invoiceId: 2, amount: 300000, method: 'Tiền mặt', time: '2025-09-16T12:00' },
-        { id: 3, invoiceId: 3, amount: 25000000, method: 'Chuyển khoản', time: '2025-09-21T15:00' }
+        { id: 'TT001', invoiceId: 'HDN001', amount: 1500000, method: 'Chuyển khoản', time: '2025-09-11T09:00' },
+        { id: 'TT002', invoiceId: 'HDN002', amount: 300000, method: 'Tiền mặt', time: '2025-09-16T12:00' },
+        { id: 'TT003', invoiceId: 'HDN003', amount: 25000000, method: 'Chuyển khoản', time: '2025-09-21T15:00' }
     ],
     sensors: [
-        { id: 1, containerId: 1, temperature: 25, humidity: 60, gps: '10.7769, 106.7009' },
-        { id: 2, containerId: 2, temperature: 5, humidity: 70, gps: '21.0285, 105.8542' },
-        { id: 3, containerId: 3, temperature: 30, humidity: 50, gps: '16.0544, 108.2022' }
+        { id: 'CB001', containerId: 'CTN001', temperature: 25, humidity: 60, gps: '10.7769, 106.7009' },
+        { id: 'CB002', containerId: 'CTN002', temperature: 5, humidity: 70, gps: '21.0285, 105.8542' },
+        { id: 'CB003', containerId: 'CTN003', temperature: 30, humidity: 50, gps: '16.0544, 108.2022' }
     ],
     alerts: [
-        { id: 1, containerId: 1, alertType: 'Nhiệt độ cao', time: '2025-09-01T09:00' },
-        { id: 2, containerId: 2, alertType: 'Độ ẩm bất thường', time: '2025-09-02T12:00' },
-        { id: 3, containerId: 3, alertType: 'Vị trí bất thường', time: '2025-09-03T15:00' }
+        { id: 'CBao001', containerId: 'CTN001', alertType: 'Nhiệt độ cao', time: '2025-09-01T09:00' },
+        { id: 'CBao002', containerId: 'CTN002', alertType: 'Độ ẩm bất thường', time: '2025-09-02T12:00' },
+        { id: 'CBao003', containerId: 'CTN003', alertType: 'Vị trí bất thường', time: '2025-09-03T15:00' }
     ]
 };
 

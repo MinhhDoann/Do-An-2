@@ -50,7 +50,7 @@ const tableConfigs = {
     warehouses: { fields: ['id', 'name', 'capacity', 'location', 'manager'] },
     customers: { fields: ['id', 'name', 'email', 'phone'] },
     vehicles: {
-        fields: [ 'vehicleType','licensePlate','image', 'capacity', 'status', 'description']
+        fields: ['id','vehicleType','licensePlate','image', 'capacity', 'status', 'description']
     },
     transports: { fields: ['id', 'fromPort', 'toPort', 'schedule', 'status', 'vehicleId'] },
     contracts: { fields: ['id', 'customerId', 'signDate', 'expiryDate', 'value'] },
@@ -85,9 +85,9 @@ function loadTableData(moduleId, data) {
             const value = item[f];
 
             if (f === 'image') {
-                const imgPath = `./image/${value}`;
-                cell.innerHTML = `<img src="${imgPath}" alt="Hình xe" style="width:80px; height:auto; border-radius:8px;">`;
-            } else if (f === 'description') {
+                const imgSrc = value?.startsWith('data:image') ? value : `./image/${value}`;
+                cell.innerHTML = `<img src="${imgSrc}" alt="Hình xe" style="width:80px; height:auto; border-radius:8px;">`;
+            }else if (f === 'description') {
                 cell.innerHTML = `<div style="max-width:250px; white-space:normal;">${value}</div>`;
             } else {
                 cell.textContent = value ?? '';
