@@ -98,3 +98,20 @@ select {
     margin-top: 12px;
     text-align: center;
 }
+
+
+@media (max-width: 500px) {
+    .login-wrapper {
+        padding: 10px; 
+    }
+
+    .login-card {
+        width: 100%; 
+    }
+
+    input,
+    select,
+    .btn {
+        width: 100%;
+    }
+}
