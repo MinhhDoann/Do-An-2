@@ -234,6 +234,13 @@ th {
 .save-btn:hover {
   background: #0056b3;
 }
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+}
+
 
 /* ====== RESPONSIVE ====== */
 @media (max-width: 768px) {
