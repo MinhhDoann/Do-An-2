@@ -61,6 +61,19 @@ const tableConfigs = {
     costs: { fields: ['id', 'contractId', 'costType', 'amount'] }
 };
 
+// ====== RÀNG BUỘC QUAN HỆ DỮ LIỆU ======
+const dataRelations = {
+    containers: { warehouseId: 'warehouses', vehicleId: 'vehicles', customerId: 'customers' },
+    containerhistory: { containerId: 'containers' },
+    transports: { vehicleId: 'vehicles' },
+    contracts: { customerId: 'customers' },
+    invoices: { contractId: 'contracts' },
+    payments: { invoiceId: 'invoices' },
+    sensors: { containerId: 'containers' },
+    alerts: { containerId: 'containers' },
+    costs: { contractId: 'contracts' }
+};
+
 // ====== TẢI DỮ LIỆU RA BẢNG ======
 function loadTableData(moduleId, data) {
     const tbody = document.querySelector(`#${moduleId} tbody`);
@@ -276,16 +289,30 @@ document.addEventListener('DOMContentLoaded', () => {
             const isAdd = modalTitle.includes('Thêm');
             const moduleId = modalTitle.replace('Thêm ', '').replace('Sửa ', '').trim();
             const fields = formFields[moduleId];
-            const id = parseInt(document.getElementById('entityId').value) || (appData[moduleId].length + 1);
+            const id = document.getElementById('entityId').value || `${moduleId.toUpperCase()}${appData[moduleId].length + 1}`;
             const newItem = { id };
             fields.forEach(f => {
                 const el = document.getElementById(f.id);
                 if (f.type === 'file') {
                     newItem[f.id] = el.dataset.preview || '';
                 } else {
-                    newItem[f.id] = el.value;
+                    newItem[f.id] = el.value.trim();
                 }
-            });            
+            });
+
+            // KIỂM TRA RÀNG BUỘC GIỮA CÁC MODULE
+            const relation = dataRelations[moduleId];
+            if (relation) {
+                for (const [field, targetModule] of Object.entries(relation)) {
+                    const targetList = appData[targetModule];
+                    const exists = targetList.some(t => t.id === newItem[field]);
+                    if (!exists) {
+                        alert(`❌ Giá trị "${field}" (${newItem[field]}) không tồn tại trong ${targetModule}!`);
+                        return;
+                    }
+                }
+            }
+
             if (isAdd) appData[moduleId].push(newItem);
             else {
                 const idx = appData[moduleId].findIndex(i => i.id === id);
