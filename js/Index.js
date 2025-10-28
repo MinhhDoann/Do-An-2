@@ -112,8 +112,8 @@ function loadTableData(moduleId, data) {
         // Cột hành động
         const actions = document.createElement('td');
         actions.innerHTML = `
-            <button onclick="openModal('edit','${moduleId}',${item.id})">Sửa</button>
-            <button onclick="deleteItem('${moduleId}',${item.id})">Xóa</button>
+            <button onclick="openModal('edit','${moduleId}','${item.id}')">Sửa</button>
+            <button onclick="deleteItem('${moduleId}','${item.id}')">Xóa</button>
         `;
         row.appendChild(actions);
         tbody.appendChild(row);
@@ -218,53 +218,74 @@ function openModal(action, moduleId, id = null) {
     fields.forEach(f => {
         const label = document.createElement('label');
         label.textContent = f.label;
-
+    
         let input;
-        switch (f.type) {
-            case 'select':
-                input = document.createElement('select');
-                f.options.forEach(opt => {
-                    const option = document.createElement('option');
-                    option.value = opt;
-                    option.textContent = opt;
-                    input.appendChild(option);
-                });
-                break;
-            case 'textarea':
-                input = document.createElement('textarea');
-                input.rows = 3;
-                break;
-            case 'file':
-                input = document.createElement('input');
-                input.type = 'file';
-                input.addEventListener('change', e => {
-                    const file = e.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = ev => {
-                            input.dataset.preview = ev.target.result;
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                });
-                break;
-            default:
-                input = document.createElement('input');
-                input.type = f.type;
+    
+        // 🔹 Nếu là khóa ngoại — chuyển sang dropdown
+        const relation = dataRelations[moduleId]?.[f.id];
+        if (relation) {
+            input = document.createElement('select');
+            const relatedList = appData[relation] || [];
+    
+            // Thêm option rỗng đầu tiên
+            const emptyOpt = document.createElement('option');
+            emptyOpt.value = '';
+            emptyOpt.textContent = '-- Chọn --';
+            input.appendChild(emptyOpt);
+    
+            relatedList.forEach(item => {
+                const option = document.createElement('option');
+                // Ưu tiên hiển thị tên (hoặc biển số nếu là vehicle)
+                const display =
+                    item.name || item.licensePlate || item.id;
+                option.value = item.id;
+                option.textContent = `${item.id} - ${display}`;
+                input.appendChild(option);
+            });
         }
-
+    
+        // 🔹 Nếu là select, textarea, file như cũ
+        else if (f.type === 'select') {
+            input = document.createElement('select');
+            f.options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                option.textContent = opt;
+                input.appendChild(option);
+            });
+        } else if (f.type === 'textarea') {
+            input = document.createElement('textarea');
+            input.rows = 3;
+        } else if (f.type === 'file') {
+            input = document.createElement('input');
+            input.type = 'file';
+            input.addEventListener('change', e => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = ev => {
+                        input.dataset.preview = ev.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        } else {
+            input = document.createElement('input');
+            input.type = f.type;
+        }
+    
         input.id = f.id;
         input.name = f.id;
         input.required = true;
-
+    
         // Gán giá trị khi sửa
         if (existingItem && f.type !== 'file') {
             input.value = existingItem[f.id] || '';
         }
-
+    
         formFieldsDiv.append(label, input);
     });
-}
+}    
 
 function closeModal() {
     const modal = document.getElementById('dynamicModal');
