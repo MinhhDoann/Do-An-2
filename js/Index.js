@@ -346,14 +346,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ====== NÚT ĐĂNG NHẬP ======
-    const loginBtn = document.querySelector('.login-btn');
-    if (loginBtn) {
-        loginBtn.addEventListener('click', () => {
-            alert('🧭 Tính năng đăng nhập sẽ được bổ sung sau!');
-        });
-    }
-
     // ====== KHỞI ĐỘNG ======
     updateDisplayMaps();
     showModule('containers');
