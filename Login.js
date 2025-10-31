@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // === XỬ LÝ ĐĂNG NHẬP (bạn chưa có, thêm nếu cần) ===
+    // === XỬ LÝ ĐĂNG NHẬP ===
     const loginSubmit = document.querySelector('.signup-login input[type="submit"]');
     if (loginSubmit) {
         loginSubmit.addEventListener('click', (e) => {
@@ -40,10 +40,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (user) {
                 alert('Đăng nhập thành công!');
+                // ✅ Lưu trạng thái đăng nhập
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('currentUser', user.email);
                 window.location.href = 'index.html';
             } else {
                 alert('Email hoặc mật khẩu sai!');
             }
+        });
+    }
+
+    // === XỬ LÝ HIỂN THỊ HEADER ===
+    const loginBtn = document.getElementById('login');
+    const logoutBtn = document.getElementById('outlogin');
+    const logoutLink = document.getElementById('logout-link');
+
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+
+    if (isLoggedIn) {
+        // Người dùng đã đăng nhập
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (logoutBtn) logoutBtn.style.display = 'block';
+    } else {
+        // Người dùng chưa đăng nhập
+        if (loginBtn) loginBtn.style.display = 'block';
+        if (logoutBtn) logoutBtn.style.display = 'none';
+    }
+
+    // === XỬ LÝ ĐĂNG XUẤT ===
+    if (logoutLink) {
+        logoutLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('currentUser');
+            alert('Đăng xuất thành công!');
+            window.location.href = 'login.html';
         });
     }
 });
