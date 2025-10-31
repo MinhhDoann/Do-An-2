@@ -32,7 +32,13 @@
   font-size: 22px;
   font-weight: 600;
 }
+.banner-right a{
+  text-decoration: none;
 
+}
+.banner-right ul{
+  list-style-type: none;
+}
 .banner-right .login-btn {
   background-color: white;
   color: #007bff;

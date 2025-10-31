@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="Login.css"/>
+    <title>Đăng Nhập</title>
+</head>
+<body background="image/back.jpg">
+    <div class="container clearfix">
+        <div class="col-s-12 col-x-12">
+
+            <!-- FORM ĐĂNG KÝ -->
+            <form class="signup" id="signup">
+                <h1>Đăng Ký</h1>
+                <div class="from">
+                    <div class="form-group">
+                        <input placeholder="Full name" type="text" id="name">
+                    </div>
+                    <div class="form-group">
+                        <input pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$" placeholder="Email Address" type="email" id="email">
+                    </div>
+                    <div class="form-group">
+                        <input placeholder="Password" type="password" id="password">
+                    </div>
+                    <div class="xacnhan">
+                        <input id="chkAgree" type="checkbox">
+                        <label for="chkAgree" style="color: aliceblue;">Tôi Chấp Nhận Mọi Chính Sách Và Điều Khoản</label>
+                        <br />
+                    </div>
+                    <div class="xacnhan-signup">
+                        <input type="submit" value="Đăng Ký">
+                    </div>
+                    <div class="switch-form">
+                        <a href="#" id="to-login">Đăng nhập</a>
+                    </div>
+                </div>
+            </form>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const registerForm = document.getElementById('signup');
+
+                    registerForm.addEventListener('submit', (e) => {
+                        e.preventDefault(); 
+
+                        const name = document.getElementById('name').value;
+                        const email = document.getElementById('email').value;
+                        const password = document.getElementById('password').value;
+                        const agree = document.getElementById('chkAgree').checked;
+
+                        if (name === '') {
+                            alert('Vui lòng nhập họ tên.');
+                            return;
+                        }
+                        if (email === '') {
+                            alert('Vui lòng nhập email.');
+                            return;
+                        }
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (!emailRegex.test(email)) {
+                            alert('Email không hợp lệ.');
+                            return;
+                        }
+                        if (password === '') {
+                            alert('Vui lòng nhập mật khẩu.');
+                            return;
+                        }
+                        if (password.length < 6) {
+                            alert('Mật khẩu phải có ít nhất 6 ký tự.');
+                            return;
+                        }
+                        if (!agree) {
+                            alert("Bạn phải đồng ý với điều khoản.");
+                            return;
+                        }
+
+                        const users = JSON.parse(localStorage.getItem('users')) || [];
+                        const userExists = users.some(user => user.email === email);
+
+                        if (userExists) {
+                            alert('Email này đã được đăng ký trước đó!');
+                        } else {
+                            users.push({ name, email, password });
+                            localStorage.setItem('users', JSON.stringify(users));
+                            alert('Đăng ký thành công! Bạn sẽ được chuyển về trang Đăng Nhập.');
+                            document.querySelector('.signup').classList.add('hidden');
+                            document.querySelector('.signup-login').classList.remove('hidden');
+                        }
+                    });
+                });
+            </script>
+
+            <!-- FORM ĐĂNG NHẬP -->
+            <form class="signup-login hidden" id="signup-login">
+                <h1>Đăng Nhập</h1>
+                <div class="from-2">
+                    <div class="form-group-2">
+                        <div class="switch-form2" id="to-register">Đăng Ký</div>    
+                    </div>
+                    <div class="form-group">
+                        <input pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$" placeholder="Email Address" type="email" id="email-login">
+                    </div>
+                    <div class="form-group-2">
+                        <input placeholder="Password" type="password" id="password-login">
+                        <div id="strength-bar"></div>
+                        <div id="strength-text"></div>
+                    </div>
+                    <div class="xacnhan-login">
+                        <input type="submit" value="Đăng Nhập" style="background-color: rgb(0, 132, 255);color: aliceblue;">
+                    </div>
+                    <div class="back" style="margin-left: 60px;">
+                        <a href="index.html">Quay lại trang chủ</a>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <script src="Login.js"></script>  
+</body>
+</html>
