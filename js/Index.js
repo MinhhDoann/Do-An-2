@@ -323,6 +323,17 @@ function generateHistoryID(existingHistories) {
     });
     return "LS" + (max + 1).toString().padStart(3, "0");
 }
+function generateWarhousesID(existingwarehouses) {
+    let max = 0;
+    existingwarehouses.forEach(h => {
+        const match = h.id.match(/^KHO(\d+)$/);
+        if (match) {
+            const num = parseInt(match[1]);
+            if (num > max) max = num;
+        }
+    });
+    return "KHO" + (max + 1).toString().padStart(3, "0");
+}
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('dynamicForm');
     if (form) {
@@ -338,6 +349,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     id = generateContainerID(appData.containers);
                 } else if (moduleId === 'containerhistory') {
                     id = generateHistoryID(appData.containerhistory);
+                } else if (moduleId === 'warehouses') {
+                    id = generateWarhousesID(appData.warehouses);
                 } else {
                     id = `${moduleId.toUpperCase()}${appData[moduleId].length + 1}`;
                 }
