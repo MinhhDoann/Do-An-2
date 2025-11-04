@@ -301,6 +301,17 @@ function deleteItem(moduleId, id) {
 }
 
 // ====== CHẠY SAU KHI DOM SẴN SÀNG ======
+function generateContainerID(existingContainers) {
+    let max = 0;
+    existingContainers.forEach(c => {
+        const match = c.id.match(/^CTN(\d+)$/);
+        if (match) {
+            const num = parseInt(match[1]);
+            if (num > max) max = num;
+        }
+    });
+    return "CTN" + (max + 1).toString().padStart(3, "0");
+}
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('dynamicForm');
     if (form) {
@@ -310,7 +321,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const isAdd = modalTitle.includes('Thêm');
             const moduleId = modalTitle.replace('Thêm ', '').replace('Sửa ', '').trim();
             const fields = formFields[moduleId];
-            const id = document.getElementById('entityId').value || `${moduleId.toUpperCase()}${appData[moduleId].length + 1}`;
+            let id = document.getElementById('entityId').value;
+            if (!id) {
+                if (moduleId === 'containers') {
+                    id = generateContainerID(appData.containers);
+                } else {
+                    id = `${moduleId.toUpperCase()}${appData[moduleId].length + 1}`;
+                }
+            }
+        
             const newItem = { id };
             fields.forEach(f => {
                 const el = document.getElementById(f.id);
