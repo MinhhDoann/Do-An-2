@@ -334,6 +334,29 @@ function generateWarhousesID(existingwarehouses) {
     });
     return "KHO" + (max + 1).toString().padStart(3, "0");
 }
+function generateCustomersID(existingcustomers) {
+    let max = 0;
+    existingcustomers.forEach(h => {
+        const match = h.id.match(/^KH(\d+)$/);
+        if (match) {
+            const num = parseInt(match[1]);
+            if (num > max) max = num;
+        }
+    });
+    return "KH" + (max + 1).toString().padStart(3, "0");
+}
+function generateVehiclesID(existingvehicles) {
+    let max = 0;
+    existingvehicles.forEach(h => {
+        const match = h.id.match(/^XE(\d+)$/);
+        if (match) {
+            const num = parseInt(match[1]);
+            if (num > max) max = num;
+        }
+    });
+    return "XE" + (max + 1).toString().padStart(3, "0");
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('dynamicForm');
     if (form) {
@@ -351,6 +374,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     id = generateHistoryID(appData.containerhistory);
                 } else if (moduleId === 'warehouses') {
                     id = generateWarhousesID(appData.warehouses);
+                } else if (moduleId === 'customers') {
+                    id = generateCustomersID(appData.customers);
+                } else if (moduleId === 'vehicles') {
+                    id = generateVehiclesID(appData.vehicles);
                 } else {
                     id = `${moduleId.toUpperCase()}${appData[moduleId].length + 1}`;
                 }
