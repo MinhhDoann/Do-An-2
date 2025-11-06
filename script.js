@@ -1,8 +1,37 @@
-// --- Simple SPA nav ---
+// --- Simple SPA nav with submenu toggle ---
 const sections = document.querySelectorAll('.card-section');
-document.getElementById('mainNav').addEventListener('click', e => {
+const mainNav = document.getElementById('mainNav');
+
+mainNav.addEventListener('click', e => {
     if (e.target.matches('button')) {
-        const s = e.target.dataset.section; document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active')); e.target.classList.add('active'); showSection(s);
+        const target = e.target;
+
+        if (target.classList.contains('submenu-toggle')) {
+            const parentLi = target.closest('li.has-submenu');
+            const isActive = parentLi.classList.toggle('active');
+            
+            document.querySelectorAll('.nav .has-submenu').forEach(li => {
+                if (li !== parentLi) {
+                    li.classList.remove('active');
+                }
+            });
+
+            return;
+        }
+
+        if (target.dataset.section) {
+            const s = target.dataset.section;
+            
+            document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+            
+            target.classList.add('active');
+            
+            document.querySelectorAll('.nav .has-submenu').forEach(li => {
+                li.classList.remove('active');
+            });
+            
+            showSection(s);
+        }
     }
 });
 function showSection(id) { sections.forEach(sec => sec.style.display = sec.id === id ? '' : 'none'); document.getElementById('sectionTitle').textContent = document.querySelector('[data-section="' + id + '"]')?.textContent || 'Tổng quan'; renderAll(); }
@@ -78,8 +107,7 @@ function renderPartners() { const tbody = document.querySelector('#tblPartners t
 function renderStaff() { const tbody = document.querySelector('#tblStaff tbody'); tbody.innerHTML = ''; DB.staff.forEach((s, i) => { const tr = document.createElement('tr'); tr.innerHTML = `<td>${i + 1}</td><td>${s.name}</td><td>${s.role}</td><td>${s.phone}</td>`; tbody.appendChild(tr); }); }
 function renderEquip() { const tbody = document.querySelector('#tblEquip tbody'); tbody.innerHTML = ''; DB.equip.forEach((q, i) => { const tr = document.createElement('tr'); tr.innerHTML = `<td>${i + 1}</td><td>${q.name}</td><td>${q.type}</td><td>${q.status}</td>`; tbody.appendChild(tr); }); }
 
-// --- IT ---
-document.getElementById('saveIt').addEventListener('click', () => { localStorage.setItem('cl_api_base', document.getElementById('apiBase').value); alert('Lưu cấu hình'); });
+
 
 // --- Misc UI ---
 document.getElementById('exportBtn').addEventListener('click', () => { downloadReport(); });

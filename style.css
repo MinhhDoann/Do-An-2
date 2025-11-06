@@ -265,3 +265,52 @@ textarea {
         justify-content: flex-end;
     }
 }
+
+
+.nav .has-submenu {
+    position: relative;
+}
+
+.nav .has-submenu .submenu {
+    display: none;
+    list-style: none;
+    padding: 0;
+    margin: 6px 0 0 20px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.nav .has-submenu .submenu li {
+    margin: 0;
+}
+
+.nav .has-submenu .submenu button {
+    width: 100%;
+    padding: 8px 12px;
+    text-align: left;
+    background: transparent;
+    color: inherit;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.nav .has-submenu .submenu button:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.nav .has-submenu.active .submenu {
+    display: block;
+}
+
+/* Hiệu ứng mũi tên cho menu cha */
+.nav .has-submenu .submenu-toggle::after {
+    content: '▸';
+    float: right;
+    transition: transform 0.2s;
+}
+
+.nav .has-submenu.active .submenu-toggle::after {
+    transform: rotate(90deg);
+}
