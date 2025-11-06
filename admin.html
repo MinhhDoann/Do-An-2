@@ -13,16 +13,54 @@
         <aside class="sidebar">
             <div class="brand">Container Logistics - Quản lý</div>
             <ul class="nav" id="mainNav">
-                <li><button data-section="dashboard" class="active">Tổng quan</button></li>
-                <li><button data-section="containers">Quản lý Container</button></li>
-                <li><button data-section="cargo">Hàng trong Container</button></li>
-                <li><button data-section="transport">Vận tải</button></li>
-                <li><button data-section="depot">Cảng & Depot</button></li>
-                <li><button data-section="docs">Chứng từ & Hải quan</button></li>
-                <li><button data-section="finance">Tài chính & Chi phí</button></li>
-                <li><button data-section="partners">Khách hàng & Đối tác</button></li>
-                <li><button data-section="staff">Nhân sự & Thiết bị</button></li>
-                <li><button data-section="it">CNTT & Hệ thống</button></li>
+                <li>
+                    <button data-section="dashboard" class="active">Tổng quan</button>
+                </li>
+                <li class="has-submenu">
+                    <button class="submenu-toggle">Quản lý Container</button>
+                    <ul class="submenu">
+                        <li><button data-section="containers">Danh sách Container</button></li>
+                        <li><button data-section="cargo">Hàng trong Container</button></li>
+                    </ul>
+                </li>
+                <li class="has-submenu">
+                    <button class="submenu-toggle">Vận tải</button>
+                    <ul class="submenu">
+                        <li><button data-section="transport">Lịch trình vận tải</button></li>
+                        <li><button data-section="depot">Cảng & Depot</button></li>
+                    </ul>
+                </li>
+                <li class="has-submenu">
+                    <button class="submenu-toggle">Chứng từ & Hải quan</button>
+                    <ul class="submenu">
+                        <li><button data-section="docs">Quản lý chứng từ</button></li>
+                    </ul>
+                </li>
+                <li class="has-submenu">
+                    <button class="submenu-toggle">Tài chính & Chi phí</button>
+                    <ul class="submenu">
+                        <li><button data-section="finance">Tính chi phí</button></li>
+                    </ul>
+                </li>
+                <li class="has-submenu">
+                    <button class="submenu-toggle">Khách hàng & Đối tác</button>
+                    <ul class="submenu">
+                        <li><button data-section="partners">Danh sách đối tác</button></li>
+                    </ul>
+                </li>
+                <li class="has-submenu">
+                    <button class="submenu-toggle">Nhân sự & Thiết bị</button>
+                    <ul class="submenu">
+                        <li><button data-section="staff">Nhân sự</button></li>
+                        <li><button data-section="staff">Thiết bị</button></li>
+                    </ul>
+                </li>
+                <li class="has-submenu">
+                    <button class="submenu-toggle">CNTT & Hệ thống</button>
+                    <ul class="submenu">
+                        <li><button data-section="it">Cấu hình hệ thống</button></li>
+                    </ul>
+                </li>
             </ul>
             <div style="position:absolute;bottom:18px;left:20px;font-size:13px;opacity:.9">Container Logictic</div>
         </aside>
