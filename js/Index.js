@@ -9,7 +9,7 @@ function getMap(source, keyName = 'id', valueName = 'name') {
     return Object.fromEntries(source.map(item => [item[keyName], item[valueName]]));
 }
 
-let displayMaps = {};
+let displayMaps = {};   
 
 function updateDisplayMaps() {
     displayMaps = {
@@ -356,6 +356,29 @@ function generateVehiclesID(existingvehicles) {
     });
     return "XE" + (max + 1).toString().padStart(3, "0");
 }
+function generateTransportsID(existingtransports) {
+    let max = 0;
+    existingtransports.forEach(h => {
+        const match = h.id.match(/^VC(\d+)$/);
+        if (match) {
+            const num = parseInt(match[1]);
+            if (num > max) max = num;
+        }
+    });
+    return "VC" + (max + 1).toString().padStart(3, "0");
+}
+function generateContractsID(existingcontracts) {
+    let max = 0;
+    existingcontracts.forEach(h => {
+        const match = h.id.match(/^HD(\d+)$/);
+        if (match) {
+            const num = parseInt(match[1]);
+            if (num > max) max = num;
+        }
+    });
+    return "HD" + (max + 1).toString().padStart(3, "0");
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('dynamicForm');
@@ -378,6 +401,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     id = generateCustomersID(appData.customers);
                 } else if (moduleId === 'vehicles') {
                     id = generateVehiclesID(appData.vehicles);
+                } else if (moduleId === 'transports') {
+                    id = generateTransportsID(appData.transports);
+                } else if (moduleId === 'contracts') {
+                    id = generateContractsID(appData.contracts);
                 } else {
                     id = `${moduleId.toUpperCase()}${appData[moduleId].length + 1}`;
                 }
