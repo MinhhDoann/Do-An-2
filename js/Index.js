@@ -378,7 +378,61 @@ function generateContractsID(existingcontracts) {
     });
     return "HD" + (max + 1).toString().padStart(3, "0");
 }
-
+function generateInvoicesID(existinginvoices) {
+    let max = 0;
+    existinginvoices.forEach(h => {
+        const match = h.id.match(/^HDN(\d+)$/);
+        if (match) {
+            const num = parseInt(match[1]);
+            if (num > max) max = num;
+        }
+    });
+    return "HDN" + (max + 1).toString().padStart(3, "0");
+}
+function generatePaymentsID(existingpayments) {
+    let max = 0;
+    existingpayments.forEach(h => {
+        const match = h.id.match(/^TT(\d+)$/);
+        if (match) {
+            const num = parseInt(match[1]);
+            if (num > max) max = num;
+        }
+    });
+    return "TT" + (max + 1).toString().padStart(3, "0");
+}
+function generateSensorsID(existingsensors) {
+    let max = 0;
+    existingsensors.forEach(h => {
+        const match = h.id.match(/^CB(\d+)$/);
+        if (match) {
+            const num = parseInt(match[1]);
+            if (num > max) max = num;
+        }
+    });
+    return "CB" + (max + 1).toString().padStart(3, "0");
+}
+function generateAlertsID(existingalerts) {
+    let max = 0;
+    existingalerts.forEach(h => {
+        const match = h.id.match(/^CBao(\d+)$/);
+        if (match) {
+            const num = parseInt(match[1]);
+            if (num > max) max = num;
+        }
+    });
+    return "CBao" + (max + 1).toString().padStart(3, "0");
+}
+function generateCostsID(existingcosts) {
+    let max = 0;
+    existingcosts.forEach(h => {
+        const match = h.id.match(/^CP(\d+)$/);
+        if (match) {
+            const num = parseInt(match[1]);
+            if (num > max) max = num;
+        }
+    });
+    return "CP" + (max + 1).toString().padStart(3, "0");
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('dynamicForm');
@@ -405,6 +459,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     id = generateTransportsID(appData.transports);
                 } else if (moduleId === 'contracts') {
                     id = generateContractsID(appData.contracts);
+                } else if (moduleId === 'invoices') {
+                    id = generateInvoicesID(appData.invoices);
+                } else if (moduleId === 'payments') {
+                    id = generatePaymentsID(appData.payments);
+                } else if (moduleId === 'sensors') {
+                    id = generateSensorsID(appData.sensors);
+                } else if (moduleId === 'alerts') {
+                    id = generateAlertsID(appData.alerts);
+                } else if (moduleId === 'costs') {
+                    id = generateCostsID(appData.costs);
                 } else {
                     id = `${moduleId.toUpperCase()}${appData[moduleId].length + 1}`;
                 }
