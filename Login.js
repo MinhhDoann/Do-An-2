@@ -40,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (user) {
                 alert('Đăng nhập thành công!');
-                // ✅ Lưu trạng thái đăng nhập
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('currentUser', user.email);
                 window.location.href = 'index.html';
