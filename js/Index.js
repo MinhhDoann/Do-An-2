@@ -124,16 +124,16 @@ function loadTableData(moduleId, data) {
 // ====== FORM MODAL ======
 const formFields = {
     containers: [
-        { id: 'itemTypeId', label: 'Loại hàng', type: 'text' },
-        { id: 'weight', label: 'Trọng lượng (kg)', type: 'number' },
-        { id: 'status', label: 'Trạng thái', type: 'text' },
+        { id: 'itemTypeId', label: 'Loại hàng', type: 'select', options: ['Hàng dễ vỡ', 'Hàng nguy hiểm', 'Hàng đông lạnh', 'Hàng cồng kềnh']},
+        { id: 'weight', label: 'Trọng lượng (kg)', type: 'number', min:'0', max:'10000' },
+        { id: 'status', label: 'Trạng thái', type: 'select', options: ['Rỗng', 'Đã đóng hàng', 'Đang vận chuyển', 'Cần bảo trì'] },
         { id: 'warehouseId', label: 'Kho', type: 'number' },
         { id: 'vehicleId', label: 'Phương tiện', type: 'number' },
         { id: 'customerId', label: 'Khách hàng', type: 'number' }
     ],
     containerhistory: [
         { id: 'containerId', label: 'Container', type: 'number' },
-        { id: 'action', label: 'Hành động', type: 'text' },
+        { id: 'action', label: 'Hành động', type: 'select', options: ['Nhập container', 'Đóng hàng', 'Xuất kho', 'Giao hàng', "Kiểm tra container"] },
         { id: 'time', label: 'Thời gian', type: 'datetime-local' },
         { id: 'location', label: 'Vị trí', type: 'text' }
     ],
@@ -144,7 +144,7 @@ const formFields = {
         { id: 'manager', label: 'Người phụ trách', type: 'text' }
     ],
     customers: [
-        { id: 'name', label: 'Tên khách hàng', type: 'text',required: true, pattern: '^[\\p{L}\\s]+$', maxLength: 50, title:'Vui lòng nhập tên khách hàng' },
+        { id: 'name', label: 'Tên khách hàng', type: 'text', required: true, pattern: '^[\\p{L}\\s]+$', maxLength: 50, title:'Vui lòng nhập tên khách hàng' },
         { id: 'email', label: 'Email', type: 'email', required: true, pattern:'^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$', title: 'Vui lòng nhập đúng gmail'},
         { id: 'phone', label: 'Số điện thoại', type: 'text', required: true, pattern: '^0\\d{9}$', title:"Vui lòng nhập đúng số điện thoại" }
     ],
