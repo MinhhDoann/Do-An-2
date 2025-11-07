@@ -138,15 +138,15 @@ const formFields = {
         { id: 'location', label: 'Vị trí', type: 'text' }
     ],
     warehouses: [
-        { id: 'name', label: 'Tên kho', type: 'text' },
-        { id: 'capacity', label: 'Sức chứa (tấn)', type: 'number' },
+        { id: 'name', label: 'Tên kho', type: 'text'},
+        { id: 'capacity', label: 'Sức chứa (tấn)', type: 'number', min:'0' },
         { id: 'location', label: 'Vị trí', type: 'text' },
         { id: 'manager', label: 'Người phụ trách', type: 'text' }
     ],
     customers: [
-        { id: 'name', label: 'Tên khách hàng', type: 'text' },
-        { id: 'email', label: 'Email', type: 'email' },
-        { id: 'phone', label: 'Số điện thoại', type: 'text' }
+        { id: 'name', label: 'Tên khách hàng', type: 'text',required: true, pattern: '^[\\p{L}\\s]+$', maxLength: 50, title:'Vui lòng nhập tên khách hàng' },
+        { id: 'email', label: 'Email', type: 'email', required: true, pattern:'^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$', title: 'Vui lòng nhập đúng gmail'},
+        { id: 'phone', label: 'Số điện thoại', type: 'text', required: true, pattern: '^0\\d{9}$', title:"Vui lòng nhập đúng số điện thoại" }
     ],
     vehicles: [
         { id: 'vehicleType', label: 'Loại xe', type: 'select', options: ['Xe tải', 'Xe container', 'Xe khách', 'Xe đầu kéo'] },
@@ -276,8 +276,14 @@ function openModal(action, moduleId, id = null) {
     
         input.id = f.id;
         input.name = f.id;
-        input.required = true;
-    
+ 
+        if (f.required) input.required = true;
+        if (f.pattern) input.pattern = f.pattern;
+        if (f.title) input.title = f.title;
+        if (f.maxLength) input.maxLength = f.maxLength;
+        if (f.min) input.min = f.min;
+        if (f.max) input.max = f.max;
+
         // Gán giá trị khi sửa
         if (existingItem && f.type !== 'file') {
             input.value = existingItem[f.id] || '';
@@ -433,6 +439,7 @@ function generateCostsID(existingcosts) {
     });
     return "CP" + (max + 1).toString().padStart(3, "0");
 }
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('dynamicForm');
