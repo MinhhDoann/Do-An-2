@@ -13,14 +13,14 @@ document.getElementById("loginForm").addEventListener("submit", function (e) {
     }
 
 
-    if (role === "admin" && email === "admin" && password === "123456") {
+    if (role === "admin" && email === "admin@gmail.com" && password === "123456") {
         message.textContent = "Đăng nhập thành công với quyền Admin!";
         message.style.color = "green";
         setTimeout(() => {
             window.location.href = "admin.html";  // 👉 chuyển sang admin.html
         }, 1000);
     }
-    else if (role === "staff" && email === "staff" && password === "123456") {
+    else if (role === "staff" && email === "staff@gmail.com" && password === "123456") {
         message.textContent = "Đăng nhập thành công với quyền Nhân viên!";
         message.style.color = "green";
         setTimeout(() => {

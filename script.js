@@ -12,3 +12,13 @@ const DB = { containers: [], cargo: [], transports: [], docs: [], partners: [], 
 function loadDB() { try { const raw = localStorage.getItem('cl_db'); if (raw) Object.assign(DB, JSON.parse(raw)); } catch (e) { console.warn(e) } }
 function saveDB() { localStorage.setItem('cl_db', JSON.stringify(DB)); renderAll(); }
 
+// --- Containers ---
+document.getElementById('saveContainer').addEventListener('click', () => {
+    const no = document.getElementById('cNumber').value.trim(); if (!no) return alert('Nhập số container');
+    const rec = { id: Date.now(), no, type: document.getElementById('cType').value, loc: document.getElementById('cLocation').value, status: document.getElementById('cStatus').value };
+    DB.containers.unshift(rec); saveDB(); clearContainerForm(); showSection('containers');
+});
+function clearContainerForm() { ['cNumber', 'cLocation'].forEach(id => document.getElementById(id).value = ''); }
+function renderContainers() { const tbody = document.querySelector('#tblContainers tbody'); tbody.innerHTML = ''; const q = document.getElementById('cFilter').value.toLowerCase(); DB.containers.forEach((c, i) => { if (q && !(c.no || '').toLowerCase().includes(q) && !(c.type || '').toLowerCase().includes(q) && !(c.loc || '').toLowerCase().includes(q)) return; const tr = document.createElement('tr'); tr.innerHTML = `<td>${i + 1}</td><td>${c.no}</td><td>${c.type}</td><td>${c.loc}</td><td>${c.status}</td><td><button onclick="removeContainer(${c.id})">Xóa</button></td>`; tbody.appendChild(tr); }); populateContainerSelect(); }
+function removeContainer(id) { DB.containers = DB.containers.filter(c => c.id !== id); saveDB(); }
+
