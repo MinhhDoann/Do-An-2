@@ -61,16 +61,20 @@ export const defaultData = {
     costs: [
         { id: 'CP001', contractId: 'HD001', costType: 'Vận chuyển container CTN001', amount: 1000000 },
         { id: 'CP002', contractId: 'HD001', costType: 'Bảo trì container CTN001', amount: 500000 },
-        { id: 'CP003', contractId: 'HD002', costType: 'Lưu kho container CTN002', amount: 300000 }
+        { id: 'CP003', contractId: 'HD002', costType: 'Lưu kho container CTN002', amount: 2000000 },
+        { id: 'CP004', contractId: 'HD002', costType: 'Vệ sinh container CTN002', amount: 1000000 },
+        { id: 'CP005', contractId: 'HD003', costType: 'Phí hải quan container CTN003', amount: 4000000 },
+        { id: 'CP006', contractId: 'HD003', costType: 'Phí vận tải quốc tế', amount: 21000000 }
     ],
     invoices: [
         { id: 'HDN001', contractId: 'HD001', amount: 1500000, issueDate: '2025-09-10' },
-        { id: 'HDN002', contractId: 'HD002', amount: 300000, issueDate: '2025-09-15' },
+        { id: 'HDN002', contractId: 'HD002', amount: 3000000, issueDate: '2025-09-15' },
         { id: 'HDN003', contractId: 'HD003', amount: 25000000, issueDate: '2025-09-20' }
     ],
+
     payments: [
         { id: 'TT001', invoiceId: 'HDN001', amount: 1500000, method: 'Chuyển khoản', time: '2025-09-11T09:00' },
-        { id: 'TT002', invoiceId: 'HDN002', amount: 300000, method: 'Tiền mặt', time: '2025-09-16T12:00' },
+        { id: 'TT002', invoiceId: 'HDN002', amount: 3000000, method: 'Tiền mặt', time: '2025-09-16T12:00' },
         { id: 'TT003', invoiceId: 'HDN003', amount: 25000000, method: 'Chuyển khoản', time: '2025-09-21T15:00' }
     ],
     sensors: [

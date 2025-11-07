@@ -502,6 +502,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const idx = appData[moduleId].findIndex(i => i.id === id);
                 if (idx >= 0) appData[moduleId][idx] = newItem;
             }
+            if (moduleId === 'costs') {
+                const contractId = newItem.contractId;
+                // Tìm hóa đơn có cùng hợp đồng
+                const relatedInvoices = appData.invoices.filter(inv => inv.contractId === contractId);
+                if (relatedInvoices.length > 0) {
+                    relatedInvoices.forEach(inv => {
+                        inv.amount = (parseFloat(inv.amount) || 0) + parseFloat(newItem.amount || 0);
+                    });
+                    saveData('invoices', appData.invoices);
+                }
+            }
 
             saveData(moduleId, appData[moduleId]);
             loadTableData(moduleId, appData[moduleId]);
