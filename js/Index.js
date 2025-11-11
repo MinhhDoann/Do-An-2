@@ -140,7 +140,7 @@ const formFields = {
     warehouses: [
         { id: 'name', label: 'Tên kho', type: 'text'},
         { id: 'capacity', label: 'Sức chứa (tấn)', type: 'number', min:'0' },
-        { id: 'location', label: 'Vị trí', type: 'text' },
+        { id: 'location', label: 'Vị trí', type: 'text'},
         { id: 'manager', label: 'Người phụ trách', type: 'text' }
     ],
     customers: [
@@ -167,16 +167,16 @@ const formFields = {
         { id: 'customerId', label: 'Khách hàng', type: 'number' },
         { id: 'signDate', label: 'Ngày ký', type: 'date' },
         { id: 'expiryDate', label: 'Ngày hết hạn', type: 'date' },
-        { id: 'value', label: 'Giá trị hợp đồng', type: 'number' }
+        { id: 'value', label: 'Giá trị hợp đồng', type: 'number', min:'0' }
     ],
     invoices: [
         { id: 'contractId', label: 'Hợp đồng', type: 'number' },
-        { id: 'amount', label: 'Số tiền', type: 'number' },
+        { id: 'amount', label: 'Số tiền', type: 'number', min:'0' },
         { id: 'issueDate', label: 'Ngày phát hành', type: 'date' }
     ],
     payments: [
         { id: 'invoiceId', label: 'Hóa đơn', type: 'number' },
-        { id: 'amount', label: 'Số tiền', type: 'number' },
+        { id: 'amount', label: 'Số tiền', type: 'number', min:'0' },
         { id: 'method', label: 'Phương thức thanh toán', type: 'text' },
         { id: 'time', label: 'Thời gian', type: 'datetime-local' }
     ],
@@ -194,10 +194,48 @@ const formFields = {
     costs: [
         { id: 'contractId', label: 'Hợp đồng', type: 'number' },
         { id: 'costType', label: 'Loại chi phí', type: 'text' },
-        { id: 'amount', label: 'Số tiền', type: 'number' }
+        { id: 'amount', label: 'Số tiền', type: 'number', min:'0'}
     ]
 };
 
+const actionToStatus = {
+    'Nhập container': 'Rỗng',
+    'Đóng hàng': 'Đã đóng hàng',
+    'Xuất kho': 'Đang vận chuyển',
+    'Giao hàng': 'Rỗng',
+    'Kiểm tra container': 'Cần bảo trì'
+  };
+  
+  function addContainerHistory(history) {
+    const c = appData.containers.find(x => x.id === history.containerId);
+    if (!c) return alert(` Không tìm thấy container ${history.containerId}`);
+  
+    appData.containerhistory.push(history);
+  
+    const newStatus = actionToStatus[history.action];
+    if (newStatus) c.status = newStatus;
+  
+    saveData('containers', appData.containers);
+    saveData('containerhistory', appData.containerhistory);
+  
+    alert(` Đã cập nhật trạng thái container ${c.id}: ${c.status}`);
+  }
+  
+  export function saveFormData(moduleId, newItem, isAdd = true, id = null) {
+    const relation = dataRelations[moduleId];
+    
+    if (relation) {
+      for (const [field, targetModule] of Object.entries(relation)) {
+        const targetList = appData[targetModule];
+        const exists = targetList.some(t => t.id === newItem[field]);
+        if (!exists) {
+          alert(` Giá trị "${field}" (${newItem[field]}) không tồn tại trong ${targetModule}!`);
+          return;
+        }
+      }
+    }
+  }
+  
 // ====== HÀM MỞ / ĐÓNG MODAL ======
 function openModal(action, moduleId, id = null) {
     const modal = document.getElementById('dynamicModal');
@@ -503,15 +541,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-
-            if (isAdd) appData[moduleId].push(newItem);
-            else {
+            if (isAdd) {
+                if (moduleId === 'containerhistory') {
+                  addContainerHistory(newItem);
+                } else {
+                  appData[moduleId].push(newItem);
+                  saveData(moduleId, appData[moduleId]);
+                }
+              } else {
                 const idx = appData[moduleId].findIndex(i => i.id === id);
                 if (idx >= 0) appData[moduleId][idx] = newItem;
-            }
+                saveData(moduleId, appData[moduleId]);
+              }
+                       
             if (moduleId === 'costs') {
                 const contractId = newItem.contractId;
-                // Tìm hóa đơn có cùng hợp đồng
+
                 const relatedInvoices = appData.invoices.filter(inv => inv.contractId === contractId);
                 if (relatedInvoices.length > 0) {
                     relatedInvoices.forEach(inv => {
