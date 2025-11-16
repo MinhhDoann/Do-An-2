@@ -340,6 +340,20 @@ function closeModal() {
 function deleteItem(moduleId, id) {
     if (!confirm('Xác nhận xóa?')) return;
     appData[moduleId] = appData[moduleId].filter(i => i.id !== id);
+    appData[moduleId].forEach((item, index) => {
+        item.id = "CTN" + (index + 1).toString().padStart(3, "0");
+        item.id = "LS"  + (index + 1).toString().padStart(3, "0");
+        item.id = "KHO" + (index + 1).toString().padStart(3, "0");
+        item.id = "XE"  + (index + 1).toString().padStart(3, "0");
+        item.id = "VC" + (index + 1).toString().padStart(3, "0");
+        item.id = "KH"  + (index + 1).toString().padStart(3, "0");
+        item.id = "HD" + (index + 1).toString().padStart(3, "0");
+        item.id = "CP"  + (index + 1).toString().padStart(3, "0");
+        item.id = "HDN" + (index + 1).toString().padStart(3, "0");
+        item.id = "TT"  + (index + 1).toString().padStart(3, "0");
+        item.id = "CB" + (index + 1).toString().padStart(3, "0");
+        item.id = "CBao"  + (index + 1).toString().padStart(3, "0");
+    });
     saveData(moduleId, appData[moduleId]);
     loadTableData(moduleId, appData[moduleId]);
 }
