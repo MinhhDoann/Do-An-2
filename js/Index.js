@@ -74,23 +74,33 @@ const dataRelations = {
     costs: { contractId: 'contracts' }
 };
 
+let currentPage = 1;
+const itemsPerPage = 9;
 // ====== TẢI DỮ LIỆU RA BẢNG ======
 function loadTableData(moduleId, data) {
     const tbody = document.querySelector(`#${moduleId} tbody`);
     if (!tbody) return;
     tbody.innerHTML = '';
 
+    const totalItems = data.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    if (currentPage > totalPages) currentPage = totalPages || 1;
+
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const pageData = data.slice(start, end);
+
     const config = tableConfigs[moduleId];
     if (!config) return;
 
-    if (!data || data.length === 0) {
+    if (pageData.length === 0) {
         const emptyRow = document.createElement('tr');
         emptyRow.innerHTML = `<td colspan="${config.fields.length + 1}" style="text-align:center;">Chưa có dữ liệu</td>`;
         tbody.appendChild(emptyRow);
         return;
     }
 
-    data.forEach(item => {
+    pageData.forEach(item => {
         const row = document.createElement('tr');
 
         config.fields.forEach(f => {
@@ -99,10 +109,12 @@ function loadTableData(moduleId, data) {
 
             if (f === 'image') {
                 const imgSrc = value?.startsWith('data:image') ? value : `./image/${value}`;
-                cell.innerHTML = `<img src="${imgSrc}" alt="Hình xe" style="width:80px; height:auto; border-radius:8px;">`;
-            }else if (f === 'description') {
+                cell.innerHTML = `<img src="${imgSrc}" style="width:80px; border-radius:8px;">`;
+            } 
+            else if (f === 'description') {
                 cell.innerHTML = `<div style="max-width:250px; white-space:normal;">${value}</div>`;
-            } else {
+            } 
+            else {
                 cell.textContent = value ?? '';
             }
 
@@ -117,7 +129,9 @@ function loadTableData(moduleId, data) {
         `;
         row.appendChild(actions);
         tbody.appendChild(row);
+    
     });
+    renderPagination(moduleId, totalPages)
 }
 
 
@@ -340,20 +354,6 @@ function closeModal() {
 function deleteItem(moduleId, id) {
     if (!confirm('Xác nhận xóa?')) return;
     appData[moduleId] = appData[moduleId].filter(i => i.id !== id);
-    appData[moduleId].forEach((item, index) => {
-        item.id = "CTN" + (index + 1).toString().padStart(3, "0");
-        item.id = "LS"  + (index + 1).toString().padStart(3, "0");
-        item.id = "KHO" + (index + 1).toString().padStart(3, "0");
-        item.id = "XE"  + (index + 1).toString().padStart(3, "0");
-        item.id = "VC" + (index + 1).toString().padStart(3, "0");
-        item.id = "KH"  + (index + 1).toString().padStart(3, "0");
-        item.id = "HD" + (index + 1).toString().padStart(3, "0");
-        item.id = "CP"  + (index + 1).toString().padStart(3, "0");
-        item.id = "HDN" + (index + 1).toString().padStart(3, "0");
-        item.id = "TT"  + (index + 1).toString().padStart(3, "0");
-        item.id = "CB" + (index + 1).toString().padStart(3, "0");
-        item.id = "CBao"  + (index + 1).toString().padStart(3, "0");
-    });
     saveData(moduleId, appData[moduleId]);
     loadTableData(moduleId, appData[moduleId]);
 }
