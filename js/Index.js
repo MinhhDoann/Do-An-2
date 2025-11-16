@@ -76,6 +76,7 @@ const dataRelations = {
 
 let currentPage = 1;
 const itemsPerPage = 9;
+
 // ====== TẢI DỮ LIỆU RA BẢNG ======
 function loadTableData(moduleId, data) {
     const tbody = document.querySelector(`#${moduleId} tbody`);
@@ -358,6 +359,38 @@ function deleteItem(moduleId, id) {
     loadTableData(moduleId, appData[moduleId]);
 }
 
+// thêm nút phân trang
+function renderPagination(moduleId, totalPages,) {
+    const container = document.querySelector(`#${moduleId}Pagination`);
+    container.innerHTML = "";
+    if (!container) {
+        console.warn(`Không tìm thấy #${moduleId}Pagination`);
+        return;
+    }
+    container.innerHTML = "";
+
+    let html = "";
+    if (currentPage > 1) {
+        html += `<button onclick="changePage(${currentPage - 1}, '${moduleId}')">Prev</button>`;
+    }
+    for (let i = 1; i <= totalPages; i++) {
+        html += `<button class="${i === currentPage ? 'active' : ''}"
+                     onclick="changePage(${i}, '${moduleId}')">${i}</button>`;
+    }
+    if (currentPage < totalPages) {
+        html += `<button onclick="changePage(${currentPage + 1}, '${moduleId}')">Next</button>`;
+    }
+
+    container.innerHTML = html;
+}
+
+function changePage(page, moduleId) {
+    currentPage = page;
+    loadTableData(moduleId, appData[moduleId]);
+}
+
+
+
 // ====== CHẠY SAU KHI DOM SẴN SÀNG ======
 function generateContainerID(existingContainers) {
     let max = 0;
@@ -596,3 +629,5 @@ window.showModule = showModule;
 window.openModal = openModal;
 window.closeModal = closeModal;
 window.deleteItem = deleteItem;
+window.changePage = changePage;
+window.renderPagination = renderPagination;
