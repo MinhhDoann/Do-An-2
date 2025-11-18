@@ -75,10 +75,12 @@ const dataRelations = {
 };
 
 let currentPage = 1;
-const itemsPerPage = 9;
+const itemsPerPageDefault = 9;
 
 // ====== TẢI DỮ LIỆU RA BẢNG ======
 function loadTableData(moduleId, data) {
+    const itemsPerPage = (moduleId === "vehicles") ? 5 : itemsPerPageDefault;
+
     const tbody = document.querySelector(`#${moduleId} tbody`);
     if (!tbody) return;
     tbody.innerHTML = '';
@@ -110,7 +112,7 @@ function loadTableData(moduleId, data) {
 
             if (f === 'image') {
                 const imgSrc = value?.startsWith('data:image') ? value : `./image/${value}`;
-                cell.innerHTML = `<img src="${imgSrc}" style="width:80px; border-radius:8px;">`;
+                cell.innerHTML = `<img src="${imgSrc}" style="width:80px; height: 55px; border-radius:8px;">`;
             } 
             else if (f === 'description') {
                 cell.innerHTML = `<div style="max-width:250px; white-space:normal;">${value}</div>`;
@@ -361,11 +363,20 @@ function deleteItem(moduleId, id) {
 
 // thêm nút phân trang
 function renderPagination(moduleId, totalPages,) {
-    const container = document.querySelector(`#${moduleId}Pagination`);
-    container.innerHTML = "";
+    if (!totalPages || totalPages < 1) totalPages = 1;
+
+    const paginationId = `${moduleId}Pagination`;
+
+    let container = document.querySelector(`#${paginationId}`);
+
     if (!container) {
-        console.warn(`Không tìm thấy #${moduleId}Pagination`);
-        return;
+        const moduleDiv = document.querySelector(`#${moduleId}`);
+        if (!moduleDiv) return;
+
+        container = document.createElement("div");
+        container.id = paginationId;
+        container.className = "pagination";
+        moduleDiv.appendChild(container);
     }
     container.innerHTML = "";
 
@@ -385,6 +396,12 @@ function renderPagination(moduleId, totalPages,) {
 }
 
 function changePage(page, moduleId) {
+    const data = appData[moduleId];
+
+    if (!data) {
+        console.error("Không tìm thấy dữ liệu cho module:", moduleId);
+        return;
+    }
     currentPage = page;
     loadTableData(moduleId, appData[moduleId]);
 }
