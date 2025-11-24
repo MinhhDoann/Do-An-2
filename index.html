@@ -29,10 +29,9 @@
             <h2>Danh mục</h2>
             <ul class="tree-menu">
                 <li class="menu-item">
-                    <a class="menu-toggle">📦 Quản lý Hàng hóa</a>
+                    <a class="menu-toggle">📦 Quản lý Container</a>
                     <ul class="sub-menu">
-                        <li><a onclick="showModule('categories')">Danh mục Loại hàng</a></li>
-                        <li><a onclick="showModule('containers')" class="active">Container</a></li>
+                        <li><a onclick="showModule('containers')">Danh sách Container</a></li>
                         <li><a onclick="showModule('containerhistory')">Lịch sử Container</a></li>
                     </ul>
                 </li>
@@ -46,7 +45,8 @@
                     <a class="menu-toggle">🚚 Quản lý Vận chuyển</a>
                     <ul class="sub-menu">
                         <li><a onclick="showModule('vehicles')">Phương tiện</a></li>
-                        <li><a onclick="showModule('transports')">Vận chuyển</a></li>
+                        <li><a onclick="showModule('trips')">Chuyến đi / Lịch trình</a></li>
+                        <li><a onclick="showModule('ports')">Danh mục Cảng</a></li>    
                     </ul>
                 </li>
                 <li class="menu-item">
@@ -69,6 +69,12 @@
                     <ul class="sub-menu">
                         <li><a onclick="showModule('sensors')">Cảm biến</a></li>
                         <li><a onclick="showModule('alerts')">Cảnh báo</a></li>
+                    </ul>
+                </li>
+                <li class="menu-item">
+                    <a class="menu-toggle">Người dùng & Phân quyền</a>
+                    <ul class="sub-menu">
+                        <li><a onclick="showModule('users')">Quản lý tài khoản</a></li>
                     </ul>
                 </li>
             </ul>
@@ -182,21 +188,43 @@
                 </table>
             </div>       
         
-            <!-- ====== TRANSPORTS ====== -->
-            <div id="transports" class="module-content">
+            <!-- ====== Trips ====== -->
+            <div id="trips" class="module-content">
                 <div class="header">
-                    <h2>🚢 Quản lý Vận chuyển</h2>
-                    <button onclick="openModal('add','transports')">Thêm Lịch trình</button>
+                    <h2>🚢 Quản lý Chuyến Đi</h2>
+                    <button onclick="openModal('add','trips')">Thêm Lịch trình</button>
                 </div>
                 <table>
                     <thead>
                         <tr>
                             <th>ID</th>
+                            <th>Mã chuyến</th>
                             <th>Cảng đi</th>
                             <th>Cảng đến</th>
-                            <th>Lịch trình</th>
-                            <th>Trạng thái</th>
+                            <th>ETD</th>
+                            <th>ETA</th>
                             <th>Phương tiện</th>
+                            <th>Tài xế</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div id="ports" class="module-content">
+                <div class="header">
+                    <h2>Danh mục Cảng</h2>
+                    <button onclick="openModal('add','ports')">Thêm Cảng</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên cảng</th>
+                            <th>Mã cảng</th>
+                            <th>Địa chỉ</th>
                             <th>Hành động</th>
                         </tr>
                     </thead>
@@ -326,6 +354,29 @@
                     <tbody></tbody>
                 </table>
             </div>
+            
+            <!-- === User ==== -->
+            <div id="users" class="module-content">
+                <div class="header">
+                    <h2>Quản lý Người dùng</h2>
+                    <button onclick="openModal('add','users')">Thêm Người dùng</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Họ tên</th>
+                            <th>Email</th>
+                            <th>Vai trò</th>
+                            <th>Kho</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            
             <div id="containersPagination" class="pagination"></div>     
         </div>       
     </div>
