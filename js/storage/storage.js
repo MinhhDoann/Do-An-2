@@ -53,11 +53,16 @@ export const defaultData = {
         { id: 'KHO002', name: 'Kho HN', capacity: 800, location: 'Hà Nội', manager: 'Trần Thị B' },
         { id: 'KHO003', name: 'Kho DN', capacity: 600, location: 'Đà Nẵng', manager: 'Lê Văn C' }
     ],
-    transports: [
-        { id: 'VC001', fromPort: 'Cảng HCM', toPort: 'Cảng HN', schedule: '2025-10-05', status: 'Lên kế hoạch', vehicleId: 'XE001' },
-        { id: 'VC002', fromPort: 'Cảng HN', toPort: 'Cảng ĐN', schedule: '2025-10-06', status: 'Đang thực hiện', vehicleId: 'XE002' },
-        { id: 'VC003', fromPort: 'Cảng ĐN', toPort: 'Cảng HCM', schedule: '2025-10-07', status: 'Hoàn thành', vehicleId: 'XE003' }
+    trips: [
+        { id: 'VC001', voyageNumber: 'VCN-001', fromPortId: 'PORT001', toPortId: 'PORT002', etd: '2025-10-05', eta: '2025-10-07', vehicleId: 'XE001', status: 'Chuẩn bị' },
+        { id: 'VC002', voyageNumber: 'VCN-002', fromPortId: 'PORT002', toPortId: 'PORT003', etd: '2025-10-06', eta: '2025-10-08', vehicleId: 'XE002', status: 'Đang chạy' },
+        { id: 'VC003', voyageNumber: 'VCN-003', fromPortId: 'PORT003', toPortId: 'PORT001', etd: '2025-10-07', eta: '2025-10-09', vehicleId: 'XE003', status: 'Hoàn thành' }
     ],
+    ports: [
+        { id: 'PORT001', name: 'Cảng Sài Gòn', code: 'SGN', location: 'TP.HCM' },
+        { id: 'PORT002', name: 'Cảng Hải Phòng', code: 'HPH', location: 'Hải Phòng' },
+        { id: 'PORT003', name: 'Cảng Đà Nẵng', code: 'DAD', location: 'Đà Nẵng' }
+    ],  
     costs: [
         { id: 'CP001', contractId: 'HD001', costType: 'Vận chuyển container CTN001', amount: 1000000 },
         { id: 'CP002', contractId: 'HD001', costType: 'Bảo trì container CTN001', amount: 500000 },
@@ -86,18 +91,31 @@ export const defaultData = {
         { id: 'CBao001', containerId: 'CTN001', alertType: 'Nhiệt độ cao', time: '2025-09-01T09:00' },
         { id: 'CBao002', containerId: 'CTN002', alertType: 'Độ ẩm bất thường', time: '2025-09-02T12:00' },
         { id: 'CBao003', containerId: 'CTN003', alertType: 'Vị trí bất thường', time: '2025-09-03T15:00' }
+    ],
+    users: [
+        { id: 'USER001', name: 'Admin Tổng', email: 'admin@company.com', role: 'admin', warehouseId: 'KHO001', status: 'Hoạt động' },
+        { id: 'USER002', name: 'Nguyễn Văn tài', email: 'taixe@company.com', role: 'nhân viên kho', warehouseId: 'KHO001', status: 'Hoạt động' },
+        { id: 'USER003', name: 'Hoàng La Thám', email: 'ketoan@company.com', role: 'nhân viên kho', warehouseId: 'KHO002', status: 'Hoạt động' },
+        { id: 'USER004', name: 'Lê Văn Quý', email: 'quanly@company.com', role: 'Điều Phối', warehouseId: 'KHO003', status: 'Hoạt động' }
     ]
 };
 
 // ====== HÀM QUẢN LÝ LOCALSTORAGE ======
 export function loadAllData() {
     const data = {};
-    Object.keys(defaultData).forEach(module => {
+    const allModules = [
+        'customers', 'contracts', 'vehicles', 'containers', 'containerhistory',
+        'warehouses', 'trips', 'ports', 'costs', 'invoices', 'payments',
+        'sensors', 'alerts', 'users'
+    ];
+    
+    allModules.forEach(module => {
         const stored = localStorage.getItem(module);
-        if (stored) data[module] = JSON.parse(stored);
-        else {
-            data[module] = defaultData[module];
-            localStorage.setItem(module, JSON.stringify(defaultData[module]));
+        if (stored) {
+            data[module] = JSON.parse(stored);
+        } else {
+            data[module] = defaultData[module] || [];
+            localStorage.setItem(module, JSON.stringify(data[module]));
         }
     });
     return data;
@@ -137,4 +155,39 @@ export function importData(module, fileContent) {
         console.error('Import failed:', error);
         return null;
     }
+}
+export function exportAllData() {
+    const allData = {};
+    const allModules = [
+        'customers', 'contracts', 'vehicles', 'containers', 'containerhistory',
+        'warehouses', 'trips', 'ports', 'costs', 'invoices', 'payments',
+        'sensor_logs', 'alerts', 'users'
+    ];
+    
+    allModules.forEach(module => {
+        allData[module] = JSON.parse(localStorage.getItem(module) || '[]');
+    });
+    
+    const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+export function resetAllData() {
+    const allModules = [
+        'customers', 'contracts', 'vehicles', 'containers', 'containerhistory',
+        'warehouses', 'trips', 'ports', 'costs', 'invoices', 'payments',
+        'sensor_logs', 'alerts', 'users'
+    ];
+    
+    allModules.forEach(module => {
+        if (defaultData[module]) {
+            localStorage.setItem(module, JSON.stringify(defaultData[module]));
+        }
+    });
+    return loadAllData();
 }

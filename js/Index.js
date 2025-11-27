@@ -85,7 +85,7 @@ const itemsPerPageDefault = 9;
 
 // ====== TẢI DỮ LIỆU RA BẢNG ======
 function loadTableData(moduleId, data) {
-    const itemsPerPage = (moduleId === "vehicles") ? 5 : itemsPerPageDefault;
+    const itemsPerPage = (moduleId === "vehicles") ? Math.min(5, data.length) : 9;
 
     const tbody = document.querySelector(`#${moduleId} tbody`);
     if (!tbody) return;
@@ -93,7 +93,11 @@ function loadTableData(moduleId, data) {
 
     const totalItems = data.length;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
-    if (currentPage > totalPages) currentPage = totalPages || 1;
+    if (totalPages === 0) {
+        currentPage = 1;
+    } else if (currentPage > totalPages) {
+        currentPage = totalPages;
+    }
 
     const start = (currentPage - 1) * itemsPerPage;
     const end = start + itemsPerPage;
@@ -102,10 +106,11 @@ function loadTableData(moduleId, data) {
     const config = tableConfigs[moduleId];
     if (!config) return;
 
-    if (pageData.length === 0) {
+    if (totalItems === 0) {
         const emptyRow = document.createElement('tr');
-        emptyRow.innerHTML = `<td colspan="${config.fields.length + 1}" style="text-align:center;">Chưa có dữ liệu</td>`;
+        emptyRow.innerHTML = `<td colspan="${config.fields.length + 1}" style="text-align:center; padding:20px;">📭 Chưa có dữ liệu</td>`;
         tbody.appendChild(emptyRow);
+        renderPagination(moduleId, 1);
         return;
     }
 
@@ -388,7 +393,12 @@ function deleteItem(moduleId, id) {
 
 // thêm nút phân trang
 function renderPagination(moduleId, totalPages,) {
-    if (!totalPages || totalPages < 1) totalPages = 1;
+    if (!totalPages || totalPages <= 1) {
+        const paginationId = `${moduleId}Pagination`;
+        const container = document.querySelector(`#${paginationId}`);
+        if (container) container.style.display = 'none';
+        return;
+    }
 
     const paginationId = `${moduleId}Pagination`;
 
@@ -403,18 +413,20 @@ function renderPagination(moduleId, totalPages,) {
         container.className = "pagination";
         moduleDiv.appendChild(container);
     }
+
+    container.style.display = 'flex';
     container.innerHTML = "";
 
     let html = "";
     if (currentPage > 1) {
-        html += `<button onclick="changePage(${currentPage - 1}, '${moduleId}')">Prev</button>`;
+        html += `<button onclick="changePage(${currentPage - 1}, '${moduleId}')">‹ Prev</button>`;
     }
     for (let i = 1; i <= totalPages; i++) {
         html += `<button class="${i === currentPage ? 'active' : ''}"
                      onclick="changePage(${i}, '${moduleId}')">${i}</button>`;
     }
     if (currentPage < totalPages) {
-        html += `<button onclick="changePage(${currentPage + 1}, '${moduleId}')">Next</button>`;
+        html += `<button onclick="changePage(${currentPage + 1}, '${moduleId}')">Next ›</button>`;
     }
 
     container.innerHTML = html;
