@@ -18,7 +18,10 @@ function updateDisplayMaps() {
         vehicles: getMap(appData.vehicles, 'id', 'licensePlate'),
         contracts: getMap(appData.contracts, 'id', 'id'),
         invoices: getMap(appData.invoices, 'id', 'id'),
-        containers: getMap(appData.containers, 'id', 'id')
+        containers: getMap(appData.containers, 'id', 'id'),
+        ports: getMap(appData.ports, 'id', 'name'),           
+        trips: getMap(appData.trips, 'id', 'voyageNumber'),   
+        users: getMap(appData.users, 'id', 'name')  
     };
 }
 
@@ -40,7 +43,7 @@ function showModule(moduleId) {
     document.querySelectorAll('.sub-menu li a').forEach(a => a.classList.remove('active'));
     const activeLink = document.querySelector(`a[onclick="showModule('${moduleId}')"]`);
     if (activeLink) activeLink.classList.add('active');
-    loadTableData(moduleId, appData[moduleId]);
+    loadTableData(moduleId, appData[moduleId] || []);
 }
 
 // ====== CẤU HÌNH CÁC BẢNG ======
@@ -52,11 +55,13 @@ const tableConfigs = {
     vehicles: {
         fields: ['id','vehicleType','licensePlate','image', 'capacity', 'status', 'description']
     },
-    transports: { fields: ['id', 'fromPort', 'toPort', 'schedule', 'status', 'vehicleId'] },
+    trips: { fields: ['id', 'voyageNumber', 'fromPortId', 'toPortId', 'etd', 'eta', 'vehicleId', 'status'] },  
+    ports: { fields: ['id', 'name', 'code', 'location'] },                                                                  
+    users: { fields: ['id', 'name', 'email', 'role', 'warehouseId', 'status'] },                               
     contracts: { fields: ['id', 'customerId', 'signDate', 'expiryDate', 'value'] },
     invoices: { fields: ['id', 'contractId', 'amount', 'issueDate'] },
     payments: { fields: ['id', 'invoiceId', 'amount', 'method', 'time'] },
-    sensors: { fields: ['id', 'containerId', 'temperature', 'humidity', 'gps'] },
+    sensors: { fields: ['id', 'containerId', 'temperature', 'humidity', 'gps', 'timestamp'] },
     alerts: { fields: ['id', 'containerId', 'alertType', 'time'] },
     costs: { fields: ['id', 'contractId', 'costType', 'amount'] }
 };
@@ -65,13 +70,14 @@ const tableConfigs = {
 const dataRelations = {
     containers: { warehouseId: 'warehouses', vehicleId: 'vehicles', customerId: 'customers' },
     containerhistory: { containerId: 'containers' },
-    transports: { vehicleId: 'vehicles' },
+    trips: { fromPortId: 'ports', toPortId: 'ports', vehicleId: 'vehicles' },
     contracts: { customerId: 'customers' },
     invoices: { contractId: 'contracts' },
     payments: { invoiceId: 'invoices' },
     sensors: { containerId: 'containers' },
     alerts: { containerId: 'containers' },
-    costs: { contractId: 'contracts' }
+    costs: { contractId: 'contracts' },
+    users: { warehouseId: 'warehouses' }  
 };
 
 let currentPage = 1;
@@ -108,7 +114,7 @@ function loadTableData(moduleId, data) {
 
         config.fields.forEach(f => {
             const cell = document.createElement('td');
-            const value = item[f];
+            let value = item[f];
 
             if (f === 'image') {
                 const imgSrc = value?.startsWith('data:image') ? value : `./image/${value}`;
@@ -117,6 +123,11 @@ function loadTableData(moduleId, data) {
             else if (f === 'description') {
                 cell.innerHTML = `<div style="max-width:250px; white-space:normal;">${value}</div>`;
             } 
+            else if (f.endsWith('Id') || f === 'fromPortId' || f === 'toPortId') {
+                const relModule = f.replace('Id', '').toLowerCase() + 's';
+                value = getDisplayValue(relModule, value);
+                cell.textContent = value || '';
+            }
             else {
                 cell.textContent = value ?? '';
             }
@@ -173,12 +184,19 @@ const formFields = {
         { id: 'status', label: 'Trạng thái', type: 'select', options: ['Đang hoạt động', 'Đang sửa chữa', 'Đang vận chuyển', 'Ngừng sử dụng'] },
         { id: 'description', label: 'Mô tả chi tiết', type: 'textarea' }
     ],
-    transports: [
-        { id: 'fromPort', label: 'Cảng đi', type: 'text' },
-        { id: 'toPort', label: 'Cảng đến', type: 'text' },
-        { id: 'schedule', label: 'Lịch trình', type: 'date' },
-        { id: 'status', label: 'Trạng thái', type: 'text' },
-        { id: 'vehicleId', label: 'Phương tiện', type: 'number' }
+    trips: [
+        { id: 'voyageNumber', label: 'Mã chuyến', type: 'text' },
+        { id: 'fromPortId', label: 'Cảng đi', type: 'number' },
+        { id: 'toPortId', label: 'Cảng đến', type: 'number' },
+        { id: 'etd', label: 'ETD', type: 'date' },
+        { id: 'eta', label: 'ETA', type: 'date' },
+        { id: 'vehicleId', label: 'Phương tiện', type: 'number' },
+        { id: 'status', label: 'Trạng thái', type: 'text' }
+    ],
+    ports: [ 
+    { id: 'name', label: 'Tên cảng', type: 'text'},
+    { id: 'code', label: 'Mã cảng', type: 'text'},
+    { id: 'location', label: 'Vị trí', type: 'text'}
     ],
     contracts: [
         { id: 'customerId', label: 'Khách hàng', type: 'number' },
@@ -212,7 +230,14 @@ const formFields = {
         { id: 'contractId', label: 'Hợp đồng', type: 'number' },
         { id: 'costType', label: 'Loại chi phí', type: 'text' },
         { id: 'amount', label: 'Số tiền', type: 'number', min:'0'}
-    ]
+    ],
+    users: [
+    { id: 'name', label: 'Họ tên', type: 'text'},
+    { id: 'email', label: 'Email', type: 'email'},
+    { id: 'role', label: 'Vai trò', type: 'select', options: ['admin','quản lý kho','tài xế','kế toán'] },
+    { id: 'warehouseId', label: 'Kho', type: 'number' },
+    { id: 'status', label: 'Trạng thái', type: 'select', options: ['Hoạt động','Khóa'] }
+]
 };
 
 const actionToStatus = {
@@ -564,8 +589,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     id = generateCustomersID(appData.customers);
                 } else if (moduleId === 'vehicles') {
                     id = generateVehiclesID(appData.vehicles);
-                } else if (moduleId === 'transports') {
-                    id = generateTransportsID(appData.transports);
+                }else if (moduleId === 'trips') {
+                    id = generateTransportsID(appData.trips);
+                } else if (moduleId === 'ports') {
+                    id = "PORT" + (appData.ports?.length + 1 || 1).toString().padStart(3, "0");  
+                } else if (moduleId === 'users') {
+                    id = "USER" + (appData.users?.length + 1 || 1).toString().padStart(3, "0"); 
                 } else if (moduleId === 'contracts') {
                     id = generateContractsID(appData.contracts);
                 } else if (moduleId === 'invoices') {
