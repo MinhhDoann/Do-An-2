@@ -30,10 +30,11 @@
             <ul class="tree-menu">
                 <li class="menu-item">
                     <a class="menu-toggle">📦 Quản lý Container</a>
-                    <ul class="sub-menu">
-                        <li><a onclick="showModule('containers')">Danh sách Container</a></li>
-                        <li><a onclick="showModule('containerhistory')">Lịch sử Container</a></li>
-                    </ul>
+                        <ul class="sub-menu">
+                            <li><a onclick="showModule('containers')">Danh sách Container</a></li>
+                            <li><a onclick="showModule('containerhistory')">Lịch sử Container</a></li>
+                            <li><a onclick="showModule('itemTypes')">Loại hàng</a></li>
+                        </ul>
                 </li>
                 <li class="menu-item">
                     <a class="menu-toggle">🏭 Quản lý Kho bãi</a>
@@ -84,7 +85,7 @@
             <!-- ====== CONTAINERS ====== -->
             <div id="containers" class="module-content active">
                 <div class="header">
-                    <h2>📦 Quản lý Container</h2>
+                    <h2>📦 Danh sách Container</h2>
                     <button onclick="openModal('add','containers')">Thêm Container</button>
                 </div>
                 <table>
@@ -123,11 +124,29 @@
                   <tbody></tbody>
                 </table>
               </div>              
-        
+
+              <div id="itemTypes" class="module-content">
+                <div class="header">
+                  <h2>📂 Loại hàng</h2>
+                  <button onclick="openModal('add','itemTypes')">Thêm loại hàng</button>
+                </div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Loại hàng</th>
+                      <th>Mô tả</th>
+                      <th>Tác vụ</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>      
+
             <!-- ====== WAREHOUSES ====== -->
             <div id="warehouses" class="module-content">
                 <div class="header">
-                    <h2>🏭 Quản lý Kho hàng</h2>
+                    <h2>🏭 Kho lưu trữ</h2>
                     <button onclick="openModal('add','warehouses')">Thêm Kho</button>
                 </div>
                 <table>

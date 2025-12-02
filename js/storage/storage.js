@@ -44,6 +44,12 @@ export const defaultData = {
         { id: 'CTN002', itemTypeId: 'HH002', weight: 3000, status: 'Đang vận chuyển', warehouseId: 'KHO001', vehicleId: 'XE002', customerId: 'KH002' },
         { id: 'CTN003', itemTypeId: 'HH003', weight: 4000, status: 'Lưu kho', warehouseId: 'KHO002', vehicleId: 'XE003', customerId: 'KH003' }
     ],
+    itemTypes: [
+        { id: 'HH001', name: 'Hàng dễ vỡ',       description: 'Rượu, thủy tinh, đồ gốm sứ, cần đóng gói chống sốc' },
+        { id: 'HH002', name: 'Hàng đông lạnh',   description: 'Cá, thịt, hải sản đông lạnh, yêu cầu nhiệt độ dưới -18°C' },
+        { id: 'HH003', name: 'Hàng nguy hiểm',   description: 'Hóa chất, pin lithium, chất dễ cháy – cần giấy phép' },
+        { id: 'HH004', name: 'Hàng cồng kềnh',   description: 'Máy móc lớn, thiết bị công nghiệp, cần xe chuyên dụng' }
+    ],
     containerhistory: [
         { id: 'LS001', containerId: 'CTN001', action: 'Nhập kho', time: '2025-10-01 08:00', location: 'Kho HCM' },
         { id: 'LS002', containerId: 'CTN002', action: 'Vận chuyển', time: '2025-10-02 09:00', location: 'Cảng HN' }
@@ -104,7 +110,7 @@ export const defaultData = {
 export function loadAllData() {
     const data = {};
     const allModules = [
-        'customers', 'contracts', 'vehicles', 'containers', 'containerhistory',
+        'customers', 'contracts', 'vehicles', 'containers','itemTypes', 'containerhistory',
         'warehouses', 'trips', 'ports', 'costs', 'invoices', 'payments',
         'sensors', 'alerts', 'users'
     ];
