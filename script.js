@@ -49,3 +49,24 @@ function clearCargoForm() { ['gDesc', 'gQty'].forEach(id => document.getElementB
 function renderCargo() {    const tbody = document.querySelector('#tblCargo tbody'); tbody.innerHTML = ''; 
                             DB.cargo.forEach((g, i) => { const tr = document.createElement('tr'); tr.innerHTML = `<td>${i + 1}</td><td>${g.desc}</td><td>${g.container || '-'}</td><td>${g.qty}</td><td>${g.type}</td>`; 
                             tbody.appendChild(tr); }); }
+
+// --- Vận tải ---
+document.getElementById('saveTransport').addEventListener('click', () => {
+    const ref = document.getElementById('tRef').value.trim(); if (!ref) return alert('Nhập ref');
+    const rec = { id: Date.now(), ref, type: document.getElementById('tType').value, vehicle: document.getElementById('tVehicle').value, eta: document.getElementById('tETA').value };
+    DB.transports.unshift(rec); saveDB(); clearTransportForm(); showSection('transport');
+});
+function clearTransportForm() { ['tRef', 'tVehicle', 'tETA'].forEach(id => document.getElementById(id).value = ''); }
+function renderTransport() { const tbody = document.querySelector('#tblTransport tbody'); tbody.innerHTML = ''; DB.transports.forEach((t, i) => { const tr = document.createElement('tr'); tr.innerHTML = `<td>${i + 1}</td><td>${t.ref}</td><td>${t.type}</td><td>${t.vehicle}</td><td>${t.eta || '-'}</td>`; tbody.appendChild(tr); }); }
+
+// --- Sân bãi (depot) ---
+function renderYard() {
+    const yard = document.getElementById('yard'); yard.innerHTML = ''; for (let i = 0; i < 32; i++) {
+        const cell = document.createElement('div'); cell.className = 'card'; cell.style.padding = '12px'; cell.style.textAlign = 'center'; cell.style.cursor = 'pointer'; cell.dataset.idx = i; cell.textContent = (DB.containers[i] && DB.containers[i].no) || 'Empty'; cell.addEventListener('click', () => {
+            const c = prompt('Nhập số container cho ô này (empty để xóa):', cell.textContent); if (c === null) return; if (c.toLowerCase() === 'empty') { // clear
+                if (DB.containers[i]) DB.containers.splice(i, 1); saveDB(); renderYard(); return;
+            }
+            const rec = { id: Date.now(), no: c, type: '20DC', loc: 'Yard', status: 'Empty' }; DB.containers[i] = rec; saveDB(); renderYard();
+        }); yard.appendChild(cell);
+    }
+}
