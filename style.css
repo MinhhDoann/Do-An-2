@@ -314,3 +314,13 @@ textarea {
 .nav .has-submenu.active .submenu-toggle::after {
     transform: rotate(90deg);
 }
+
+/*highligh tìm kiếm trong thanh header*/
+
+mark.search-highlight {
+    background-color: #ffec99;
+    color: #4b3800;
+    padding: 0 2px;
+    border-radius: 2px;
+    font-weight: 600;
+}

@@ -1,13 +1,11 @@
 <!doctype html>
 <html lang="vi">
-
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Dashboard Quản lý Container Logistics </title>
+    <title>Dashboard Quản lý Container Logistics</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
     <div class="app">
         <aside class="sidebar">
@@ -52,12 +50,11 @@
                     <button class="submenu-toggle">Nhân sự & Thiết bị</button>
                     <ul class="submenu">
                         <li><button data-section="staff">Nhân sự</button></li>
-                        <li><button data-section="staff">Thiết bị</button></li>
+                        <li><button data-section="equipment">Thiết bị</button></li> <!-- ✅ ĐÃ SỬA -->
                     </ul>
                 </li>
-                
             </ul>
-            <div style="position:absolute;bottom:18px;left:20px;font-size:13px;opacity:.9">Container Logictic</div>
+            <div style="position:absolute;bottom:18px;left:20px;font-size:13px;opacity:.9">Container Logistic</div>
         </aside>
 
         <main class="content">
@@ -66,7 +63,7 @@
                 <div class="header-right">
                     <div class="search">
                         <input id="globalSearch" placeholder="Tìm kiếm..." />
-                        <button class="btn" id="exportBtn">Export JSON</button>
+                        <button class="btn" id="searchBtn">Tìm</button>
                     </div>
                     <div class="user-menu">
                         <div class="user-icon" id="userIcon">👤</div>
@@ -75,10 +72,8 @@
                             <button id="logoutBtn" class="btn">Đăng xuất</button>
                         </div>
                     </div>
-
                 </div>
             </div>
-
 
             <!-- Sections -->
             <section id="dashboard" class="card-section">
@@ -110,15 +105,7 @@
                     <div class="card">
                         <h4>Recent Containers</h4>
                         <table id="recentContainers">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Container</th>
-                                    <th>Loại</th>
-                                    <th>Vị trí</th>
-                                    <th>Trạng thái</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>#</th><th>Container</th><th>Loại</th><th>Vị trí</th><th>Trạng thái</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -126,21 +113,13 @@
                     <div class="card">
                         <h4>Recent Bookings / Docs</h4>
                         <table id="recentDocs">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Ref</th>
-                                    <th>Loại</th>
-                                    <th>Trạng thái</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>#</th><th>Ref</th><th>Loại</th><th>Trạng thái</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-            <!-- Container Management -->
             <section id="containers" class="card-section" style="display:none">
                 <div class="grid">
                     <div class="card">
@@ -150,16 +129,7 @@
                             <button class="btn" onclick="renderContainers()">Lọc</button>
                         </div>
                         <table id="tblContainers">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Số</th>
-                                    <th>Loại</th>
-                                    <th>Vị trí</th>
-                                    <th>Trạng thái</th>
-                                    <th>Hành động</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>#</th><th>Số</th><th>Loại</th><th>Vị trí</th><th>Trạng thái</th><th>Hành động</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -168,40 +138,26 @@
                         <h3>Thêm / Sửa Container</h3>
                         <div class="form-row"><input id="cNumber" placeholder="Container No" /></div>
                         <div class="form-row"><select id="cType">
-                                <option>20DC</option>
-                                <option>40HC</option>
-                                <option>REEFER</option>
-                                <option>OPEN_TOP</option>
+                                <option>20DC</option><option>40HC</option><option>REEFER</option><option>OPEN_TOP</option>
                             </select></div>
-                        <div class="form-row"><input id="cLocation" placeholder="Vị trí (Depot / Port / Onboard)" />
-                        </div>
+                        <div class="form-row"><input id="cLocation" placeholder="Vị trí (Depot / Port / Onboard)" /></div>
                         <div class="form-row"><select id="cStatus">
-                                <option>Empty</option>
-                                <option>Full</option>
-                                <option>In Transit</option>
-                                <option>Maintenance</option>
+                                <option>Empty</option><option>Full</option><option>In Transit</option><option>Maintenance</option>
                             </select></div>
-                        <div style="display:flex;gap:8px"><button class="btn" id="saveContainer">Lưu</button><button
-                                onclick="clearContainerForm()" class="btn" style="background:#6b7280">Hủy</button></div>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn" id="saveContainer">Lưu</button>
+                            <button onclick="clearContainerForm()" class="btn" style="background:#6b7280">Hủy</button>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Cargo -->
             <section id="cargo" class="card-section" style="display:none">
                 <div class="grid">
                     <div class="card">
                         <h3>Danh sách Lô hàng</h3>
                         <table id="tblCargo">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Mô tả</th>
-                                    <th>Container</th>
-                                    <th>Trọng lượng</th>
-                                    <th>Loại</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>#</th><th>Mô tả</th><th>Container</th><th>Trọng lượng</th><th>Loại</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -211,34 +167,25 @@
                         <div class="form-row"><input id="gDesc" placeholder="Mô tả hàng" /></div>
                         <div class="form-row"><input id="gQty" placeholder="Số lượng / Trọng lượng" /></div>
                         <div class="form-row"><select id="gType">
-                                <option>General</option>
-                                <option>Reefer</option>
-                                <option>Dangerous (DG)</option>
+                                <option>General</option><option>Reefer</option><option>Dangerous (DG)</option>
                             </select></div>
                         <div class="form-row"><select id="gContainer">
                                 <option value="">- Chọn container -</option>
                             </select></div>
-                        <div style="display:flex;gap:8px"><button class="btn" id="saveCargo">Lưu</button><button
-                                onclick="clearCargoForm()" class="btn" style="background:#6b7280">Hủy</button></div>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn" id="saveCargo">Lưu</button>
+                            <button onclick="clearCargoForm()" class="btn" style="background:#6b7280">Hủy</button>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Transport -->
             <section id="transport" class="card-section" style="display:none">
                 <div class="grid">
                     <div class="card">
                         <h3>Lịch trình vận tải</h3>
                         <table id="tblTransport">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Ref</th>
-                                    <th>Type</th>
-                                    <th>Vehicle</th>
-                                    <th>ETA</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>#</th><th>Ref</th><th>Type</th><th>Vehicle</th><th>ETA</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -247,53 +194,40 @@
                         <h3>Tạo Lịch trình</h3>
                         <div class="form-row"><input id="tRef" placeholder="Ref / Booking" /></div>
                         <div class="form-row"><select id="tType">
-                                <option>Trucking</option>
-                                <option>Rail</option>
-                                <option>Feeder</option>
+                                <option>Trucking</option><option>Rail</option><option>Feeder</option>
                             </select></div>
                         <div class="form-row"><input id="tVehicle" placeholder="Số xe / Vessel" /></div>
                         <div class="form-row"><input id="tETA" type="date" /></div>
-                        <div style="display:flex;gap:8px"><button class="btn" id="saveTransport">Lưu</button><button
-                                onclick="clearTransportForm()" class="btn" style="background:#6b7280">Hủy</button></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Depot -->
-            <section id="depot" class="card-section" style="display:none">
-                <div class="grid">
-                    <div class="card full-width">
-                        <h3>Quản lý Bãi (Yard Map)</h3>
-                        <div class="small">Sơ đồ bãi mẫu (Grid) - click để thay đổi trạng thái</div>
-                        <div id="yard" style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:10px">
+                        <div style="display:flex;gap:8px">
+                            <button class="btn" id="saveTransport">Lưu</button>
+                            <button onclick="clearTransportForm()" class="btn" style="background:#6b7280">Hủy</button>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Docs -->
+            <section id="depot" class="card-section" style="display:none">
+                <div class="grid">
+                    <div class="card full-width">
+                        <h3>Quản lý Bãi (Yard Map)</h3>
+                        <div class="small">Sơ đồ bãi mẫu (Grid) - click để thay đổi trạng thái</div>
+                        <div id="yard" style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:10px"></div>
+                    </div>
+                </div>
+            </section>
+
             <section id="docs" class="card-section" style="display:none">
                 <div class="grid">
                     <div class="card">
                         <h3>Chứng từ</h3>
                         <input id="docRef" placeholder="Ref / B/L" />
                         <select id="docType">
-                            <option>BL</option>
-                            <option>Invoice</option>
-                            <option>Packing List</option>
-                            <option>CO</option>
+                            <option>BL</option><option>Invoice</option><option>Packing List</option><option>CO</option>
                         </select>
                         <div style="margin-top:8px"><button class="btn" id="saveDoc">Lưu chứng từ</button></div>
                         <hr />
                         <table id="tblDocs">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Ref</th>
-                                    <th>Loại</th>
-                                    <th>Trạng thái</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>#</th><th>Ref</th><th>Loại</th><th>Trạng thái</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -301,13 +235,11 @@
                     <div class="card">
                         <h3>Upload chứng từ (mô phỏng)</h3>
                         <input type="file" id="fileDoc" />
-                        <div class="small" style="margin-top:6px">Tệp sẽ được đọc và lưu tên trong localStorage (mô
-                            phỏng)</div>
+                        <div class="small" style="margin-top:6px">Tệp sẽ được đọc và lưu tên trong localStorage (mô phỏng)</div>
                     </div>
                 </div>
             </section>
 
-            <!-- Finance -->
             <section id="finance" class="card-section" style="display:none">
                 <div class="grid">
                     <div class="card">
@@ -315,7 +247,8 @@
                         <div class="form-row"><input id="fBase" placeholder="Cước cơ bản" type="number" /></div>
                         <div class="form-row"><input id="fDemDet" placeholder="DEM/DET" type="number" /></div>
                         <div class="form-row"><input id="fLocal" placeholder="Phí local" type="number" /></div>
-                        <div style="display:flex;gap:8px"><button class="btn" id="calcCost">Tính</button>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn" id="calcCost">Tính</button>
                             <div id="costResult" style="align-self:center"></div>
                         </div>
                     </div>
@@ -327,20 +260,12 @@
                 </div>
             </section>
 
-            <!-- Partners -->
             <section id="partners" class="card-section" style="display:none">
                 <div class="grid">
                     <div class="card">
                         <h3>Danh sách Đối tác / Khách hàng</h3>
                         <table id="tblPartners">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Tên</th>
-                                    <th>Loại</th>
-                                    <th>Liên hệ</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>#</th><th>Tên</th><th>Loại</th><th>Liên hệ</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -349,10 +274,7 @@
                         <h3>Thêm Đối tác</h3>
                         <div class="form-row"><input id="pName" placeholder="Tên" /></div>
                         <div class="form-row"><select id="pType">
-                                <option>Shipper</option>
-                                <option>Consignee</option>
-                                <option>Carrier</option>
-                                <option>Forwarder</option>
+                                <option>Shipper</option><option>Consignee</option><option>Carrier</option><option>Forwarder</option>
                             </select></div>
                         <div class="form-row"><input id="pContact" placeholder="SĐT / Email" /></div>
                         <div style="display:flex;gap:8px"><button class="btn" id="savePartner">Lưu</button></div>
@@ -360,35 +282,26 @@
                 </div>
             </section>
 
-            <!-- Staff & Equipment -->
+            <!-- ✅ Nhân sự -->
             <section id="staff" class="card-section" style="display:none">
                 <div class="grid">
                     <div class="card">
                         <h3>Nhân sự</h3>
                         <table id="tblStaff">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Tên</th>
-                                    <th>Role</th>
-                                    <th>Phone</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>#</th><th>Tên</th><th>Role</th><th>Phone</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
+                </div>
+            </section>
 
+            <!-- ✅ Thiết bị (đã tách riêng) -->
+            <section id="equipment" class="card-section" style="display:none">
+                <div class="grid">
                     <div class="card">
                         <h3>Thiết bị</h3>
                         <table id="tblEquip">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Tên</th>
-                                    <th>Type</th>
-                                    <th>Trạng thái</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>#</th><th>Tên</th><th>Type</th><th>Trạng thái</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -396,7 +309,6 @@
             </section>
         </main>
     </div>
+    <script src="script.js"></script>
 </body>
-<script src="script.js"></script>
-
 </html>
