@@ -15,7 +15,6 @@ mainNav.addEventListener('click', e => {
                     li.classList.remove('active');
                 }
             });
-
             return;
         }
 
@@ -23,128 +22,588 @@ mainNav.addEventListener('click', e => {
             const s = target.dataset.section;
             
             document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-            
             target.classList.add('active');
-            
-            document.querySelectorAll('.nav .has-submenu').forEach(li => {
-                li.classList.remove('active');
-            });
+            document.querySelectorAll('.nav .has-submenu').forEach(li => li.classList.remove('active'));
             
             showSection(s);
         }
     }
 });
-function showSection(id) { sections.forEach(sec => sec.style.display = sec.id === id ? '' : 'none'); document.getElementById('sectionTitle').textContent = document.querySelector('[data-section="' + id + '"]')?.textContent || 'Tổng quan'; renderAll(); }
+
+function showSection(id) {
+    sections.forEach(sec => sec.style.display = sec.id === id ? '' : 'none');
+    document.getElementById('sectionTitle').textContent = 
+        document.querySelector(`[data-section="${id}"]`)?.textContent || 'Tổng quan';
+    
+    // Gọi render riêng cho section cần thiết
+    switch(id) {
+        case 'dashboard': renderAll(); break;
+        case 'containers': renderContainers(); populateContainerSelect(); break;
+        case 'cargo': renderCargo(); populateContainerSelect(); break;
+        case 'transport': renderTransport(); break;
+        case 'depot': renderYard(); break;
+        case 'docs': renderDocs(); break;
+        case 'finance': /* nothing extra */ break;
+        case 'partners': renderPartners(); break;
+        case 'staff': renderStaff(); break;
+        case 'equipment': renderEquip(); break;
+        default: renderAll();
+    }
+}
 
 // --- Storage utilities ---
-const DB = { containers: [], cargo: [], transports: [], docs: [], partners: [], staff: [], equip: [] };
-function loadDB() { try { const raw = localStorage.getItem('cl_db'); if (raw) Object.assign(DB, JSON.parse(raw)); } catch (e) { console.warn(e) } }
-function saveDB() { localStorage.setItem('cl_db', JSON.stringify(DB)); renderAll(); }
+const DB = {
+    containers: [],
+    cargo: [],
+    transports: [],
+    docs: [],
+    partners: [],
+    staff: [],
+    equip: []
+};
+
+function loadDB() {
+    try {
+        const raw = localStorage.getItem('cl_db');
+        if (raw) Object.assign(DB, JSON.parse(raw));
+    } catch (e) {
+        console.warn("Lỗi load DB:", e);
+    }
+}
+
+function saveDB() {
+    localStorage.setItem('cl_db', JSON.stringify(DB));
+}
 
 // --- Containers ---
 document.getElementById('saveContainer').addEventListener('click', () => {
-    const no = document.getElementById('cNumber').value.trim(); if (!no) return alert('Nhập số container');
-    const rec = { id: Date.now(), no, type: document.getElementById('cType').value, loc: document.getElementById('cLocation').value, status: document.getElementById('cStatus').value };
-    DB.containers.unshift(rec); saveDB(); clearContainerForm(); showSection('containers');
+    const no = document.getElementById('cNumber').value.trim();
+    if (!no) return alert('Nhập số container');
+
+    // Kiểm tra trùng số container
+    if (DB.containers.some(c => c.no === no)) {
+        return alert('Số container đã tồn tại!');
+    }
+
+    const rec = {
+        id: Date.now(),
+        no,
+        type: document.getElementById('cType').value,
+        loc: document.getElementById('cLocation').value,
+        status: document.getElementById('cStatus').value
+    };
+    DB.containers.unshift(rec);
+    saveDB();
+    clearContainerForm();
+    showSection('containers');
 });
-function clearContainerForm() { ['cNumber', 'cLocation'].forEach(id => document.getElementById(id).value = ''); }
-function renderContainers() { const tbody = document.querySelector('#tblContainers tbody'); tbody.innerHTML = ''; const q = document.getElementById('cFilter').value.toLowerCase(); DB.containers.forEach((c, i) => { if (q && !(c.no || '').toLowerCase().includes(q) && !(c.type || '').toLowerCase().includes(q) && !(c.loc || '').toLowerCase().includes(q)) return; const tr = document.createElement('tr'); tr.innerHTML = `<td>${i + 1}</td><td>${c.no}</td><td>${c.type}</td><td>${c.loc}</td><td>${c.status}</td><td><button onclick="removeContainer(${c.id})">Xóa</button></td>`; tbody.appendChild(tr); }); populateContainerSelect(); }
-function removeContainer(id) { DB.containers = DB.containers.filter(c => c.id !== id); saveDB(); }
+
+function clearContainerForm() {
+    ['cNumber', 'cLocation'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('cStatus').value = 'Empty';
+}
+
+function renderContainers() {
+    const tbody = document.querySelector('#tblContainers tbody');
+    tbody.innerHTML = '';
+    const q = document.getElementById('cFilter').value.toLowerCase();
+
+    DB.containers.forEach((c, i) => {
+        if (q && !(c.no || '').toLowerCase().includes(q) &&
+            !(c.type || '').toLowerCase().includes(q) &&
+            !(c.loc || '').toLowerCase().includes(q)) return;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${i + 1}</td>
+            <td>${c.no}</td>
+            <td>${c.type}</td>
+            <td>${c.loc}</td>
+            <td>${c.status}</td>
+            <td><button class="btn-sm" onclick="removeContainer(${c.id})">Xóa</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+    populateContainerSelect();
+}
+
+function removeContainer(id) {
+    if (!confirm('Xóa container này?')) return;
+    DB.containers = DB.containers.filter(c => c.id !== id);
+    saveDB();
+    renderContainers();
+}
 
 // --- Cargo ---
 document.getElementById('saveCargo').addEventListener('click', () => {
-    const desc = document.getElementById('gDesc').value.trim(); if (!desc) return alert('Nhập mô tả');
-    const rec = { id: Date.now(), desc, qty: document.getElementById('gQty').value, type: document.getElementById('gType').value, container: document.getElementById('gContainer').value };
-    DB.cargo.unshift(rec); saveDB(); clearCargoForm(); showSection('cargo');
+    const desc = document.getElementById('gDesc').value.trim();
+    if (!desc) return alert('Nhập mô tả hàng');
+
+    const containerNo = document.getElementById('gContainer').value;
+    if (!containerNo) return alert('Chọn container');
+
+    const rec = {
+        id: Date.now(),
+        desc,
+        qty: document.getElementById('gQty').value || 'N/A',
+        type: document.getElementById('gType').value,
+        container: containerNo
+    };
+    DB.cargo.unshift(rec);
+    saveDB();
+    clearCargoForm();
+    showSection('cargo');
 });
-function clearCargoForm() { ['gDesc', 'gQty'].forEach(id => document.getElementById(id).value = ''); }
-function renderCargo() { const tbody = document.querySelector('#tblCargo tbody'); tbody.innerHTML = ''; DB.cargo.forEach((g, i) => { const tr = document.createElement('tr'); tr.innerHTML = `<td>${i + 1}</td><td>${g.desc}</td><td>${g.container || '-'}</td><td>${g.qty}</td><td>${g.type}</td>`; tbody.appendChild(tr); }); }
+
+function clearCargoForm() {
+    ['gDesc', 'gQty'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('gType').value = 'General';
+    document.getElementById('gContainer').value = '';
+}
+
+function renderCargo() {
+    const tbody = document.querySelector('#tblCargo tbody');
+    tbody.innerHTML = '';
+    DB.cargo.forEach((g, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${i + 1}</td>
+            <td>${g.desc}</td>
+            <td>${g.container || '-'}</td>
+            <td>${g.qty}</td>
+            <td>${g.type}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
 
 // --- Transport ---
 document.getElementById('saveTransport').addEventListener('click', () => {
-    const ref = document.getElementById('tRef').value.trim(); if (!ref) return alert('Nhập ref');
-    const rec = { id: Date.now(), ref, type: document.getElementById('tType').value, vehicle: document.getElementById('tVehicle').value, eta: document.getElementById('tETA').value };
-    DB.transports.unshift(rec); saveDB(); clearTransportForm(); showSection('transport');
-});
-function clearTransportForm() { ['tRef', 'tVehicle', 'tETA'].forEach(id => document.getElementById(id).value = ''); }
-function renderTransport() { const tbody = document.querySelector('#tblTransport tbody'); tbody.innerHTML = ''; DB.transports.forEach((t, i) => { const tr = document.createElement('tr'); tr.innerHTML = `<td>${i + 1}</td><td>${t.ref}</td><td>${t.type}</td><td>${t.vehicle}</td><td>${t.eta || '-'}</td>`; tbody.appendChild(tr); }); }
+    const ref = document.getElementById('tRef').value.trim();
+    if (!ref) return alert('Nhập ref');
 
-// --- Yard (depot) ---
+    const rec = {
+        id: Date.now(),
+        ref,
+        type: document.getElementById('tType').value,
+        vehicle: document.getElementById('tVehicle').value || 'N/A',
+        eta: document.getElementById('tETA').value || ''
+    };
+    DB.transports.unshift(rec);
+    saveDB();
+    clearTransportForm();
+    showSection('transport');
+});
+
+function clearTransportForm() {
+    ['tRef', 'tVehicle'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('tType').value = 'Trucking';
+    document.getElementById('tETA').value = '';
+}
+
+function renderTransport() {
+    const tbody = document.querySelector('#tblTransport tbody');
+    tbody.innerHTML = '';
+    DB.transports.forEach((t, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${i + 1}</td>
+            <td>${t.ref}</td>
+            <td>${t.type}</td>
+            <td>${t.vehicle}</td>
+            <td>${t.eta || '-'}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// --- Yard (depot) - ✅ CẢI TIẾN AN TOÀN ---
 function renderYard() {
-    const yard = document.getElementById('yard'); yard.innerHTML = ''; for (let i = 0; i < 32; i++) {
-        const cell = document.createElement('div'); cell.className = 'card'; cell.style.padding = '12px'; cell.style.textAlign = 'center'; cell.style.cursor = 'pointer'; cell.dataset.idx = i; cell.textContent = (DB.containers[i] && DB.containers[i].no) || 'Empty'; cell.addEventListener('click', () => {
-            const c = prompt('Nhập số container cho ô này (empty để xóa):', cell.textContent); if (c === null) return; if (c.toLowerCase() === 'empty') { // clear
-                if (DB.containers[i]) DB.containers.splice(i, 1); saveDB(); renderYard(); return;
+    const yard = document.getElementById('yard');
+    yard.innerHTML = '';
+    
+    for (let i = 0; i < 32; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'card';
+        cell.style.padding = '12px';
+        cell.style.textAlign = 'center';
+        cell.style.cursor = 'pointer';
+        cell.dataset.idx = i;
+
+        // Tìm container đang ở vị trí yard này
+        const containerHere = DB.containers.find(c => 
+            c.loc === 'Yard' && c.yardPosition == i
+        );
+
+        cell.textContent = containerHere ? containerHere.no : 'Empty';
+        if (containerHere) cell.style.backgroundColor = '#e0f2fe';
+
+        cell.addEventListener('click', () => {
+            const currentNo = containerHere ? containerHere.no : '';
+            const no = prompt('Nhập số container (để trống để xóa):', currentNo);
+            
+            if (no === null) return;
+
+            const trimmed = no.trim();
+
+            if (trimmed === '') {
+                // Xóa container khỏi yard
+                if (containerHere) {
+                    DB.containers = DB.containers.filter(c => c.id !== containerHere.id);
+                }
+            } else {
+                // Kiểm tra trùng số
+                if (DB.containers.some(c => c.no === trimmed && c.id !== (containerHere?.id || -1))) {
+                    alert('Số container đã tồn tại!');
+                    return;
+                }
+
+                if (containerHere) {
+                    // Cập nhật container hiện có
+                    containerHere.no = trimmed;
+                } else {
+                    // Tạo mới
+                    DB.containers.push({
+                        id: Date.now(),
+                        no: trimmed,
+                        type: '20DC',
+                        loc: 'Yard',
+                        status: 'Empty',
+                        yardPosition: i
+                    });
+                }
             }
-            const rec = { id: Date.now(), no: c, type: '20DC', loc: 'Yard', status: 'Empty' }; DB.containers[i] = rec; saveDB(); renderYard();
-        }); yard.appendChild(cell);
+            saveDB();
+            renderYard();
+        });
+
+        yard.appendChild(cell);
     }
 }
 
 // --- Docs ---
 document.getElementById('saveDoc').addEventListener('click', () => {
-    const r = document.getElementById('docRef').value.trim(); if (!r) return alert('Nhập ref');
-    const doc = { id: Date.now(), ref: r, type: document.getElementById('docType').value, status: 'Pending' }; DB.docs.unshift(doc); saveDB(); document.getElementById('docRef').value = ''; showSection('docs');
+    const r = document.getElementById('docRef').value.trim();
+    if (!r) return alert('Nhập ref');
+
+    const doc = {
+        id: Date.now(),
+        ref: r,
+        type: document.getElementById('docType').value,
+        status: 'Pending'
+    };
+    DB.docs.unshift(doc);
+    saveDB();
+    document.getElementById('docRef').value = '';
+    showSection('docs');
 });
+
 document.getElementById('fileDoc').addEventListener('change', e => {
-    const f = e.target.files[0]; if (!f) return; DB.docs.unshift({ id: Date.now(), ref: f.name, type: 'File', status: 'Uploaded' }); saveDB();
+    const f = e.target.files[0];
+    if (!f) return;
+    DB.docs.unshift({
+        id: Date.now(),
+        ref: f.name,
+        type: 'File',
+        status: 'Uploaded'
+    });
+    saveDB();
+    e.target.value = ''; // reset input
 });
-function renderDocs() { const tbody = document.querySelector('#tblDocs tbody'); tbody.innerHTML = ''; DB.docs.forEach((d, i) => { const tr = document.createElement('tr'); tr.innerHTML = `<td>${i + 1}</td><td>${d.ref}</td><td>${d.type}</td><td>${d.status}</td>`; tbody.appendChild(tr); }); }
+
+function renderDocs() {
+    const tbody = document.querySelector('#tblDocs tbody');
+    tbody.innerHTML = '';
+    DB.docs.forEach((d, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${i + 1}</td>
+            <td>${d.ref}</td>
+            <td>${d.type}</td>
+            <td>${d.status}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
 
 // --- Finance ---
 document.getElementById('calcCost').addEventListener('click', () => {
-    const base = Number(document.getElementById('fBase').value) || 0; const dem = Number(document.getElementById('fDemDet').value) || 0; const local = Number(document.getElementById('fLocal').value) || 0; const total = base + dem + local; document.getElementById('costResult').textContent = 'Tổng: ' + total.toLocaleString();
+    const base = parseFloat(document.getElementById('fBase').value) || 0;
+    const dem = parseFloat(document.getElementById('fDemDet').value) || 0;
+    const local = parseFloat(document.getElementById('fLocal').value) || 0;
+    
+    if (isNaN(base) || isNaN(dem) || isNaN(local)) {
+        return alert('Vui lòng nhập số hợp lệ.');
+    }
+
+    const total = base + dem + local;
+    document.getElementById('costResult').textContent = 
+        `Tổng: ${total.toLocaleString('vi-VN')} VND`;
 });
-function downloadReport() { const blob = new Blob([JSON.stringify(DB, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'report_cl_db.json'; a.click(); URL.revokeObjectURL(url); }
+
+function downloadReport() {
+    const blob = new Blob([JSON.stringify(DB, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'report_cl_db.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
 
 // --- Partners ---
 document.getElementById('savePartner').addEventListener('click', () => {
-    const name = document.getElementById('pName').value.trim(); if (!name) return alert('Nhập tên'); DB.partners.unshift({ id: Date.now(), name, type: document.getElementById('pType').value, contact: document.getElementById('pContact').value }); saveDB(); document.getElementById('pName').value = '';
-});
-function renderPartners() { const tbody = document.querySelector('#tblPartners tbody'); tbody.innerHTML = ''; DB.partners.forEach((p, i) => { const tr = document.createElement('tr'); tr.innerHTML = `<td>${i + 1}</td><td>${p.name}</td><td>${p.type}</td><td>${p.contact}</td>`; tbody.appendChild(tr); }); }
+    const name = document.getElementById('pName').value.trim();
+    if (!name) return alert('Nhập tên');
 
-// --- Staff & Equip ---
-function renderStaff() { const tbody = document.querySelector('#tblStaff tbody'); tbody.innerHTML = ''; DB.staff.forEach((s, i) => { const tr = document.createElement('tr'); tr.innerHTML = `<td>${i + 1}</td><td>${s.name}</td><td>${s.role}</td><td>${s.phone}</td>`; tbody.appendChild(tr); }); }
-function renderEquip() { const tbody = document.querySelector('#tblEquip tbody'); tbody.innerHTML = ''; DB.equip.forEach((q, i) => { const tr = document.createElement('tr'); tr.innerHTML = `<td>${i + 1}</td><td>${q.name}</td><td>${q.type}</td><td>${q.status}</td>`; tbody.appendChild(tr); }); }
-
-
-
-// --- Misc UI ---
-document.getElementById('exportBtn').addEventListener('click', () => { downloadReport(); });
-document.getElementById('globalSearch').addEventListener('input', e => {
-    const q = e.target.value.toLowerCase(); // basic search across names
-    // filter recent lists
-    renderAll(q);
+    DB.partners.unshift({
+        id: Date.now(),
+        name,
+        type: document.getElementById('pType').value,
+        contact: document.getElementById('pContact').value || 'N/A'
+    });
+    saveDB();
+    document.getElementById('pName').value = '';
+    document.getElementById('pContact').value = '';
+    showSection('partners');
 });
 
-function populateContainerSelect() { const sel = document.getElementById('gContainer'); sel.innerHTML = '<option value="">- Chọn container -</option>'; DB.containers.forEach(c => { const o = document.createElement('option'); o.value = c.no; o.textContent = c.no + ' • ' + c.type; sel.appendChild(o); }); }
-
-function renderAll(q) { // q optional
-    loadDB(); document.getElementById('stat-containers').textContent = DB.containers.length;
-    document.getElementById('stat-intransit').textContent = DB.containers.filter(c => c.status === 'In Transit').length;
-    document.getElementById('stat-docs').textContent = DB.docs.filter(d => d.status === 'Pending').length;
-    // recent tables
-    const rc = document.querySelector('#recentContainers tbody'); rc.innerHTML = ''; DB.containers.slice(0, 6).forEach((c, i) => { const tr = document.createElement('tr'); tr.innerHTML = `<td>${i + 1}</td><td>${c.no}</td><td>${c.type}</td><td>${c.loc}</td><td>${c.status}</td>`; rc.appendChild(tr); });
-    const rd = document.querySelector('#recentDocs tbody'); rd.innerHTML = ''; DB.docs.slice(0, 6).forEach((d, i) => { const tr = document.createElement('tr'); tr.innerHTML = `<td>${i + 1}</td><td>${d.ref}</td><td>${d.type}</td><td>${d.status}</td>`; rd.appendChild(tr); });
-
-    renderContainers(); renderCargo(); renderTransport(); renderDocs(); renderPartners(); renderStaff(); renderEquip(); renderYard();
+function renderPartners() {
+    const tbody = document.querySelector('#tblPartners tbody');
+    tbody.innerHTML = '';
+    DB.partners.forEach((p, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${i + 1}</td>
+            <td>${p.name}</td>
+            <td>${p.type}</td>
+            <td>${p.contact}</td>
+        `;
+        tbody.appendChild(tr);
+    });
 }
 
+// --- Staff & Equip ---
+function renderStaff() {
+    const tbody = document.querySelector('#tblStaff tbody');
+    tbody.innerHTML = '';
+    DB.staff.forEach((s, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${i + 1}</td>
+            <td>${s.name}</td>
+            <td>${s.role}</td>
+            <td>${s.phone}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
 
+function renderEquip() {
+    const tbody = document.querySelector('#tblEquip tbody');
+    tbody.innerHTML = '';
+    DB.equip.forEach((q, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${i + 1}</td>
+            <td>${q.name}</td>
+            <td>${q.type}</td>
+            <td>${q.status}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// --- Misc UI ---
+function populateContainerSelect() {
+    const sel = document.getElementById('gContainer');
+    sel.innerHTML = '<option value="">- Chọn container -</option>';
+    DB.containers.forEach(c => {
+        const o = document.createElement('option');
+        o.value = c.no;
+        o.textContent = `${c.no} • ${c.type}`;
+        sel.appendChild(o);
+    });
+}
+
+// --- Render All Stats & Recent Lists ---
+function renderAll() {
+    loadDB();
+
+    // Stats
+    document.getElementById('stat-containers').textContent = DB.containers.length;
+    document.getElementById('stat-intransit').textContent = 
+        DB.containers.filter(c => c.status === 'In Transit').length;
+    document.getElementById('stat-docs').textContent = 
+        DB.docs.filter(d => d.status === 'Pending').length;
+
+    // Recent tables
+    const rc = document.querySelector('#recentContainers tbody');
+    rc.innerHTML = '';
+    DB.containers.slice(0, 6).forEach((c, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${i + 1}</td>
+            <td>${c.no}</td>
+            <td>${c.type}</td>
+            <td>${c.loc}</td>
+            <td>${c.status}</td>
+        `;
+        rc.appendChild(tr);
+    });
+
+    const rd = document.querySelector('#recentDocs tbody');
+    rd.innerHTML = '';
+    DB.docs.slice(0, 6).forEach((d, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${i + 1}</td>
+            <td>${d.ref}</td>
+            <td>${d.type}</td>
+            <td>${d.status}</td>
+        `;
+        rd.appendChild(tr);
+    });
+}
+
+// --- ✅ Mock Data ---
+function initMockData() {
+    if (DB.containers.length > 0) return;
+
+    DB.containers = [
+        { id: 1, no: "TGHU1234567", type: "40HC", loc: "Cảng Cái Mép", status: "In Transit" },
+        { id: 2, no: "MSKU7890123", type: "20DC", loc: "Depot Tân Cảng", status: "Full", yardPosition: 12 },
+        { id: 3, no: "CMAU4567890", type: "REEFER", loc: "Yard", status: "Empty", yardPosition: 3 },
+        { id: 4, no: "HLCU2468135", type: "40HC", loc: "Onboard Vessel VN123", status: "In Transit" },
+        { id: 5, no: "OOLU1357924", type: "20DC", loc: "Depot SITC", status: "Maintenance" }
+    ];
+
+    DB.cargo = [
+        { id: 101, desc: "Máy lạnh Daikin", qty: "20 units", type: "General", container: "TGHU1234567" },
+        { id: 102, desc: "Hải sản đông lạnh", qty: "15 tons", type: "Reefer", container: "CMAU4567890" },
+        { id: 103, desc: "Pin lithium", qty: "5 pallets", type: "Dangerous (DG)", container: "MSKU7890123" }
+    ];
+
+    DB.transports = [
+        { id: 201, ref: "BK-2025-001", type: "Trucking", vehicle: "88C-123.45", eta: "2025-12-07" },
+        { id: 202, ref: "BK-2025-002", type: "Feeder", vehicle: "MV SEA VIP", eta: "2025-12-10" }
+    ];
+
+    DB.docs = [
+        { id: 301, ref: "HLCU2468135-BL", type: "BL", status: "Pending" },
+        { id: 302, ref: "INV-DEC2025", type: "Invoice", status: "Approved" },
+        { id: 303, ref: "PL-MSKU789", type: "Packing List", status: "Pending" },
+        { id: 304, ref: "CO-VN-2025", type: "CO", status: "Issued" }
+    ];
+
+    DB.partners = [
+        { id: 401, name: "Công ty TNHH ABC Logistics", type: "Forwarder", contact: "abc@logistics.vn" },
+        { id: 402, name: "Cảng vụ Hàng hải TP.HCM", type: "Carrier", contact: "port@vietnam.vn" },
+        { id: 403, name: "Xuất khẩu Nông sản Miền Tây", type: "Shipper", contact: "xuatkhau@agri.vn" }
+    ];
+
+    DB.staff = [
+        { id: 501, name: "Nguyễn Văn A", role: "Quản lý điều độ", phone: "0909 123 456" },
+        { id: 502, name: "Trần Thị B", role: "Nhân viên chứng từ", phone: "0933 789 012" },
+        { id: 503, name: "Lê Văn C", role: "Tài xế xe đầu kéo", phone: "0977 456 789" }
+    ];
+
+    DB.equip = [
+        { id: 601, name: "Xe nâng 10T - #XN001", type: "Forklift", status: "Available" },
+        { id: 602, name: "Container Handler - #CH002", type: "Reach Stacker", status: "In Use" },
+        { id: 603, name: "Xe đầu kéo - #XD003", type: "Tractor", status: "Maintenance" }
+    ];
+
+    saveDB();
+    console.log("✅ Đã khởi tạo dữ liệu mẫu.");
+}
+
+// --- 🔍 Global Search (nút "Tìm") ---
+function performGlobalSearch() {
+    const query = document.getElementById('globalSearch').value.trim().toLowerCase();
+    if (!query) {
+        // Xoá highlight nếu không tìm
+        document.querySelectorAll('mark.search-highlight').forEach(el => {
+            el.outerHTML = el.textContent; // replace <mark> with plain text
+        });
+        return;
+    }
+
+    // Xoá highlight cũ
+    document.querySelectorAll('mark.search-highlight').forEach(el => {
+        el.outerHTML = el.textContent;
+    });
+
+    let found = false;
+
+    // Hàm highlight trong 1 ô
+    const highlightInCell = (cell, term) => {
+        const text = cell.textContent || '';
+        const lowerText = text.toLowerCase();
+        const lowerTerm = term.toLowerCase();
+        if (lowerText.includes(lowerTerm)) {
+            const escaped = lowerTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const re = new RegExp(`(${escaped})`, 'gi');
+            cell.innerHTML = text.replace(re, '<mark class="search-highlight">$1</mark>');
+            found = true;
+        }
+    };
+
+    // Các bảng cần tìm
+    const tables = [
+        { selector: '#tblContainers tbody tr', cols: [1, 2, 3, 4] },
+        { selector: '#tblCargo tbody tr', cols: [1, 2, 4] },
+        { selector: '#tblTransport tbody tr', cols: [1, 2, 3] },
+        { selector: '#tblDocs tbody tr', cols: [1, 2, 3] },
+        { selector: '#tblPartners tbody tr', cols: [1, 2, 3] },
+        { selector: '#tblStaff tbody tr', cols: [1, 2, 3] },
+        { selector: '#tblEquip tbody tr', cols: [1, 2, 3] },
+        { selector: '#recentContainers tbody tr', cols: [1, 2, 3, 4] },
+        { selector: '#recentDocs tbody tr', cols: [1, 2, 3] }
+    ];
+
+    tables.forEach(table => {
+        document.querySelectorAll(table.selector).forEach(row => {
+            table.cols.forEach(colIndex => {
+                const cell = row.cells[colIndex];
+                if (cell) highlightInCell(cell, query);
+            });
+        });
+    });
+
+    if (!found) {
+        alert(`Không tìm thấy "${query}"`);
+    }
+}
+
+// Gắn sự kiện cho nút "Tìm"
+document.getElementById('searchBtn')?.addEventListener('click', performGlobalSearch);
+
+// Tìm khi nhấn Enter
+document.getElementById('globalSearch')?.addEventListener('keypress', e => {
+    if (e.key === 'Enter') {
+        performGlobalSearch();
+    }
+});
+
+// --- Init App ---
 document.addEventListener("DOMContentLoaded", () => {
+    loadDB();
+    initMockData();
+    renderAll();
+
+    // User menu
     const userIcon = document.getElementById("userIcon");
     const userDropdown = document.getElementById("userDropdown");
     const logoutBtn = document.getElementById("logoutBtn");
 
     if (userIcon && userDropdown) {
-        // Toggle khi click vào icon
         userIcon.addEventListener("click", (e) => {
             e.stopPropagation();
-            userDropdown.style.display =
+            userDropdown.style.display = 
                 userDropdown.style.display === "block" ? "none" : "block";
         });
 
-        // Click ra ngoài -> ẩn menu
         document.addEventListener("click", (e) => {
             if (!userIcon.contains(e.target) && !userDropdown.contains(e.target)) {
                 userDropdown.style.display = "none";
@@ -152,11 +611,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Logout
     logoutBtn?.addEventListener("click", () => {
-        localStorage.removeItem("cl_db");
-        window.location.href = "index.html";
+        if (confirm('Đăng xuất và xóa toàn bộ dữ liệu?')) {
+            localStorage.removeItem("cl_db");
+            location.reload();
+        }
     });
 });
-
-
