@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ thống Quản lý Logistics</title>
     <link rel="stylesheet" href="Index.css">
+    <link rel="stylesheet" href="dashboard.css">
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1995/1995574.png" type="image/png">
     
 </head>
@@ -66,17 +67,13 @@
                     </ul>
                 </li>
                 <li class="menu-item">
-                    <a class="menu-toggle">🌐 Quản lý IoT</a>
-                    <ul class="sub-menu">
-                        <li><a onclick="showModule('sensors')">Cảm biến</a></li>
-                        <li><a onclick="showModule('alerts')">Cảnh báo</a></li>
-                    </ul>
-                </li>
-                <li class="menu-item">
                     <a class="menu-toggle">Người dùng & Phân quyền</a>
                     <ul class="sub-menu">
                         <li><a onclick="showModule('users')">Quản lý tài khoản</a></li>
                     </ul>
+                </li>
+                <li class="menu-item">
+                    <a class="menu-toggle" onclick="showDashboard()">Báo cáo thống kê</a>
                 </li>
             </ul>
         </div>
@@ -134,8 +131,9 @@
                   <thead>
                     <tr>
                       <th>ID</th>
-                      <th>Loại hàng</th>
-                      <th>Mô tả</th>
+                      <th>Tên loại hàng</th>
+                      <th>Mô tả chi tiết</th>
+                      <th>Danh mục</th>
                       <th>Tác vụ</th>
                     </tr>
                   </thead>
@@ -304,6 +302,7 @@
                             <th>Hợp đồng</th>
                             <th>Số tiền</th>
                             <th>Ngày phát hành</th>
+                            <th>Đã thanh toán (%)</th>
                             <th>Hành động</th>
                         </tr>
                     </thead>
@@ -324,47 +323,6 @@
                             <th>Hóa đơn</th>
                             <th>Số tiền</th>
                             <th>Phương thức</th>
-                            <th>Thời gian</th>
-                            <th>Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        
-            <!-- ====== SENSORS ====== -->
-            <div id="sensors" class="module-content">
-                <div class="header">
-                    <h2>🌡️ Dữ liệu Cảm biến</h2>
-                    <button onclick="openModal('add','sensors')">Thêm Dữ liệu</button>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Container</th>
-                            <th>Nhiệt độ (°C)</th>
-                            <th>Độ ẩm (%)</th>
-                            <th>Tọa độ GPS</th>
-                            <th>Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        
-            <!-- ====== ALERTS ====== -->
-            <div id="alerts" class="module-content">
-                <div class="header">
-                    <h2>⚠️ Cảnh báo Hệ thống</h2>
-                    <button onclick="openModal('add','alerts')">Thêm Cảnh báo</button>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Container</th>
-                            <th>Loại cảnh báo</th>
                             <th>Thời gian</th>
                             <th>Hành động</th>
                         </tr>
@@ -426,7 +384,8 @@
             </form>
         </div>
     </div>
-    <script type="module" src="js/index.js"></script>
+    <script type="module" src="./js/index.js"></script>
     <script type="module" src="Login.js"></script>
+    <script type="module" src="./js/dashboard.js"></script>
 </body>
 </html>

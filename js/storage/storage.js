@@ -45,10 +45,30 @@ export const defaultData = {
         { id: 'CTN003', itemTypeId: 'HH003', weight: 4000, status: 'Lưu kho', warehouseId: 'KHO002', vehicleId: 'XE003', customerId: 'KH003' }
     ],
     itemTypes: [
-        { id: 'HH001', name: 'Hàng dễ vỡ',       description: 'Rượu, thủy tinh, đồ gốm sứ, cần đóng gói chống sốc' },
-        { id: 'HH002', name: 'Hàng đông lạnh',   description: 'Cá, thịt, hải sản đông lạnh, yêu cầu nhiệt độ dưới -18°C' },
-        { id: 'HH003', name: 'Hàng nguy hiểm',   description: 'Hóa chất, pin lithium, chất dễ cháy – cần giấy phép' },
-        { id: 'HH004', name: 'Hàng cồng kềnh',   description: 'Máy móc lớn, thiết bị công nghiệp, cần xe chuyên dụng' }
+        { 
+            id: 'HH001', 
+            name: 'Hàng dễ vỡ',       
+            description: 'Rượu, thủy tinh, đồ gốm sứ – yêu cầu đóng gói chống sốc, hạn chế va đập',
+            category: 'Fragile',
+        },
+        { 
+            id: 'HH002', 
+            name: 'Hàng đông lạnh',   
+            description: 'Cá, thịt, hải sản yêu cầu nhiệt độ dưới -18°C trong suốt quá trình vận chuyển',
+            category: 'Frozen',
+        },
+        { 
+            id: 'HH003', 
+            name: 'Hàng nguy hiểm',   
+            description: 'Hóa chất, pin lithium, chất dễ cháy – bắt buộc có giấy phép vận chuyển',
+            category: 'Hazardous',
+        },
+        { 
+            id: 'HH004', 
+            name: 'Hàng cồng kềnh',   
+            description: 'Máy móc lớn, thiết bị công nghiệp – cần xe nâng hoặc phương tiện chuyên dụng',
+            category: 'Oversized',
+        }
     ],
     containerhistory: [
         { id: 'LS001', containerId: 'CTN001', action: 'Nhập kho', time: '2025-10-01 08:00', location: 'Kho HCM' },
@@ -78,25 +98,15 @@ export const defaultData = {
         { id: 'CP006', contractId: 'HD003', costType: 'Phí vận tải quốc tế', amount: 21000000 }
     ],
     invoices: [
-        { id: 'HDN001', contractId: 'HD001', amount: 1500000, issueDate: '2025-09-10' },
-        { id: 'HDN002', contractId: 'HD002', amount: 3000000, issueDate: '2025-09-15' },
-        { id: 'HDN003', contractId: 'HD003', amount: 25000000, issueDate: '2025-09-20' }
+        { id: 'HDN001', contractId: 'HD001', amount: 1500000, issueDate: '2025-09-10', paidPercent: 0 },
+        { id: 'HDN002', contractId: 'HD002', amount: 3000000, issueDate: '2025-09-15', paidPercent: 0 },
+        { id: 'HDN003', contractId: 'HD003', amount: 25000000, issueDate: '2025-09-20', paidPercent: 0 }
     ],
 
     payments: [
         { id: 'TT001', invoiceId: 'HDN001', amount: 1500000, method: 'Chuyển khoản', time: '2025-09-11T09:00' },
         { id: 'TT002', invoiceId: 'HDN002', amount: 3000000, method: 'Tiền mặt', time: '2025-09-16T12:00' },
         { id: 'TT003', invoiceId: 'HDN003', amount: 25000000, method: 'Chuyển khoản', time: '2025-09-21T15:00' }
-    ],
-    sensors: [
-        { id: 'CB001', containerId: 'CTN001', temperature: 25, humidity: 60, gps: '10.7769, 106.7009' },
-        { id: 'CB002', containerId: 'CTN002', temperature: 5, humidity: 70, gps: '21.0285, 105.8542' },
-        { id: 'CB003', containerId: 'CTN003', temperature: 30, humidity: 50, gps: '16.0544, 108.2022' }
-    ],
-    alerts: [
-        { id: 'CBao001', containerId: 'CTN001', alertType: 'Nhiệt độ cao', time: '2025-09-01T09:00' },
-        { id: 'CBao002', containerId: 'CTN002', alertType: 'Độ ẩm bất thường', time: '2025-09-02T12:00' },
-        { id: 'CBao003', containerId: 'CTN003', alertType: 'Vị trí bất thường', time: '2025-09-03T15:00' }
     ],
     users: [
         { id: 'USER001', name: 'Admin Tổng', email: 'admin@company.com', role: 'admin', warehouseId: 'KHO001', status: 'Hoạt động' },
@@ -111,8 +121,7 @@ export function loadAllData() {
     const data = {};
     const allModules = [
         'customers', 'contracts', 'vehicles', 'containers','itemTypes', 'containerhistory',
-        'warehouses', 'trips', 'ports', 'costs', 'invoices', 'payments',
-        'sensors', 'alerts', 'users'
+        'warehouses', 'trips', 'ports', 'costs', 'invoices', 'payments', 'users'
     ];
     
     allModules.forEach(module => {
@@ -126,6 +135,7 @@ export function loadAllData() {
     });
     return data;
 }
+
 
 export function saveData(module, dataArray) {
     localStorage.setItem(module, JSON.stringify(dataArray));
@@ -166,8 +176,7 @@ export function exportAllData() {
     const allData = {};
     const allModules = [
         'customers', 'contracts', 'vehicles', 'containers', 'containerhistory',
-        'warehouses', 'trips', 'ports', 'costs', 'invoices', 'payments',
-        'sensor_logs', 'alerts', 'users'
+        'warehouses', 'trips', 'ports', 'costs', 'invoices', 'payments', 'users'
     ];
     
     allModules.forEach(module => {
@@ -186,8 +195,7 @@ export function exportAllData() {
 export function resetAllData() {
     const allModules = [
         'customers', 'contracts', 'vehicles', 'containers', 'containerhistory',
-        'warehouses', 'trips', 'ports', 'costs', 'invoices', 'payments',
-        'sensor_logs', 'alerts', 'users'
+        'warehouses', 'trips', 'ports', 'costs', 'invoices', 'payments', 'users'
     ];
     
     allModules.forEach(module => {
