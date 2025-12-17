@@ -81,25 +81,24 @@
             users: { warehouseId: 'warehouses' }  
         };
 
-        let currentPage = 1;
+        const paginationState = {}
         const itemsPerPageDefault = 9;
 
         // ====== TẢI DỮ LIỆU RA BẢNG ======
         function loadTableData(moduleId, data) {
-            const itemsPerPage = (moduleId === "vehicles") ? Math.min(5, data.length) : 9;
+            if (!paginationState[moduleId]) paginationState[moduleId] = 1;
+            const currentPage = paginationState[moduleId];
 
+            const itemsPerPage = (moduleId === "vehicles") ? 5 : 9;
             const tbody = document.querySelector(`#${moduleId} tbody`);
             if (!tbody) return;
             tbody.innerHTML = '';
 
             const totalItems = data.length;
             const totalPages = Math.ceil(totalItems / itemsPerPage);
-            if (totalPages === 0) {
-                currentPage = 1;
-            } else if (currentPage > totalPages) {
-                currentPage = totalPages;
+            if (currentPage > totalPages && totalPages > 0) {
+                paginationState[moduleId] = 1;
             }
-
             const start = (currentPage - 1) * itemsPerPage;
             const end = start + itemsPerPage;
             const pageData = data.slice(start, end);
@@ -148,10 +147,21 @@
 
                 // Cột hành động
                 const actions = document.createElement('td');
-                actions.innerHTML = `
-                    <button class="btn-edit" onclick="openModal('edit','${moduleId}','${item.id}')">Sửa</button>
-                    <button class="btn-delete" onclick="deleteItem('${moduleId}','${item.id}')">Xóa</button>
-                `;
+                if (moduleId === 'containerhistory') {
+                    actions.innerHTML = `
+                        <button class="btn-edit" onclick="openModal('edit','${moduleId}','${item.id}')">Sửa</button>
+                        <button class="btn-delete" disabled 
+                            title="Dữ liệu lịch sử không được xóa"
+                            style="opacity:0.4; cursor:not-allowed">
+                            Xóa
+                        </button>
+                    `;
+                } else {
+                    actions.innerHTML = `
+                        <button class="btn-edit" onclick="openModal('edit','${moduleId}','${item.id}')">Sửa</button>
+                        <button class="btn-delete" onclick="deleteItem('${moduleId}','${item.id}')">Xóa</button>
+                    `;
+                }
                 row.appendChild(actions);
                 tbody.appendChild(row);
             
@@ -165,7 +175,7 @@
             containers: [
                 { id: 'itemTypeId', label: 'Loại hàng', type: 'select', required: true },
                 { id: 'weight', label: 'Trọng lượng (kg)', type: 'number', min:'0', max:'10000' },
-                { id: 'status', label: 'Trạng thái', type: 'select', options: ['Rỗng', 'Đã đóng hàng', 'Đang vận chuyển', 'Cần bảo trì'], defaultValue:"Rỗng"},
+                { id: 'status', label: 'Trạng thái', type: 'select', options: ['Rỗng', 'Đã đóng hàng', 'Đang vận chuyển', 'Cần bảo trì', 'Đã Giao'], defaultValue:"Rỗng"},
                 { id: 'warehouseId', label: 'Kho', type: 'number' },
                 { id: 'vehicleId', label: 'Phương tiện', type: 'number' },
                 { id: 'customerId', label: 'Khách hàng', type: 'number' }
@@ -203,7 +213,7 @@
                 { id: 'licensePlate', label: 'Biển số xe', type: 'text' },
                 { id: 'image', label: 'Hình ảnh', type: 'file' },
                 { id: 'capacity', label: 'Tải trọng (tấn)', type: 'number' },
-                { id: 'status', label: 'Trạng thái', type: 'select', options: ['Đang hoạt động', 'Đang sửa chữa', 'Đang vận chuyển', 'Ngừng sử dụng'] },
+                { id: 'status', label: 'Trạng thái', type: 'select', options: ['Đang hoạt động', 'Đang bảo trì', 'Đang vận chuyển', 'Ngừng sử dụng'] },
                 { id: 'description', label: 'Mô tả chi tiết', type: 'textarea' }
             ],
             trips: [
@@ -213,7 +223,7 @@
                 { id: 'etd', label: 'ETD', type: 'date' },
                 { id: 'eta', label: 'ETA', type: 'date' },
                 { id: 'vehicleId', label: 'Phương tiện', type: 'number' },
-                { id: 'status', label: 'Trạng thái', type: 'text' }
+                { id: 'status', label: 'Trạng thái', type: 'select', options: ['Chuẩn bị', 'Đang chạy', 'Hoàn thành', 'Hủy'], disabled: true }
             ],
             ports: [ 
             { id: 'name', label: 'Tên cảng', type: 'text'},
@@ -253,42 +263,75 @@
         ]
         };
 
-        const actionToStatus = {
-            'Nhập container': 'Rỗng',
-            'Đóng hàng': 'Đã đóng hàng',
-            'Xuất kho': 'Đang vận chuyển',
-            'Giao hàng': 'Rỗng',
-            'Kiểm tra container': 'Cần bảo trì'
+        const ACTION_EFFECTS = {
+            'Nhập container':     { container: 'Rỗng',           vehicle: 'Đang hoạt động',   trip: null },
+            'Đóng hàng':          { container: 'Đã đóng hàng',   vehicle: 'Đang hoạt động',   trip: null },
+            'Xuất kho':           { container: 'Đang vận chuyển',vehicle: 'Đang vận chuyển',  trip: 'Đang chạy' }, 
+            'Giao hàng':          { container: 'Rỗng',           vehicle: 'Đang hoạt động',   trip: 'Hoàn thành' },
+            'Kiểm tra container': { container: 'Cần bảo trì',vehicle: 'Đang bảo trì',     trip: null }
         };
         
-        function addContainerHistory(history) {
-            const c = appData.containers.find(x => x.id === history.containerId);
-            if (!c) return alert(` Không tìm thấy container ${history.containerId}`);
+        function updateRelatedStatus(history) {
+            const container = appData.containers.find(c => c.id === history.containerId);
+            if (!container) return;
         
-            appData.containerhistory.push(history);
+            const effect = ACTION_EFFECTS[history.action];
+            if (!effect) return;
         
-            const newStatus = actionToStatus[history.action];
-            if (newStatus) c.status = newStatus;
-        
-            saveData('containers', appData.containers);
-            saveData('containerhistory', appData.containerhistory);
-        
-            alert(` Đã cập nhật trạng thái container ${c.id}: ${c.status}`);
-        }
-        
-        export function saveFormData(moduleId, newItem, isAdd = true, id = null) {
-            const relation = dataRelations[moduleId];
-            
-            if (relation) {
-            for (const [field, targetModule] of Object.entries(relation)) {
-                const targetList = appData[targetModule];
-                const exists = targetList.some(t => t.id === newItem[field]);
-                if (!exists) {
-                alert(` Giá trị "${field}" (${newItem[field]}) không tồn tại trong ${targetModule}!`);
-                return;
+            container.status = effect.container;
+   
+            if (container.vehicleId) {
+                const vehicle = appData.vehicles.find(v => v.id === container.vehicleId);
+                if (vehicle && effect.vehicle) {
+                    vehicle.status = effect.vehicle;
                 }
             }
+        
+            if (effect.trip && container.vehicleId) {
+                const activeTrip = appData.trips.find(t => 
+                    t.vehicleId === container.vehicleId && 
+                    (t.status === 'Chuẩn bị' || t.status === 'Đang chạy')
+                );
+        
+                if (activeTrip) {
+                    if (history.action === 'Giao hàng') {
+                        const allContainersEmpty = appData.containers
+                            .filter(c => c.vehicleId === container.vehicleId)
+                            .every(c => c.status === 'Rỗng');
+        
+                        activeTrip.status = allContainersEmpty ? 'Hoàn thành' : 'Đang chạy';
+                    } else {
+                        activeTrip.status = effect.trip;
+                    }
+                }
             }
+        
+            // Lưu tất cả thay đổi
+            saveData('containers', appData.containers);
+            saveData('vehicles', appData.vehicles);
+            saveData('trips', appData.trips);
+        }
+        
+        function addContainerHistory(history) {
+            const container = appData.containers.find(c => c.id === history.containerId);
+            if (!container) {
+                return alert(`Không tìm thấy container ${history.containerId}`);
+            }
+        
+            // Thêm lịch sử
+            appData.containerhistory.push(history);
+            saveData('containerhistory', appData.containerhistory);
+        
+            // TỰ ĐỘNG CẬP NHẬT TRẠNG THÁI CONTAINER + XE + CHUYẾN
+            updateRelatedStatus(history);
+        
+            // Thông báo + refresh bảng liên quan
+            alert(`Đã ghi lịch sử và cập nhật trạng thái!\nContainer ${container.id} → ${container.status}`);
+        
+            loadTableData('containers', appData.containers);
+            loadTableData('vehicles', appData.vehicles);
+            loadTableData('trips', appData.trips);
+            loadTableData('containerhistory', appData.containerhistory);
         }
         
         // ====== HÀM MỞ / ĐÓNG MODAL ======
@@ -417,10 +460,19 @@
                 if (existingItem && f.type !== 'file') {
                     input.value = existingItem[f.id] || '';
                 }
-                
-                if (f.id === "status") {
-                    input.disabled = true;     
+                if (
+                    action === 'edit' &&
+                    moduleId === 'containerhistory' &&
+                    (f.id === 'status' || f.id === 'action')
+                ) {
+                    input.disabled = true;
+                    input.title = "Lịch sử đã ghi nhận không được chỉnh sửa";
                 }
+                
+                if (f.id === "status" && moduleId === "containers") {
+                    input.disabled = true;
+                }
+                
 
                 formFieldsDiv.append(label, input);
             });
@@ -440,54 +492,66 @@
         }
 
         // thêm nút phân trang
-        function renderPagination(moduleId, totalPages,) {
-            if (!totalPages || totalPages <= 1) {
-                const paginationId = `${moduleId}Pagination`;
-                const container = document.querySelector(`#${paginationId}`);
-                if (container) container.style.display = 'none';
-                return;
-            }
+        function renderPagination(moduleId, totalPages) {
 
-            const paginationId = `${moduleId}Pagination`;
-
-            let container = document.querySelector(`#${paginationId}`);
+            let container = document.querySelector(`#${moduleId} .pagination-wrapper`);        
 
             if (!container) {
-                const moduleDiv = document.querySelector(`#${moduleId}`);
+                const moduleDiv = document.getElementById(moduleId);
                 if (!moduleDiv) return;
-
+        
                 container = document.createElement("div");
-                container.id = paginationId;
-                container.className = "pagination";
+                container.className = "pagination-wrapper";
                 moduleDiv.appendChild(container);
             }
-
+        
             container.style.display = 'flex';
-            container.innerHTML = "";
+            container.style.justifyContent = 'center';
+            container.style.marginTop = '20px';
+            container.style.gap = '10px';
 
-            let html = "";
-            if (currentPage > 1) {
-                html += `<button onclick="changePage(${currentPage - 1}, '${moduleId}')">‹ Prev</button>`;
+            const current = paginationState[moduleId] || 1;
+
+            let html = '';
+
+            // Nút Prev
+            if (current <= 1) {
+                html += `<button disabled>← Prev</button>`;
+            } else {
+                html += `<button onclick="changePage(${current - 1}, '${moduleId}')">← Prev</button>`;
             }
-            for (let i = 1; i <= totalPages; i++) {
-                html += `<button class="${i === currentPage ? 'active' : ''}"
-                            onclick="changePage(${i}, '${moduleId}')">${i}</button>`;
+
+            let pages = [];
+            if (totalPages <= 3) {
+                for (let i = 1; i <= totalPages; i++) pages.push(i);
+            } else if (current <= 2) {
+                pages = [1, 2, 3];
+            } else if (current >= totalPages - 1) {
+                pages = [totalPages - 2, totalPages - 1, totalPages];
+            } else {
+                pages = [current - 1, current, current + 1];
             }
-            if (currentPage < totalPages) {
-                html += `<button onclick="changePage(${currentPage + 1}, '${moduleId}')">Next ›</button>`;
+
+            pages.forEach(p => {
+                if (p === current) {
+                    html += `<button class="active">${p}</button>`;
+                } else {
+                    html += `<button onclick="changePage(${p}, '${moduleId}')">${p}</button>`;
+                }
+            });
+
+            // Nút Next
+            if (current >= totalPages) {
+                html += `<button disabled>Next →</button>`;
+            } else {
+                html += `<button onclick="changePage(${current + 1}, '${moduleId}')">Next →</button>`;
             }
 
             container.innerHTML = html;
         }
 
         function changePage(page, moduleId) {
-            const data = appData[moduleId];
-
-            if (!data) {
-                console.error("Không tìm thấy dữ liệu cho module:", moduleId);
-                return;
-            }
-            currentPage = page;
+            paginationState[moduleId] = page; 
             loadTableData(moduleId, appData[moduleId]);
         }
 
@@ -693,54 +757,37 @@
                         }
                         // === CHI PHÍ: XỬ LÝ RIÊNG, KHÔNG ĐỂ VÀO else BÊN DƯỚI ===
                         else if (moduleId === 'costs') {
-                            // 1. Lưu chi phí (chỉ 1 lần duy nhất!)
                             appData.costs.push(newItem);
                             saveData('costs', appData.costs);
 
-                            // 2. Nếu phải thu khách → tạo hóa đơn phát sinh
                             if (newItem.billToCustomer === 'Có') {
-                                const newInvoiceId = generateInvoicesID(appData.invoices);
-                                const additionalInvoice = {
-                                    id: newInvoiceId,
-                                    contractId: newItem.contractId,
-                                    amount: parseFloat(newItem.amount) || 0,
-                                    issueDate: new Date().toISOString().split('T')[0],
-                                    paidPercent: 0,
-                                    note: `Phát sinh - ${newItem.costType}`
-                                };
-
-                                appData.invoices.push(additionalInvoice);
-                                saveData('invoices', appData.invoices);
-
-                                // Cập nhật % thanh toán cho tất cả hóa đơn của hợp đồng
-                                appData.invoices
-                                    .filter(inv => inv.contractId === newItem.contractId)
-                                    .forEach(inv => updateInvoicePaidPercent(inv.id));
-
-                                alert(`Chi phí đã ghi nhận + Tạo hóa đơn phát sinh ${newInvoiceId}\n` +
-                                      `Số tiền thu thêm: ${additionalInvoice.amount.toLocaleString('vi-VN')} ₫\n` +
-                                      `Lý do: ${newItem.costType}`);
+                                const invoice = appData.invoices.find(inv => inv.contractId === newItem.contractId);
+                                if (!invoice) {
+                                    alert("Không tìm thấy hóa đơn chính của hợp đồng này!");
+                                    return;
+                                }
+                        
+                                const addAmount = parseFloat(newItem.amount) || 0;
+                                invoice.amount += addAmount; 
+                        
+                                updateInvoicePaidPercent(invoice.id);
+                        
+                                alert(`Đã cộng dồn ${addAmount.toLocaleString('vi-VN')} ₫ vào hóa đơn ${invoice.id}\n` +
+                                      `Tổng tiền hóa đơn hiện tại: ${invoice.amount.toLocaleString('vi-VN')} ₫`);
                             } else {
-                                alert(`Chi phí nội bộ đã ghi nhận\n` +
-                                      `Số tiền: ${parseFloat(newItem.amount).toLocaleString('vi-VN')} ₫\n` +
-                                      `Loại: ${newItem.costType}\n` +
-                                      `Không tạo hóa đơn thu khách`);
+                                alert(`Chi phí nội bộ đã ghi nhận: ${parseFloat(newItem.amount).toLocaleString('vi-VN')} ₫`);
                             }
-
-                            // Cập nhật giao diện
+                        
                             loadTableData('costs', appData.costs);
-                            if (newItem.billToCustomer === 'Có') {
-                                loadTableData('invoices', appData.invoices);
-                            }
+                            loadTableData('invoices', appData.invoices);
                             closeModal();
-                            return; // QUAN TRỌNG: Dừng lại, không chạy xuống dưới nữa!
+                            return;
                         }
-                        // === HỢP ĐỒNG: Tạo hóa đơn chính ===
+                
                         else if (moduleId === 'contracts') {
                             appData.contracts.push(newItem);
                             saveData('contracts', appData.contracts);
 
-                            // Tạo hóa đơn chính từ giá trị hợp đồng
                             const mainInvoiceId = generateInvoicesID(appData.invoices);
                             const mainInvoice = {
                                 id: mainInvoiceId,
@@ -748,12 +795,31 @@
                                 amount: parseFloat(newItem.value) || 0,
                                 issueDate: newItem.signDate || new Date().toISOString().split('T')[0],
                                 paidPercent: 0,
-                                note: 'Hóa đơn chính từ hợp đồng'
+                                note: 'Hóa đơn chính từ hợp đồng',
+                                originalAmount: parseFloat(newItem.value) || 0
                             };
                             appData.invoices.push(mainInvoice);
                             saveData('invoices', appData.invoices);
 
-                            alert(`Tạo hợp đồng thành công!\nTự động tạo hóa đơn chính ${mainInvoiceId}\nSố tiền: ${mainInvoice.amount.toLocaleString('vi-VN')} ₫`);
+                            alert(`Tạo hợp đồng + hóa đơn duy nhất ${mainInvoiceId}`);
+                        }
+                        else if (moduleId === 'invoices') {
+                            const contractId = newItem.contractId;
+                    
+                            const exists = appData.invoices.some(inv => inv.contractId === contractId);
+                    
+                            if (exists) {
+                                alert(`Hợp đồng ${contractId} ĐÃ CÓ HÓA ĐƠN rồi!\n\n` +
+                                      `→ Nếu có phát sinh: vào mục "Chi phí" để ghi nhận (sẽ tự động cộng vào hóa đơn này)\n` +
+                                      `→ Nếu khách thanh toán: vào mục "Thanh toán" để ghi thu`);
+                                closeModal();
+                                return;
+                            }
+                    
+                            appData.invoices.push(newItem);
+                            saveData('invoices', appData.invoices);
+                    
+                            alert(`Tạo hóa đơn thủ công thành công: ${newItem.id}`);
                         }
                         // === CÁC MODULE THƯỜNG ===
                         else {
@@ -778,7 +844,7 @@
                     loadTableData(moduleId, appData[moduleId]);
 
                     // Refresh bảng hóa đơn nếu có thay đổi liên quan
-                    if (['payments', 'costs', 'contracts'].includes(moduleId)) {
+                    if (['payments', 'costs', 'contracts', 'invoices'].includes(moduleId)) {
                         loadTableData('invoices', appData.invoices);
                     }
 
@@ -809,32 +875,44 @@
         }
         
         function addPayment(payment) {
-            console.log("Payment nhận vào:", payment);
-        
             const invoice = appData.invoices.find(x => x.id === payment.invoiceId);
             if (!invoice) {
-                console.error("Hóa đơn không tồn tại!");
+                alert("Không tìm thấy hóa đơn này!");
                 return;
             }
         
             const paidBefore = appData.payments
                 .filter(p => p.invoiceId === payment.invoiceId)
-                .reduce((sum, p) => sum + Number(p.amount), 0);
+                .reduce((sum, p) => sum + Number(p.amount || 0), 0);
         
-            const totalPaidAfter = paidBefore + Number(payment.amount);
+            const newTotalPaid = paidBefore + Number(payment.amount || 0);
+            const remaining = invoice.amount - paidBefore;
         
-            if (totalPaidAfter > Number(invoice.amount)) {
-                console.error("❌ Quá số tiền hóa đơn!");
-                return;
+            if (newTotalPaid > invoice.amount) {
+                alert(`Không thể thanh toán vượt quá công nợ!\n\n` +
+                      `Hóa đơn ${invoice.id}\n` +
+                      `Tổng tiền hóa đơn: ${invoice.amount.toLocaleString('vi-VN')} ₫\n` +
+                      `Đã thu trước đó:   ${paidBefore.toLocaleString('vi-VN')} ₫\n` +
+                      `Còn được thu:      ${remaining.toLocaleString('vi-VN')} ₫\n\n` +
+                      `Số tiền bạn vừa nhập: ${Number(payment.amount).toLocaleString('vi-VN')} ₫ → Quá ${(newTotalPaid - invoice.amount).toLocaleString('vi-VN')} ₫`);
+                return; 
             }
         
+            payment.id = generatePaymentsID(appData.payments); 
             appData.payments.push(payment);
             saveData('payments', appData.payments);
         
-            updateInvoicePaidPercent(payment.invoiceId);   // <-- GIỜ MỚI DÙNG
+            updateInvoicePaidPercent(payment.invoiceId);
         
+            alert(`Đã ghi nhận thanh toán thành công!\n` +
+                  `Hóa đơn: ${invoice.id}\n` +
+                  `Số tiền: ${Number(payment.amount).toLocaleString('vi-VN')} ₫\n` +
+                  `Còn lại: ${(invoice.amount - newTotalPaid).toLocaleString('vi-VN')} ₫`);
+        
+            loadTableData('payments', appData.payments);
             loadTableData('invoices', appData.invoices);
-        }        
+            closeModal();
+        }
         
         // ====== GẮN WINDOW (CHO HTML GỌI) ======
         window.addPayment = addPayment;
