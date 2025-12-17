@@ -131,6 +131,7 @@ body {
   flex-grow: 1;
   padding: 25px;
   overflow-y: auto;
+  padding-bottom: 80px;
 }
 
 .header {
@@ -241,14 +242,88 @@ th {
 }
 
 
-/* ====== RESPONSIVE ====== */
+.menu-toggle-btn {
+  display: none;
+  font-size: 26px;
+  cursor: pointer;
+  padding: 0 15px;
+}
+
+/* Mobile */
 @media (max-width: 768px) {
-  .container {
-      flex-direction: column;
+  .menu-toggle-btn { display: block; }
+
+  .banner {
+    flex-direction: column;
+    padding: 10px;
+    text-align: center;
   }
+
+  .banner-left, .banner-right { width: 100%; justify-content: center; }
+  .banner-left h1 { font-size: 1.3rem; margin: 8px 0; }
+  .banner-right li { display: inline-block; margin: 0 8px; }
+
   .sidebar {
-      width: 100%;
-      box-shadow: none;
-      border-bottom: 2px solid #007bff;
+    position: fixed;
+    top: 70px;
+    left: -260px;
+    width: 260px;
+    height: calc(100vh - 70px);
+    background: #fff;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    transition: left 0.3s ease;
+    z-index: 1000;
+    overflow-y: auto;
   }
+
+  .sidebar.active { left: 0; }
+
+  body.sidebar-open::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+  }
+
+  .container { flex-direction: column; }
+  .main-content { padding: 12px; }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    font-size: 0.82rem;
+  }
+
+  thead th, tbody td { padding: 8px 6px; }
+
+  .header button {
+    width: 100%;
+    margin-top: 10px;
+    font-size: 0.9rem;
+  }
+
+  h2 { font-size: 1.35rem; }
+
+  .tree-menu a { font-size: 0.88rem; }
+
+  .footer {
+    flex-direction: column;
+    padding: 12px 8px;
+    font-size: 0.82rem;
+    gap: 8px;
+  }
+
+  .footer img { height: 45px; width: 45px; }
+  .footer span { margin: 4px 0; }
+
+  .modal-content {
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+    margin: 15px auto;
+  }
+
+  .close { font-size: 1.8rem; top: 8px; right: 12px; }
 }

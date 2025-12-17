@@ -1,24 +1,30 @@
-// js/dashboard.js - Báo cáo tổng hợp theo năm (HOÀN HẢO, KHÔNG CÒN LỖI)
-
 function showDashboard() {
     let dashboard = document.getElementById('dashboard');
+
     if (!dashboard) {
         dashboard = document.createElement('div');
         dashboard.id = 'dashboard';
         dashboard.className = 'module-content';
+
         dashboard.innerHTML = `
             <h2>BÁO CÁO TỔNG HỢP</h2>
 
             <!-- Lọc theo năm -->
             <div style="text-align:center; margin:30px 0;">
                 <label style="font-weight:bold; font-size:18px;">Năm báo cáo:</label>
-                <select id="reportYear" style="padding:12px 18px; font-size:17px; border-radius:8px; border:2px solid #007bff; margin-left:15px;">
-                    ${Array.from({length:6}, (_, i) => {
+                <select id="reportYear"
+                    style="padding:12px 18px; font-size:17px; border-radius:8px;
+                           border:2px solid #007bff; margin-left:15px;">
+                    ${Array.from({ length: 6 }, (_, i) => {
                         const y = new Date().getFullYear() - i;
-                        return `<option value="${y}" ${i===0?'selected':''}>${y}</option>`;
+                        return `<option value="${y}" ${i === 0 ? 'selected' : ''}>${y}</option>`;
                     }).join('')}
                 </select>
-                <button id="btnRefreshReport" style="margin-left:20px; padding:12px 25px; background:#007bff; color:white; border:none; border-radius:8px; font-size:17px; cursor:pointer;">
+
+                <button id="btnRefreshReport"
+                    style="margin-left:20px; padding:12px 25px;
+                           background:#007bff; color:white; border:none;
+                           border-radius:8px; font-size:17px; cursor:pointer;">
                     Xem báo cáo năm
                 </button>
             </div>
@@ -32,36 +38,50 @@ function showDashboard() {
                 <div class="stat-card"><h3>Chưa thu trong năm</h3><p id="unpaidRevenue">0 ₫</p></div>
             </div>
 
-            <h3>Top 5 khách hàng công nợ cao nhất (tính đến 31/12/<span id="currentYearDisplay"></span>)</h3>
+            <h3>
+                Top 5 khách hàng công nợ cao nhất
+                (tính đến 31/12/<span id="currentYearDisplay"></span>)
+            </h3>
+
             <table class="table">
-                <thead><tr><th>Khách hàng</th><th>Số HĐ</th><th>Công nợ</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Khách hàng</th>
+                        <th>Số HĐ</th>
+                        <th>Công nợ</th>
+                    </tr>
+                </thead>
                 <tbody id="topDebtors"></tbody>
             </table>
 
-            <button onclick="exportAllData()" class="btn-export" style="margin-top:30px; padding:12px 25px; font-size:16px;">
+            <button onclick="exportAllData()"
+                style="margin-top:30px; padding:12px 25px; background-color: #66FFCC; font-size:16px; cursor:pointer;">
                 Xuất toàn bộ dữ liệu (Backup)
             </button>
         `;
+
         document.querySelector('.main-content').appendChild(dashboard);
     }
 
-    // GẮN SỰ KIỆN CHO SELECT VÀ NÚT (QUAN TRỌNG NHẤT!)
-    const yearSelect = document.getElementById('reportYear');
-    const btnRefresh = document.getElementById('btnRefreshReport');
-
-    if (yearSelect) {
-        yearSelect.addEventListener('change', updateDashboard);
-    }
-    if (btnRefresh) {
-        btnRefresh.addEventListener('click', updateDashboard);
-    }
-
-    // Cập nhật tiêu đề năm
-    document.getElementById('currentYearDisplay').textContent = yearSelect.value;
-
     showModule('dashboard');
-    updateDashboard(); // load lần đầu
+
+    // gắn sự kiện SAU khi DOM render xong
+    setTimeout(() => {
+        const btnRefresh = document.getElementById('btnRefreshReport');
+        const yearSelect = document.getElementById('reportYear');
+
+        // hiển thị năm đang chọn (lần đầu)
+        document.getElementById('currentYearDisplay').textContent = yearSelect.value;
+
+        if (btnRefresh) {
+            btnRefresh.onclick = updateDashboard; // ⭐ CHỈ CLICK MỚI LOAD
+        }
+
+        updateDashboard(); // load lần đầu (năm mặc định)
+    }, 0);
 }
+
+// ================== UPDATE DASHBOARD ==================
 
 function updateDashboard() {
     if (!appData) return;
@@ -70,7 +90,7 @@ function updateDashboard() {
     document.getElementById('currentYearDisplay').textContent = year;
 
     const startDate = new Date(year, 0, 1);
-    const endDate = new Date(year, 11, 31, 23, 59, 59);
+    const endDate   = new Date(year, 11, 31, 23, 59, 59);
 
     // 1. Hợp đồng trong năm
     const contractsInYear = appData.contracts.filter(c => {
@@ -78,27 +98,36 @@ function updateDashboard() {
         return d.getFullYear() === year;
     });
 
-    // 2. Doanh thu phải thu trong năm
-    const invoicesInYear = appData.invoices.filter(inv => 
+    // 2. Hóa đơn thuộc hợp đồng năm đó
+    const invoicesInYear = appData.invoices.filter(inv =>
         contractsInYear.some(c => c.id === inv.contractId)
     );
-    const totalRevenue = invoicesInYear.reduce((s, i) => s + Number(i.amount || 0), 0);
 
-    // 3. Đã thu trong năm
+    const totalRevenue = invoicesInYear.reduce(
+        (s, i) => s + Number(i.amount || 0), 0
+    );
+
+    // 3. Thanh toán trong năm
     const paymentsInYear = appData.payments.filter(p => {
         const d = new Date(p.time || p.date || '2000-01-01');
         return d.getFullYear() === year;
     });
-    const totalPaid = paymentsInYear.reduce((s, p) => s + Number(p.amount || 0), 0);
 
-    // 4. Chi phí nội bộ trong năm
+    const totalPaid = paymentsInYear.reduce(
+        (s, p) => s + Number(p.amount || 0), 0
+    );
+
+    // 4. Chi phí nội bộ
     const internalCosts = appData.costs.filter(c => {
         const d = new Date(c.time || c.date || '2000-01-01');
         return c.billToCustomer === 'Không' && d.getFullYear() === year;
     });
-    const totalInternalCost = internalCosts.reduce((s, c) => s + Number(c.amount || 0), 0);
 
-    // 5. Công nợ toàn hệ thống (tính đến hiện tại)
+    const totalInternalCost = internalCosts.reduce(
+        (s, c) => s + Number(c.amount || 0), 0
+    );
+
+    // 5. Công nợ toàn hệ thống
     let totalDebt = 0;
     appData.invoices.forEach(inv => {
         const paid = appData.payments
@@ -107,32 +136,36 @@ function updateDashboard() {
         totalDebt += (inv.amount - paid);
     });
 
-    // 6. Doanh thu chưa thu trong năm hiện tại
-    const unpaidInYear = invoicesInYear.reduce((s, inv) => {
+    // 6. Doanh thu chưa thu trong năm
+    const unpaidRevenue = invoicesInYear.reduce((s, inv) => {
         const paid = paymentsInYear
             .filter(p => p.invoiceId === inv.id)
             .reduce((s, p) => s + Number(p.amount || 0), 0);
         return s + (inv.amount - paid);
     }, 0);
 
-    // Cập nhật giao diện
+    // cập nhật số liệu
     document.getElementById('totalContracts').textContent = contractsInYear.length;
-    document.getElementById('totalRevenue').textContent   = totalRevenue.toLocaleString('vi-VN') + ' ₫';
-    document.getElementById('totalPaid').textContent     = totalPaid.toLocaleString('vi-VN') + ' ₫';
-    document.getElementById('totalDebt').textContent     = totalDebt.toLocaleString('vi-VN') + ' ₫';
+    document.getElementById('totalRevenue').textContent = totalRevenue.toLocaleString('vi-VN') + ' ₫';
+    document.getElementById('totalPaid').textContent = totalPaid.toLocaleString('vi-VN') + ' ₫';
+    document.getElementById('totalDebt').textContent = totalDebt.toLocaleString('vi-VN') + ' ₫';
     document.getElementById('totalInternalCost').textContent = totalInternalCost.toLocaleString('vi-VN') + ' ₫';
-    document.getElementById('unpaidRevenue').textContent  = unpaidInYear.toLocaleString('vi-VN') + ' ₫';
+    document.getElementById('unpaidRevenue').textContent = unpaidRevenue.toLocaleString('vi-VN') + ' ₫';
 
-    // Top 5 công nợ xấu
+    // ===== TOP 5 CÔNG NỢ =====
     const debtMap = {};
+
     appData.invoices.forEach(inv => {
         const contract = appData.contracts.find(c => c.id === inv.contractId);
         if (!contract) return;
+
         const customer = appData.customers.find(cus => cus.id === contract.customerId);
         if (!customer) return;
 
-        const paid = appData.payments.filter(p => p.invoiceId === inv.id)
-                                 .reduce((s, p) => s + Number(p.amount || 0), 0);
+        const paid = appData.payments
+            .filter(p => p.invoiceId === inv.id)
+            .reduce((s, p) => s + Number(p.amount || 0), 0);
+
         const debt = inv.amount - paid;
         if (debt > 0) {
             debtMap[customer.name] = (debtMap[customer.name] || 0) + debt;
@@ -140,23 +173,27 @@ function updateDashboard() {
     });
 
     const top5 = Object.entries(debtMap)
-        .sort((a,b) => b[1] - a[1])
-        .slice(0,5);
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
 
     const tbody = document.getElementById('topDebtors');
     tbody.innerHTML = top5.length === 0
-        ? `<tr><td colspan="3" style="text-align:center; color:#27ae60; padding:40px; font-size:18px;">Không có công nợ!</td></tr>`
+        ? `<tr><td colspan="3" style="text-align:center; padding:30px; color:#27ae60;">
+                Không có công nợ
+           </td></tr>`
         : top5.map(([name, debt]) => `
             <tr>
                 <td><strong>${name}</strong></td>
                 <td>${appData.invoices.filter(inv => {
                     const c = appData.contracts.find(ct => ct.id === inv.contractId);
                     return c && appData.customers.find(cus => cus.id === c.customerId)?.name === name;
-                }).length} HĐ</td>
-                <td style="color:#e74c3c; font-weight:bold; font-size:18px;">${debt.toLocaleString('vi-VN')} ₫</td>
+                }).length}</td>
+                <td style="color:#e74c3c; font-weight:bold;">
+                    ${debt.toLocaleString('vi-VN')} ₫
+                </td>
             </tr>
         `).join('');
 }
 
-// GỌI KHI MỞ DASHBOARD
+// expose
 window.showDashboard = showDashboard;

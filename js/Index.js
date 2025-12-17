@@ -821,14 +821,12 @@
                     
                             alert(`Tạo hóa đơn thủ công thành công: ${newItem.id}`);
                         }
-                        // === CÁC MODULE THƯỜNG ===
                         else {
                             appData[moduleId].push(newItem);
                             saveData(moduleId, appData[moduleId]);
                         }
                     } 
                     else {
-                        // === SỬA DỮ LIỆU ===
                         const idx = appData[moduleId].findIndex(i => i.id === id);
                         if (idx >= 0) {
                             appData[moduleId][idx] = newItem;
@@ -840,7 +838,6 @@
                         saveData(moduleId, appData[moduleId]);
                     }
 
-                    // === CẬP NHẬT GIAO DIỆN ===
                     loadTableData(moduleId, appData[moduleId]);
 
                     // Refresh bảng hóa đơn nếu có thay đổi liên quan
@@ -914,6 +911,17 @@
             closeModal();
         }
         
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleBtn = document.getElementById('menuToggle');
+            const sidebar = document.querySelector('.sidebar');
+          
+            if (!toggleBtn || !sidebar) return;
+          
+            toggleBtn.addEventListener('click', () => {
+              sidebar.classList.toggle('active');
+            });
+          });
+          
         // ====== GẮN WINDOW (CHO HTML GỌI) ======
         window.addPayment = addPayment;
         window.showModule = showModule;
