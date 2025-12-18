@@ -65,23 +65,22 @@ function showDashboard() {
 
     showModule('dashboard');
 
-    // gắn sự kiện SAU khi DOM render xong
+ 
     setTimeout(() => {
         const btnRefresh = document.getElementById('btnRefreshReport');
         const yearSelect = document.getElementById('reportYear');
 
-        // hiển thị năm đang chọn (lần đầu)
+
         document.getElementById('currentYearDisplay').textContent = yearSelect.value;
 
         if (btnRefresh) {
-            btnRefresh.onclick = updateDashboard; // ⭐ CHỈ CLICK MỚI LOAD
+            btnRefresh.onclick = updateDashboard; 
         }
 
-        updateDashboard(); // load lần đầu (năm mặc định)
+        updateDashboard(); 
     }, 0);
 }
 
-// ================== UPDATE DASHBOARD ==================
 
 function updateDashboard() {
     if (!appData) return;

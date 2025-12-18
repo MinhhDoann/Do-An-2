@@ -111,3 +111,43 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+if (document.getElementById('menuToggle')) {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+    if (currentUser) {
+        const role = currentUser.role;
+
+        const outloginLi = document.getElementById('outlogin');
+        if (outloginLi) {
+            outloginLi.innerHTML = `
+                <span style="margin-right: 20px; font-weight: 500;">Chào ${currentUser.name} (${currentUser.role})</span>
+                <a href="#" id="logout-link">Đăng Xuất</a>
+            `;
+        }
+        if (role !== 'admin') {
+            const userMenuItem = document.querySelector('.tree-menu a[onclick="showModule(\'users\')"]')?.closest('.menu-item');
+            if (userMenuItem) userMenuItem.style.display = 'none';
+        }
+
+        if (role !== 'admin' && role !== 'Điều Phối') {
+            const financeMenuItem = document.querySelector('.tree-menu li.menu-item:nth-child(5)'); 
+            if (financeMenuItem) financeMenuItem.style.display = 'none';
+        }
+
+        // Ẩn module nếu cố truy cập trực tiếp không có quyền
+        const activeModule = document.querySelector('.module-content.active');
+        if (activeModule) {
+            if (activeModule.id === 'users' && role !== 'admin') {
+                activeModule.style.display = 'none';
+                alert('Bạn không có quyền truy cập chức năng này!');
+                showModule('containers'); // chuyển về trang mặc định
+            }
+            if (['costs', 'invoices', 'payments'].includes(activeModule.id) && role !== 'admin' && role !== 'Điều Phối') {
+                activeModule.style.display = 'none';
+                alert('Bạn không có quyền truy cập chức năng này!');
+                showModule('containers');
+            }
+        }
+    }
+}
