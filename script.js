@@ -217,7 +217,7 @@ function renderTransport() {
     });
 }
 
-// --- Yard (depot) - ✅ CẢI TIẾN AN TOÀN ---
+// --- Yard (depot)
 function renderYard() {
     const yard = document.getElementById('yard');
     yard.innerHTML = '';
@@ -466,7 +466,7 @@ function renderAll() {
     });
 }
 
-// --- ✅ Mock Data ---
+// ---  Mock Data ---
 function initMockData() {
     if (DB.containers.length > 0) return;
 
@@ -518,13 +518,13 @@ function initMockData() {
     console.log("✅ Đã khởi tạo dữ liệu mẫu.");
 }
 
-// --- 🔍 Global Search (nút "Tìm") ---
+// --- Global Search (nút "Tìm") ---
 function performGlobalSearch() {
     const query = document.getElementById('globalSearch').value.trim().toLowerCase();
     if (!query) {
         // Xoá highlight nếu không tìm
         document.querySelectorAll('mark.search-highlight').forEach(el => {
-            el.outerHTML = el.textContent; // replace <mark> with plain text
+            el.outerHTML = el.textContent; 
         });
         return;
     }
@@ -611,10 +611,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    logoutBtn?.addEventListener("click", () => {
-        if (confirm('Đăng xuất và xóa toàn bộ dữ liệu?')) {
-            localStorage.removeItem("cl_db");
-            location.reload();
-        }
+     logoutBtn?.addEventListener("click", () => {
+    if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+        window.location.href = 'index.html';
+    }
     });
 });
