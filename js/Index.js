@@ -56,13 +56,13 @@
             itemTypes: { fields: ['id', 'name', 'description','category'] },
             containerhistory: { fields: ['id', 'containerId', 'action', 'time', 'location'] },
             warehouses: { fields: ['id', 'name', 'capacity', 'location', 'manager'] },
-            customers: { fields: ['id', 'name', 'email', 'phone'] },
+            customers: { fields: ['id', 'name', 'email', 'phone','address'] },
             vehicles: {
                 fields: ['id','vehicleType','licensePlate','image', 'capacity', 'status', 'description']
             },
             trips: { fields: ['id', 'voyageNumber', 'fromPortId', 'toPortId', 'etd', 'eta', 'vehicleId', 'status'] },  
             ports: { fields: ['id', 'name', 'code', 'location'] },                                                                  
-            users: { fields: ['id', 'name', 'email', 'role', 'warehouseId', 'status'] },                               
+            users: { fields: ['id', 'name', 'email', 'role', 'password', 'warehouseId', 'status'] },                               
             contracts: { fields: ['id', 'customerId', 'signDate', 'expiryDate', 'value'] },
             invoices: { fields: ['id', 'contractId', 'amount', 'issueDate', 'paidPercent'] },
             payments: { fields: ['id', 'invoiceId', 'amount', 'method', 'time'] },
@@ -206,13 +206,14 @@
             customers: [
                 { id: 'name', label: 'Tên khách hàng', type: 'text', required: true, pattern: '^[\\p{L}\\s]+$', maxLength: 50, title:'Vui lòng nhập tên khách hàng' },
                 { id: 'email', label: 'Email', type: 'email', required: true, pattern:'^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$', title: 'Vui lòng nhập đúng gmail'},
-                { id: 'phone', label: 'Số điện thoại', type: 'text', required: true, pattern: '^0\\d{9}$', title:"Vui lòng nhập đúng số điện thoại" }
+                { id: 'phone', label: 'Số điện thoại', type: 'text', required: true, pattern: '^0\\d{9}$', title:"Vui lòng nhập đúng số điện thoại" },
+                { id: 'address', label: 'Địa chỉ', type: 'text', required: true}
             ],
             vehicles: [
                 { id: 'vehicleType', label: 'Loại xe', type: 'select', options: ['Xe tải', 'Xe container', 'Xe khách', 'Xe đầu kéo'] },
                 { id: 'licensePlate', label: 'Biển số xe', type: 'text' },
                 { id: 'image', label: 'Hình ảnh', type: 'file' },
-                { id: 'capacity', label: 'Tải trọng (tấn)', type: 'number' },
+                { id: 'capacity', label: 'Tải trọng (tấn)', type: 'number' , min: '0', max: '20' },
                 { id: 'status', label: 'Trạng thái', type: 'select', options: ['Đang hoạt động', 'Đang bảo trì', 'Đang vận chuyển', 'Ngừng sử dụng'] },
                 { id: 'description', label: 'Mô tả chi tiết', type: 'textarea' }
             ],
@@ -257,7 +258,8 @@
             users: [
             { id: 'name', label: 'Họ tên', type: 'text'},
             { id: 'email', label: 'Email', type: 'email'},
-            { id: 'role', label: 'Vai trò', type: 'select', options: ['admin','quản lý kho','tài xế','kế toán'] },
+            { id: 'role', label: 'Vai trò', type: 'select', options: ['admin','quản lý kho','Điều Phối'] },
+            { id: 'password', label: 'Mật khẩu', type: 'password'},
             { id: 'warehouseId', label: 'Kho', type: 'number' },
             { id: 'status', label: 'Trạng thái', type: 'select', options: ['Hoạt động','Khóa'] }
         ]
@@ -922,7 +924,8 @@
             });
           });
           
-        // ====== GẮN WINDOW (CHO HTML GỌI) ======
+          
+        // ====== GẮN WINDOW ======
         window.addPayment = addPayment;
         window.showModule = showModule;
         window.openModal = openModal;

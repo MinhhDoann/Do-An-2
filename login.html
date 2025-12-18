@@ -77,15 +77,29 @@
 
                         const users = JSON.parse(localStorage.getItem('users')) || [];
                         const userExists = users.some(user => user.email === email);
-
                         if (userExists) {
                             alert('Email này đã được đăng ký trước đó!');
                         } else {
-                            users.push({ name, email, password });
+                            const newUser = {
+                                id: 'USER' + String(users.length + 5).padStart(3, '0'),
+                                name: name,
+                                email: email,
+                                password: password,
+                                role: 'nhân viên kho' 
+                            };
+
+                            users.push(newUser);
                             localStorage.setItem('users', JSON.stringify(users));
-                            alert('Đăng ký thành công! Bạn sẽ được chuyển về trang Đăng Nhập.');
+                            alert('Đăng ký thành công! Bạn đã được cấp quyền "nhân viên kho".\nBây giờ bạn có thể đăng nhập.');
+
+
                             document.querySelector('.signup').classList.add('hidden');
                             document.querySelector('.signup-login').classList.remove('hidden');
+
+                            document.getElementById('name').value = '';
+                            document.getElementById('email').value = '';
+                            document.getElementById('password').value = '';
+                            document.getElementById('chkAgree').checked = false;
                         }
                     });
                 });
