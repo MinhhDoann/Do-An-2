@@ -171,6 +171,47 @@ function updateDashboard() {
         `).join('');
     }
 }
+function exportAllData() {
 
-// Gắn ra ngoài để gọi từ menu
+    const backupData = {};
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        try {
+            backupData[key] = JSON.parse(localStorage.getItem(key));
+        } catch (e) {
+            backupData[key] = localStorage.getItem(key);
+        }
+    }
+
+    const now = new Date();
+    const timestamp = now.toLocaleString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    }).replace(/[/, :]/g, '-');
+
+    const dataStr = JSON.stringify(backupData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Backup_QuanLyLogistics_${timestamp}.json`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+
+    alert(`✅ Đã xuất backup thành công!\nFile: ${link.download}`);
+}
+
+
+window.exportAllData = exportAllData;
+
+
 window.showDashboard = showDashboard;
