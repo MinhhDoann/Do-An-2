@@ -788,10 +788,90 @@
                     const relation = dataRelations[moduleId];
                     if (relation) {
                         for (const [field, targetModule] of Object.entries(relation)) {
-                            const targetList = appData[targetModule];
-                            const exists = targetList.some(t => t.id === newItem[field]);
-                            if (!exists) {
-                                alert(`❌ Giá trị "${field}" (${newItem[field]}) không tồn tại trong ${targetModule}!`);
+                            if (newItem[field]) {
+                                const exists = appData[targetModule].some(t => t.id === newItem[field]);
+                                if (!exists) {
+                                    alert(`❌ Giá trị "${field}" (${newItem[field]}) không tồn tại trong ${targetModule}!`);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                    if (moduleId === 'containers') {
+                        const vehicleId = newItem.vehicleId;
+                        const currentStatus = newItem.status;
+                
+                        if (currentStatus === 'Đang vận chuyển' && !vehicleId) {
+                            alert('Container đang vận chuyển phải được gắn vào một phương tiện!');
+                            return;
+                        }
+                
+                        if (vehicleId) {
+                            const vehicle = appData.vehicles.find(v => v.id === vehicleId);
+                            if (!vehicle) {
+                                alert('Phương tiện không tồn tại!');
+                                return;
+                            }
+                
+                            const currentContainer = isAdd ? null : appData.containers.find(c => c.id === id);
+                
+                            const busyContainer = getContainerOnVehicle(vehicleId);
+                            if (busyContainer && (!currentContainer || busyContainer.id !== currentContainer.id)) {
+                                alert(`Xe ${vehicle.licensePlate || vehicleId} đang chở container ${busyContainer.id} (Đang vận chuyển).\nKhông thể gắn thêm container khác!`);
+                                return;
+                            }
+                        }
+                
+                        if (!vehicleId && currentStatus === 'Đang vận chuyển') {
+                            alert('Không thể để trạng thái "Đang vận chuyển" khi không có phương tiện!');
+                            return;
+                        }
+                    }
+                
+                    else if (moduleId === 'trips') {
+                        const vehicleId = newItem.vehicleId;
+                    
+                        if (!vehicleId) {
+                            alert('Chuyến đi phải được gắn với một phương tiện!');
+                            return;
+                        }
+                    
+                        const vehicle = appData.vehicles.find(v => v.id === vehicleId);
+                        if (!vehicle) {
+                            alert('Phương tiện không tồn tại!');
+                            return;
+                        }
+                    
+                        const currentTrip = isAdd ? null : appData.trips.find(t => t.id === id);
+                    
+                        const activeTrip = appData.trips.find(t => 
+                            t.vehicleId === vehicleId && 
+                            ['Chuẩn bị', 'Đang chạy'].includes(t.status) &&
+                            (!currentTrip || t.id !== currentTrip.id)
+                        );
+                    
+                        if (activeTrip) {
+                            alert(`Xe ${vehicle.licensePlate || vehicleId} đang thực hiện chuyến ${activeTrip.voyageNumber} (trạng thái: ${activeTrip.status}).\nKhông thể tạo/sửa chuyến mới!`);
+                            return;
+                        }
+                    
+                        if (['Chuẩn bị', 'Đang chạy'].includes(newItem.status)) {
+                            const containersOnVehicle = appData.containers.filter(c => c.vehicleId === vehicleId);
+                    
+                            if (containersOnVehicle.length === 0) {
+                                alert(`Xe ${vehicle.licensePlate || vehicleId} chưa có container nào.\nKhông thể bắt đầu chuyến đi!`);
+                                return;
+                            }
+                    
+                            const hasLoadedContainer = containersOnVehicle.some(c => 
+                                c.status !== 'Rỗng' && 
+                                c.status !== 'Cần bảo trì' && 
+                                c.status !== 'Đã Giao'
+                            );
+                    
+                            if (!hasLoadedContainer) {
+                                const containerIds = containersOnVehicle.map(c => c.id).join(', ');
+                                alert(`Xe ${vehicle.licensePlate || vehicleId} chỉ đang chở container rỗng hoặc không có hàng (${containerIds}).\nKhông được phép chạy chuyến đi với container rỗng!`);
                                 return;
                             }
                         }
@@ -889,22 +969,20 @@
                     else {
                         const idx = appData[moduleId].findIndex(i => i.id === id);
                         if (idx >= 0) {
-                            appData[moduleId][idx] = newItem;
-
-                            if (moduleId === 'payments') {
-                                updateInvoicePaidPercent(newItem.invoiceId);
-                            }
+                            appData[moduleId][idx] = { ...appData[moduleId][idx], ...newItem };
+                            saveData(moduleId, appData[moduleId]);
                         }
-                        saveData(moduleId, appData[moduleId]);
                     }
 
                     loadTableData(moduleId, appData[moduleId]);
 
-                    // Refresh bảng hóa đơn nếu có thay đổi liên quan
-                    if (['costs', 'contracts', 'invoices'].includes(moduleId)) {
+                    if (['costs', 'contracts', 'invoices', 'containers', 'trips'].includes(moduleId)) {
                         loadTableData('invoices', appData.invoices);
+                        loadTableData('containers', appData.containers);
+                        loadTableData('vehicles', appData.vehicles);
+                        loadTableData('trips', appData.trips);
                     }
-
+                    alert(isAdd ? 'Thêm thành công!' : 'Cập nhật thành công!');
                     closeModal();
                 });
             }
@@ -913,7 +991,30 @@
             updateDisplayMaps();
             showModule('containers');
         });
-        
+        // ktra có đang trở k 
+        function isVehicleBusy(vehicleId) {
+            return appData.containers.some(c => 
+                c.vehicleId === vehicleId && 
+                ['Đang vận chuyển'].includes(c.status)
+            );
+        }
+        // ktra đã có chuyến chưa
+        function hasActiveTrip(vehicleId) {
+            return appData.trips.some(t => 
+                t.vehicleId === vehicleId && 
+                ['Chuẩn bị', 'Đang chạy'].includes(t.status)
+            );
+        }
+        //kiểm tra đang bận k 
+        function isVehicleInUse(vehicleId) {
+            return isVehicleBusy(vehicleId) || hasActiveTrip(vehicleId);
+        }
+        //container đang gắn với xe k 
+        function getContainerOnVehicle(vehicleId) {
+            return appData.containers.find(c => 
+                c.vehicleId === vehicleId && c.status === 'Đang vận chuyển'
+            );
+        }
         document.addEventListener('DOMContentLoaded', () => {
             const toggleBtn = document.getElementById('menuToggle');
             const sidebar = document.querySelector('.sidebar');

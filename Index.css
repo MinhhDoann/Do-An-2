@@ -249,6 +249,11 @@ th {
   padding: 0 15px;
 }
 
+.btn-edit, .btn-delete{
+  width: 35px;
+  border-radius: 5px;
+  border-bottom: 1px solid green;
+}
 /* Mobile */
 @media (max-width: 768px) {
   .menu-toggle-btn { display: block; }
