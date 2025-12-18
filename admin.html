@@ -152,6 +152,7 @@
                 </div>
             </section>
 
+
             <!-- Cargo -->
             <section id="cargo" class="card-section" style="display:none">
                 <div class="grid">
@@ -165,26 +166,31 @@
                                     <th>Container</th>
                                     <th>Trọng lượng</th>
                                     <th>Loại</th>
-                                </tr>
+                                    <th>Hành động</th> </tr>
                             </thead>
                             <tbody></tbody>
                         </table>
                     </div>
 
                     <div class="card">
-                        <h3>Thêm Lô hàng</h3>
-                        <div class="form-row"><input id="gDesc" placeholder="Mô tả hàng" /></div>
+                        <h3 id="gFormTitle">Thêm / Sửa Lô hàng</h3> <div class="form-row"><input id="gDesc" placeholder="Mô tả hàng" /></div>
                         <div class="form-row"><input id="gQty" placeholder="Số lượng / Trọng lượng" /></div>
-                        <div class="form-row"><select id="gType">
+                        <div class="form-row">
+                            <select id="gType">
                                 <option>General</option>
                                 <option>Reefer</option>
                                 <option>Dangerous (DG)</option>
-                            </select></div>
-                        <div class="form-row"><select id="gContainer">
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <select id="gContainer">
                                 <option value="">- Chọn container -</option>
-                            </select></div>
-                        <div style="display:flex;gap:8px"><button class="btn" id="saveCargo">Lưu</button><button
-                                onclick="clearCargoForm()" class="btn" style="background:#6b7280">Hủy</button></div>
+                            </select>
+                        </div>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn" id="saveCargo">Lưu</button>
+                            <button onclick="clearCargoForm()" class="btn" style="background:#6b7280">Hủy</button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -229,7 +235,6 @@
                 <div class="grid">
                     <div class="card full-width">
                         <h3>Quản lý Bãi (Yard Map)</h3>
-                        <div class="small">Sơ đồ bãi mẫu (Grid) - click để thay đổi trạng thái</div>
                         <div id="yard" style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:10px">
                         </div>
                     </div>
@@ -238,20 +243,23 @@
 
             <!-- Finance -->
             <section id="finance" class="card-section" style="display:none">
-                <div class="grid">
+                <div class="grid" style="grid-template-columns: 1fr 1fr;">
                     <div class="card">
-                        <h3>Tính chi phí nhanh</h3>
-                        <div class="form-row"><input id="fBase" placeholder="Cước cơ bản" type="number" /></div>
-                        <div class="form-row"><input id="fDemDet" placeholder="DEM/DET" type="number" /></div>
-                        <div class="form-row"><input id="fLocal" placeholder="Phí local" type="number" /></div>
-                        <div style="display:flex;gap:8px"><button class="btn" id="calcCost">Tính</button>
-                            <div id="costResult" style="align-self:center"></div>
+                        <h3>Tính toán chi phí</h3>
+                        <div class="form-row">
+                            <select id="fSelectContainer" onchange="updateFinanceDetail()">
+                                <option value="">- Chọn Container cần tính -</option>
+                            </select>
                         </div>
+                        <div class="form-row"><input id="fBase" placeholder="Cước cơ bản (VND)" type="number" /></div>
+                        <div class="form-row"><input id="fDemDet" placeholder="Phí DEM/DET" type="number" /></div>
+                        <div class="form-row"><input id="fLocal" placeholder="Phí Local/Seal" type="number" /></div>
+                        <button class="btn" onclick="calculateFinance()">Tính tổng phí</button>
+                        <div id="costResult" style="margin-top:15px; font-weight:bold; color:var(--accent); font-size:1.2rem"></div>
                     </div>
-
-                    <div class="card">
-                        <h3>Hóa đơn & Báo cáo</h3>
-                        <button class="btn" onclick="downloadReport()">Tải báo cáo (JSON)</button>
+                    <div class="card" id="financeDetailBox">
+                        <h3>Chi tiết Container</h3>
+                        <p class="small">Chọn một container bên trái để xem thông tin chi tiết.</p>
                     </div>
                 </div>
             </section>
