@@ -1,7 +1,17 @@
 // --- Quản lý Trạng thái ---
 let editingContainerId = null; 
 let editingCargoId = null; 
-const DB = { containers: [], cargo: [], transports: [], docs: [], partners: [], staff: [], equip: [] };
+let editingTransportId = null; // Quản lý trạng thái sửa vận tải
+
+const DB = { 
+    containers: [], 
+    cargo: [], 
+    transports: [], 
+    docs: [], 
+    partners: [], 
+    staff: [], 
+    equip: [] 
+};
 
 // --- 1. Quản lý Lưu trữ (LocalStorage) ---
 function loadDB() { 
@@ -16,7 +26,7 @@ function saveDB() {
     renderAll(); 
 }
 
-// --- 2. Điều hướng (SPA Navigation) ---
+// --- 2. Điều hướng (Navigation) ---
 document.getElementById('mainNav').addEventListener('click', e => {
     if (e.target.matches('button')) {
         const s = e.target.dataset.section; 
@@ -28,20 +38,23 @@ document.getElementById('mainNav').addEventListener('click', e => {
 
 function showSection(id) { 
     document.querySelectorAll('.card-section').forEach(sec => sec.style.display = sec.id === id ? '' : 'none'); 
-    document.getElementById('sectionTitle').textContent = document.querySelector('[data-section="' + id + '"]')?.textContent || 'Tổng quan';
+    const title = document.querySelector('[data-section="' + id + '"]')?.textContent;
+    document.getElementById('sectionTitle').textContent = title || 'Tổng quan';
     renderAll(); 
 }
 
 // --- 3. Quản lý Container ---
 document.getElementById('saveContainer').addEventListener('click', () => {
     const no = document.getElementById('cNumber').value.trim();
-    if (!no) return alert('Nhập số hiệu');
+    if (!no) return alert('Nhập số hiệu container');
+
     const data = {
         no,
         type: document.getElementById('cType').value,
         loc: document.getElementById('cLocation').value,
         status: document.getElementById('cStatus').value
     };
+
     if (editingContainerId) {
         const idx = DB.containers.findIndex(c => c.id === editingContainerId);
         if (idx !== -1) DB.containers[idx] = { ...DB.containers[idx], ...data };
@@ -51,7 +64,8 @@ document.getElementById('saveContainer').addEventListener('click', () => {
         if (DB.containers.some(c => c.no.toLowerCase() === no.toLowerCase())) return alert('Số hiệu đã tồn tại');
         DB.containers.unshift({ id: Date.now(), ...data });
     }
-    saveDB(); clearContainerForm();
+    saveDB(); 
+    clearContainerForm();
 });
 
 function editContainer(id) {
@@ -66,58 +80,76 @@ function editContainer(id) {
 }
 
 function removeContainer(id) {
-    if(confirm('Xóa container này?')) { DB.containers = DB.containers.filter(c => c.id !== id); saveDB(); }
+    if(confirm('Xóa container này?')) { 
+        DB.containers = DB.containers.filter(c => c.id !== id); 
+        saveDB(); 
+    }
 }
 
 function clearContainerForm() { 
-    ['cNumber', 'cLocation'].forEach(id => document.getElementById(id).value = ''); 
-    editingContainerId = null; document.getElementById('saveContainer').textContent = 'Lưu';
+    ['cNumber', 'cLocation'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.value = '';
+    });
+    editingContainerId = null; 
+    document.getElementById('saveContainer').textContent = 'Lưu';
 }
 
-// --- 4. Quản lý Hàng hóa (Cargo) ---
-document.getElementById('saveCargo').addEventListener('click', () => {
-    const desc = document.getElementById('gDesc').value.trim();
-    if (!desc) return alert('Nhập mô tả hàng');
+// --- 4. Quản lý Vận tải (Sửa/Xóa/Liên kết Container) ---
+document.getElementById('saveTransport').addEventListener('click', () => {
+    const ref = document.getElementById('tRef').value.trim();
+    const container = document.getElementById('tContainer').value;
+    const vehicle = document.getElementById('tVehicle').value.trim();
+
+    if (!ref || !container || !vehicle) return alert('Vui lòng nhập Mã Booking, Chọn Container và Số xe');
+
     const data = {
-        desc,
-        qty: document.getElementById('gQty').value,
-        type: document.getElementById('gType').value,
-        container: document.getElementById('gContainer').value
+        ref,
+        container,
+        type: document.getElementById('tType').value,
+        vehicle,
+        eta: document.getElementById('tETA').value
     };
 
-    if (editingCargoId) {
-        const idx = DB.cargo.findIndex(g => g.id === editingCargoId);
-        if (idx !== -1) DB.cargo[idx] = { ...DB.cargo[idx], ...data };
-        editingCargoId = null;
-        document.getElementById('saveCargo').textContent = 'Lưu';
-        if(document.getElementById('gFormTitle')) document.getElementById('gFormTitle').textContent = 'Thêm Lô hàng';
+    if (editingTransportId) {
+        const idx = DB.transports.findIndex(t => t.id === editingTransportId);
+        if (idx !== -1) DB.transports[idx] = { ...DB.transports[idx], ...data };
+        editingTransportId = null;
+        document.getElementById('saveTransport').textContent = 'Lưu';
     } else {
-        DB.cargo.unshift({ id: Date.now(), ...data });
+        DB.transports.unshift({ id: Date.now(), ...data });
     }
-    saveDB(); clearCargoForm();
+    saveDB();
+    clearTransportForm();
 });
 
-function editCargo(id) {
-    const g = DB.cargo.find(item => item.id === id);
-    if (!g) return;
-    document.getElementById('gDesc').value = g.desc;
-    document.getElementById('gQty').value = g.qty;
-    document.getElementById('gType').value = g.type;
-    document.getElementById('gContainer').value = g.container;
-    editingCargoId = id;
-    document.getElementById('saveCargo').textContent = 'Cập nhật';
-    if(document.getElementById('gFormTitle')) document.getElementById('gFormTitle').textContent = 'Sửa Lô hàng';
-    document.getElementById('gDesc').focus();
+function editTransport(id) {
+    const t = DB.transports.find(item => item.id === id);
+    if (!t) return;
+    document.getElementById('tRef').value = t.ref;
+    document.getElementById('tContainer').value = t.container;
+    document.getElementById('tType').value = t.type;
+    document.getElementById('tVehicle').value = t.vehicle;
+    document.getElementById('tETA').value = t.eta;
+    
+    editingTransportId = id;
+    document.getElementById('saveTransport').textContent = 'Cập nhật';
 }
 
-function removeCargo(id) {
-    if(confirm('Xóa lô hàng này?')) { DB.cargo = DB.cargo.filter(g => g.id !== id); saveDB(); }
+function removeTransport(id) {
+    if(confirm('Xóa lịch trình vận tải này?')) {
+        DB.transports = DB.transports.filter(t => t.id !== id);
+        saveDB();
+    }
 }
 
-function clearCargoForm() {
-    ['gDesc', 'gQty'].forEach(id => document.getElementById(id).value = '');
-    editingCargoId = null; document.getElementById('saveCargo').textContent = 'Lưu';
-    if(document.getElementById('gFormTitle')) document.getElementById('gFormTitle').textContent = 'Thêm Lô hàng';
+function clearTransportForm() {
+    ['tRef', 'tVehicle', 'tETA', 'tContainer'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    editingTransportId = null;
+    document.getElementById('saveTransport').textContent = 'Lưu';
 }
 
 // --- 5. Sơ đồ bãi (Yard Map) ---
@@ -125,6 +157,7 @@ function renderYard() {
     const yard = document.getElementById('yard');
     if (!yard) return;
     yard.innerHTML = '';
+    
     // Hiển thị 32 ô bãi
     for (let i = 0; i < 32; i++) {
         const cell = document.createElement('div');
@@ -134,7 +167,6 @@ function renderYard() {
         const containerAtPos = DB.containers[i];
         cell.innerHTML = containerAtPos ? `<b>${containerAtPos.no}</b>` : '<span style="color:#ccc">Trống</span>';
         
-        // Hiệu ứng màu sắc theo trạng thái
         if (containerAtPos) {
             cell.style.background = containerAtPos.status === 'Full' ? '#dcfce7' : '#fef9c3';
         }
@@ -161,24 +193,21 @@ function renderYard() {
 }
 
 // --- 6. Tiện ích & Render ---
-function populateContainerSelect() { 
-    const selects = ['gContainer', 'fSelectContainer'];
-    selects.forEach(sId => {
-        const sel = document.getElementById(sId);
-        if (sel) {
-            const val = sel.value;
-            sel.innerHTML = '<option value="">- Chọn container -</option>' + 
-                DB.containers.map(c => `<option value="${c.no}">${c.no}</option>`).join('');
-            sel.value = val;
+function populateAllSelects() { 
+    const selects = [
+        { id: 'gContainer', label: '- Chọn container chứa hàng -' },
+        { id: 'tContainer', label: '-- Chọn container trên xe --' }
+    ];
+
+    selects.forEach(selConfig => {
+        const el = document.getElementById(selConfig.id);
+        if (el) {
+            const currentVal = el.value;
+            el.innerHTML = `<option value="">${selConfig.label}</option>` + 
+                DB.containers.map(c => `<option value="${c.no}">${c.no} (${c.type})</option>`).join('');
+            el.value = currentVal;
         }
     });
-}
-
-function renderAll() {
-    renderContainers();
-    renderCargo();
-    renderYard(); // Đã thêm lại vào đây
-    populateContainerSelect();
 }
 
 function renderContainers() { 
@@ -198,21 +227,29 @@ function renderContainers() {
         </tr>`).join('');
 }
 
-function renderCargo() {
-    const tbody = document.querySelector('#tblCargo tbody');
+function renderTransport() {
+    const tbody = document.querySelector('#tblTransport tbody');
     if (!tbody) return;
-    tbody.innerHTML = DB.cargo.map((g, i) => `
+    tbody.innerHTML = DB.transports.map((t, i) => `
         <tr>
             <td>${i + 1}</td>
-            <td>${g.desc}</td>
-            <td>${g.container || '-'}</td>
-            <td>${g.qty}</td>
-            <td>${g.type}</td>
+            <td><strong>${t.ref}</strong></td>
+            <td>${t.container}</td>
+            <td>${t.type}</td>
+            <td>${t.vehicle}</td>
+            <td>${t.eta || '-'}</td>
             <td>
-                <button class="btn" onclick="editCargo(${g.id})" style="background:#f59e0b; padding:4px 8px">Sửa</button>
-                <button class="btn" onclick="removeCargo(${g.id})" style="background:#ef4444; padding:4px 8px">Xóa</button>
+                <button class="btn" onclick="editTransport(${t.id})" style="background:#f59e0b; padding:4px 8px; margin-right:4px">Sửa</button>
+                <button class="btn" onclick="removeTransport(${t.id})" style="background:#ef4444; padding:4px 8px">Xóa</button>
             </td>
         </tr>`).join('');
+}
+
+function renderAll() {
+    renderContainers();
+    renderTransport();
+    renderYard(); 
+    populateAllSelects();
 }
 
 // Khởi chạy

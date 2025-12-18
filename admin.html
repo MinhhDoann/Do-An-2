@@ -205,27 +205,35 @@
                                 <tr>
                                     <th>STT</th>
                                     <th>Mã tham chiếu</th>
-                                    <th>Loại xe</th>
+                                    <th>Số Container</th> <th>Loại xe</th>
                                     <th>Biển kiểm soát</th>
                                     <th>Thời gian dự kiến</th>
-                                </tr>
+                                    <th>Hành động</th> </tr>
                             </thead>
                             <tbody></tbody>
                         </table>
                     </div>
 
                     <div class="card">
-                        <h3>Tạo Lịch trình</h3>
-                        <div class="form-row"><input id="tRef" placeholder="Mã tham chiếu / Booking" /></div>
-                        <div class="form-row"><select id="tType">
-                                <option>Vận tải đường bộ</option>
-                                <option>Đường sắt</option>
-                                <option>Phương tiện trung chuyển</option>
-                            </select></div>
-                        <div class="form-row"><input id="tVehicle" placeholder="Số xe / Vessel" /></div>
-                        <div class="form-row"><input id="tETA" type="date" /></div>
-                        <div style="display:flex;gap:8px"><button class="btn" id="saveTransport">Lưu</button><button
-                                onclick="clearTransportForm()" class="btn" style="background:#6b7280">Hủy</button></div>
+                        <h3 id="tFormTitle">Tạo Lịch trình</h3>
+                        <div class="form-row">
+                            <input id="tRef" placeholder="Mã tham chiếu / Booking" />
+                        </div>
+                        <div class="form-row">
+                            <select id="tContainer">
+                                <option value="">-- Chọn container trên xe --</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <input id="tVehicle" placeholder="Số xe / Biển kiểm soát" />
+                        </div>
+                        <div class="form-row">
+                            <input id="tETA" type="date" />
+                        </div>
+                        <div style="display:flex; gap:8px">
+                            <button class="btn" id="saveTransport">Lưu</button>
+                            <button onclick="clearTransportForm()" class="btn" style="background:#6b7280">Hủy</button>
+                        </div>
                     </div>
                 </div>
             </section>
