@@ -64,8 +64,7 @@
             ports: { fields: ['id', 'name', 'code', 'location'] },                                                                  
             users: { fields: ['id', 'name', 'email', 'role', 'password', 'warehouseId', 'status'] },                               
             contracts: { fields: ['id', 'customerId', 'signDate', 'expiryDate', 'value'] },
-            invoices: { fields: ['id', 'contractId', 'amount', 'issueDate', 'paidPercent'] },
-            payments: { fields: ['id', 'invoiceId', 'amount', 'method', 'time'] },
+            invoices: { fields: ['id', 'contractId', 'amount', 'issueDate', 'paidPercent', 'payments'] },
             costs: { fields: ['id', 'contractId', 'costType', 'amount'] }
         };
 
@@ -76,7 +75,6 @@
             trips: { fromPortId: 'ports', toPortId: 'ports', vehicleId: 'vehicles' },
             contracts: { customerId: 'customers' },
             invoices: { contractId: 'contracts' },
-            payments: { invoiceId: 'invoices' },
             costs: { contractId: 'contracts' },
             users: { warehouseId: 'warehouses' }  
         };
@@ -137,6 +135,74 @@
                     }
                     else if (f === 'paidPercent') {
                         cell.textContent = (value ?? 0) + "%";
+                    }
+                    else if (f === 'payments') {
+                        const payments = item.payments || [];
+                        const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+                        const amount = item.amount || 0;
+                        const percent = amount > 0 ? Math.round((totalPaid / amount) * 100) : 0;
+                        const remaining = amount - totalPaid;
+
+                        // Danh sách các lần thanh toán ngắn gọn (hiển thị trực tiếp trong bảng)
+                        let paymentsList = '';
+                        if (payments.length === 0) {
+                            paymentsList = '<em style="color:#999; font-style:italic;">Chưa có thanh toán</em>';
+                        } else {
+                            paymentsList = '<ul style="margin:6px 0; padding-left:20px; font-size:13px; max-height:120px; overflow-y:auto; list-style:none;">';
+                            payments.forEach(p => {
+                                const time = p.time ? new Date(p.time).toLocaleString('vi-VN') : 'Không rõ thời gian';
+                                paymentsList += `
+                                    <li style="margin:4px 0; padding-left:4px; border-left:3px solid #ddd;">
+                                        <strong>${Number(p.amount).toLocaleString('vi-VN')} ₫</strong><br>
+                                        <small style="color:#555;">
+                                            ${p.method || 'Không ghi chú'} • ${time}
+                                        </small>
+                                    </li>`;
+                            });
+                            paymentsList += '</ul>';
+                        }
+
+                        cell.innerHTML = `
+                            <div style="line-height:1.6; min-width:250px; font-size:14px;">
+                                <!-- Tổng tiền đã thu / tổng hóa đơn -->
+                                <div style="font-weight:bold; font-size:16px; margin-bottom:4px;">
+                                    ${totalPaid.toLocaleString('vi-VN')} ₫ 
+                                    <span style="color:#777; font-weight:normal;">/ ${amount.toLocaleString('vi-VN')} ₫</span>
+                                </div>
+
+                                <!-- Phần trăm thanh toán với màu sắc -->
+                                <div style="font-weight:bold; margin-bottom:8px; color:${
+                                    percent >= 100 ? '#27ae60' : 
+                                    percent >= 70 ? '#f39c12' : 
+                                    percent >= 30 ? '#e67e22' : '#e74c3c'
+                                };">
+                                    ${percent}% đã thanh toán
+                                    ${percent < 100 ? 
+                                        `<span style="font-weight:normal; color:#555; font-size:13px;"> 
+                                            (còn ${remaining.toLocaleString('vi-VN')} ₫)
+                                        </span>` : 
+                                        ' <span style="font-size:13px;">✅</span>'
+                                    }
+                                </div>
+
+                                <!-- Nút hành động -->
+                                <div style="margin:10px 0;">
+                                    <button class="btn-small" onclick="openPaymentModal('${item.id}', 'add')"
+                                            style="background:#27ae60; color:white; padding:6px 12px; font-size:13px; border:none; border-radius:5px; cursor:pointer; margin-right:6px;">
+                                        + Thêm thanh toán
+                                    </button>
+                                    <button class="btn-small" onclick="openPaymentModal('${item.id}', 'list')"
+                                            style="background:#3498db; color:white; padding:6px 12px; font-size:13px; border:none; border-radius:5px; cursor:pointer;">
+                                        ${payments.length > 0 ? 'Quản lý (' + payments.length + ')' : 'Xem chi tiết'}
+                                    </button>
+                                </div>
+
+                                <!-- Danh sách thanh toán ngắn gọn -->
+                                <div style="border-top:1px dashed #ccc; padding-top:8px; margin-top:8px;">
+                                    ${paymentsList}
+                                </div>
+                            </div>
+                        `;
                     }
                     else {
                         cell.textContent = value ?? '-';
@@ -242,12 +308,6 @@
                 { id: 'amount', label: 'Số tiền', type: 'number', min:'0' },
                 { id: 'issueDate', label: 'Ngày phát hành', type: 'date' },
                 { id: 'paidPercent', label: 'Đã thanh toán (%)', type:'text', disabled: true }
-            ],
-            payments: [
-                { id: 'invoiceId', label: 'Hóa đơn', type: 'number' },
-                { id: 'amount', label: 'Số tiền', type: 'number', min:'0' },
-                { id: 'method', label: 'Phương thức thanh toán', type: 'text' },
-                { id: 'time', label: 'Thời gian', type: 'datetime-local' }
             ],
             costs: [
                 { id: 'contractId', label: 'Hợp đồng', type: 'number' },
@@ -648,17 +708,6 @@
             });
             return "HDN" + (max + 1).toString().padStart(3, "0");
         }
-        function generatePaymentsID(existingpayments) {
-            let max = 0;
-            existingpayments.forEach(h => {
-                const match = h.id.match(/^TT(\d+)$/);
-                if (match) {
-                    const num = parseInt(match[1]);
-                    if (num > max) max = num;
-                }
-            });
-            return "TT" + (max + 1).toString().padStart(3, "0");
-        }
         function generateCostsID(existingcosts) {
             let max = 0;
             existingcosts.forEach(h => {
@@ -703,8 +752,6 @@
                             id = generateContractsID(appData.contracts);
                         } else if (moduleId === 'invoices') {
                             id = generateInvoicesID(appData.invoices);
-                        } else if (moduleId === 'payments') {
-                            id = generatePaymentsID(appData.payments);
                         }else if (moduleId === 'itemTypes') {
                             let max = 0;
                             appData.itemTypes.forEach(item => {
@@ -754,35 +801,43 @@
                         if (moduleId === 'containerhistory') {
                             addContainerHistory(newItem);
                         } 
-                        else if (moduleId === 'payments') {
-                            addPayment(newItem);
-                        }
-                        // === CHI PHÍ: XỬ LÝ RIÊNG, KHÔNG ĐỂ VÀO else BÊN DƯỚI ===
                         else if (moduleId === 'costs') {
                             appData.costs.push(newItem);
                             saveData('costs', appData.costs);
-
+                        
+                            let message = '';
+                        
                             if (newItem.billToCustomer === 'Có') {
                                 const invoice = appData.invoices.find(inv => inv.contractId === newItem.contractId);
                                 if (!invoice) {
-                                    alert("Không tìm thấy hóa đơn chính của hợp đồng này!");
-                                    return;
+                                    message = "Chi phí đã lưu nhưng KHÔNG tìm thấy hóa đơn để cộng tiền (hợp đồng không tồn tại hoặc chưa có hóa đơn)!";
+                                } else {
+                                    const addAmount = parseFloat(newItem.amount || 0);
+                                    const oldAmount = invoice.amount;
+                                    invoice.amount += addAmount;
+                        
+                                    const totalPaid = (invoice.payments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
+                                    invoice.paidPercent = invoice.amount > 0 
+                                        ? Math.min(100, Math.round((totalPaid / invoice.amount) * 100)) 
+                                        : 0;
+                        
+                                    saveData('invoices', appData.invoices);
+                        
+                                    message = `Đã cộng ${addAmount.toLocaleString('vi-VN')} ₫ vào hóa đơn ${invoice.id}\n` +
+                                              `Tổng hóa đơn: ${oldAmount.toLocaleString('vi-VN')} ₫ → ${invoice.amount.toLocaleString('vi-VN')} ₫\n` +
+                                              `Tỷ lệ thanh toán hiện tại: ${invoice.paidPercent}%`;
                                 }
-                        
-                                const addAmount = parseFloat(newItem.amount) || 0;
-                                invoice.amount += addAmount; 
-                        
-                                updateInvoicePaidPercent(invoice.id);
-                        
-                                alert(`Đã cộng dồn ${addAmount.toLocaleString('vi-VN')} ₫ vào hóa đơn ${invoice.id}\n` +
-                                      `Tổng tiền hóa đơn hiện tại: ${invoice.amount.toLocaleString('vi-VN')} ₫`);
                             } else {
-                                alert(`Chi phí nội bộ đã ghi nhận: ${parseFloat(newItem.amount).toLocaleString('vi-VN')} ₫`);
+                                message = `Đã ghi nhận chi phí nội bộ: ${parseFloat(newItem.amount || 0).toLocaleString('vi-VN')} ₫\n` +
+                                          `Loại chi phí: ${newItem.costType || 'Không ghi chú'}`;
                             }
                         
                             loadTableData('costs', appData.costs);
                             loadTableData('invoices', appData.invoices);
+                        
+                            alert("✅ Thành công!\n\n" + message);
                             closeModal();
+                        
                             return;
                         }
                 
@@ -797,6 +852,7 @@
                                 amount: parseFloat(newItem.value) || 0,
                                 issueDate: newItem.signDate || new Date().toISOString().split('T')[0],
                                 paidPercent: 0,
+                                payments: [],                 
                                 note: 'Hóa đơn chính từ hợp đồng',
                                 originalAmount: parseFloat(newItem.value) || 0
                             };
@@ -817,7 +873,9 @@
                                 closeModal();
                                 return;
                             }
-                    
+                            
+                            newItem.payments = [];
+                            newItem.paidPercent = 0;
                             appData.invoices.push(newItem);
                             saveData('invoices', appData.invoices);
                     
@@ -843,7 +901,7 @@
                     loadTableData(moduleId, appData[moduleId]);
 
                     // Refresh bảng hóa đơn nếu có thay đổi liên quan
-                    if (['payments', 'costs', 'contracts', 'invoices'].includes(moduleId)) {
+                    if (['costs', 'contracts', 'invoices'].includes(moduleId)) {
                         loadTableData('invoices', appData.invoices);
                     }
 
@@ -855,63 +913,6 @@
             updateDisplayMaps();
             showModule('containers');
         });
-
-        // hàm tính ràng buộc của thanh toán vs hóa đơn
-        function updateInvoicePaidPercent(invoiceId) {
-            const invoice = appData.invoices.find(inv => inv.id === invoiceId);
-            if (!invoice) return;
-        
-            const listPayments = appData.payments.filter(p => p.invoiceId === invoiceId);
-            const totalPaid = listPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
-        
-            const percent = invoice.amount > 0
-                ? Math.min(100, Math.round((totalPaid / invoice.amount) * 100))
-                : 0;
-        
-            invoice.paidPercent = percent;
-        
-            saveData("invoices", appData.invoices);
-        }
-        
-        function addPayment(payment) {
-            const invoice = appData.invoices.find(x => x.id === payment.invoiceId);
-            if (!invoice) {
-                alert("Không tìm thấy hóa đơn này!");
-                return;
-            }
-        
-            const paidBefore = appData.payments
-                .filter(p => p.invoiceId === payment.invoiceId)
-                .reduce((sum, p) => sum + Number(p.amount || 0), 0);
-        
-            const newTotalPaid = paidBefore + Number(payment.amount || 0);
-            const remaining = invoice.amount - paidBefore;
-        
-            if (newTotalPaid > invoice.amount) {
-                alert(`Không thể thanh toán vượt quá công nợ!\n\n` +
-                      `Hóa đơn ${invoice.id}\n` +
-                      `Tổng tiền hóa đơn: ${invoice.amount.toLocaleString('vi-VN')} ₫\n` +
-                      `Đã thu trước đó:   ${paidBefore.toLocaleString('vi-VN')} ₫\n` +
-                      `Còn được thu:      ${remaining.toLocaleString('vi-VN')} ₫\n\n` +
-                      `Số tiền bạn vừa nhập: ${Number(payment.amount).toLocaleString('vi-VN')} ₫ → Quá ${(newTotalPaid - invoice.amount).toLocaleString('vi-VN')} ₫`);
-                return; 
-            }
-        
-            payment.id = generatePaymentsID(appData.payments); 
-            appData.payments.push(payment);
-            saveData('payments', appData.payments);
-        
-            updateInvoicePaidPercent(payment.invoiceId);
-        
-            alert(`Đã ghi nhận thanh toán thành công!\n` +
-                  `Hóa đơn: ${invoice.id}\n` +
-                  `Số tiền: ${Number(payment.amount).toLocaleString('vi-VN')} ₫\n` +
-                  `Còn lại: ${(invoice.amount - newTotalPaid).toLocaleString('vi-VN')} ₫`);
-        
-            loadTableData('payments', appData.payments);
-            loadTableData('invoices', appData.invoices);
-            closeModal();
-        }
         
         document.addEventListener('DOMContentLoaded', () => {
             const toggleBtn = document.getElementById('menuToggle');
@@ -923,10 +924,156 @@
               sidebar.classList.toggle('active');
             });
           });
-          
-          
+          function openPaymentModal(invoiceId, mode = 'add') {
+            const invoice = appData.invoices.find(inv => inv.id === invoiceId);
+            if (!invoice) {
+                alert("Không tìm thấy hóa đơn!");
+                return;
+            }
+        
+            const modal = document.getElementById('dynamicModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const formFieldsDiv = document.getElementById('formFields');
+            formFieldsDiv.innerHTML = '';
+            modal.style.display = 'block';
+        
+            const payments = invoice.payments || [];
+            const totalPaid = payments.reduce((s, p) => s + Number(p.amount || 0), 0);
+            const remaining = invoice.amount - totalPaid;
+        
+            // Thông tin hóa đơn
+            const infoDiv = document.createElement('div');
+            infoDiv.style.cssText = 'background:#f0f8ff; padding:15px; border-radius:8px; margin-bottom:20px; border-left:5px solid #3498db; font-size:15px;';
+            infoDiv.innerHTML = `
+                <strong style="font-size:17px; display:block; margin-bottom:8px;">Hóa đơn: ${invoice.id}</strong>
+                <strong>Tổng tiền:</strong> ${Number(invoice.amount).toLocaleString('vi-VN')} ₫<br>
+                <strong>Đã thu:</strong> ${totalPaid.toLocaleString('vi-VN')} ₫<br>
+                <strong style="color:${remaining <= 0 ? '#27ae60' : '#e74c3c'};">
+                    Còn lại: ${remaining.toLocaleString('vi-VN')} ₫
+                </strong>
+            `;
+            formFieldsDiv.appendChild(infoDiv);
+        
+            if (mode === 'add') {
+                modalTitle.textContent = `Thêm thanh toán – Hóa đơn ${invoiceId}`;
+        
+                const fields = [
+                    { id: 'amount', label: 'Số tiền thanh toán (₫)', type: 'number', min: '1', required: true },
+                    { id: 'method', label: 'Phương thức', type: 'text', placeholder: 'Tiền mặt, chuyển khoản...' },
+                    { id: 'time', label: 'Thời gian', type: 'datetime-local', required: true }
+                ];
+        
+                fields.forEach(f => {
+                    const label = document.createElement('label');
+                    label.textContent = f.label;
+                    label.style.cssText = 'display:block; margin-top:10px; font-weight:600;';
+        
+                    const input = document.createElement('input');
+                    input.type = f.type;
+                    input.id = f.id;
+                    input.style.cssText = 'width:100%; padding:10px; box-sizing:border-box; border-radius:6px; border:1px solid #ccc;';
+                    if (f.min) input.min = f.min;
+                    if (f.required) input.required = true;
+                    if (f.placeholder) input.placeholder = f.placeholder;
+                    if (f.type === 'datetime-local') input.value = new Date().toISOString().slice(0, 16);
+        
+                    formFieldsDiv.appendChild(label);
+                    formFieldsDiv.appendChild(input);
+                });
+        
+            } else if (mode === 'list') {
+                modalTitle.textContent = `Quản lý thanh toán – Hóa đơn ${invoiceId}`;
+        
+                if (payments.length === 0) {
+                    formFieldsDiv.innerHTML += '<p style="text-align:center; color:#999; padding:30px;">Chưa có thanh toán nào.</p>';
+                } else {
+                    const list = document.createElement('div');
+                    list.style.cssText = 'max-height:400px; overflow-y:auto; border:1px solid #ddd; border-radius:8px; padding:10px;';
+        
+                    payments.forEach((p, idx) => {
+                        const timeStr = p.time ? new Date(p.time).toLocaleString('vi-VN') : 'Không rõ';
+                        const item = document.createElement('div');
+                        item.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #eee;';
+                        item.innerHTML = `
+                            <div>
+                                <strong style="font-size:16px;">${Number(p.amount).toLocaleString('vi-VN')} ₫</strong><br>
+                                <small style="color:#555;">${p.method || 'Không ghi chú'}</small><br>
+                                <small style="color:#888;">${timeStr}</small>
+                            </div>
+                            <button onclick="deletePayment('${invoiceId}', ${idx})"
+                                    style="background:#e74c3c; color:white; padding:8px 14px; border:none; border-radius:5px; cursor:pointer;">
+                                Xóa
+                            </button>
+                        `;
+                        list.appendChild(item);
+                    });
+                    formFieldsDiv.appendChild(list);
+                }
+        
+                const addBtn = document.createElement('button');
+                addBtn.textContent = '+ Thêm thanh toán mới';
+                addBtn.style.cssText = 'margin-top:20px; width:100%; padding:12px; background:#27ae60; color:white; border:none; border-radius:6px; font-size:15px; cursor:pointer;';
+                addBtn.onclick = () => openPaymentModal(invoiceId, 'add');
+                formFieldsDiv.appendChild(addBtn);
+            }
+        
+            // Xử lý submit khi thêm thanh toán
+            const form = document.getElementById('dynamicForm');
+            const oldSubmit = form.onsubmit;
+        
+            if (mode === 'add') {
+                form.onsubmit = function(e) {
+                    e.preventDefault();
+                    const amount = Number(document.getElementById('amount').value);
+                    if (!amount || amount <= 0) return alert("Số tiền không hợp lệ!");
+        
+                    if (totalPaid + amount > invoice.amount) {
+                        return alert(`Không được thu quá công nợ!\nCòn được thu: ${(invoice.amount - totalPaid).toLocaleString('vi-VN')} ₫`);
+                    }
+        
+                    const payment = {
+                        amount,
+                        method: document.getElementById('method').value.trim() || 'Không ghi chú',
+                        time: document.getElementById('time').value
+                    };
+        
+                    if (!invoice.payments) invoice.payments = [];
+                    invoice.payments.push(payment);
+        
+                    const newTotal = invoice.payments.reduce((s, p) => s + Number(p.amount || 0), 0);
+                    invoice.paidPercent = Math.min(100, Math.round((newTotal / invoice.amount) * 100));
+        
+                    saveData('invoices', appData.invoices);
+                    alert(`Thanh toán ${amount.toLocaleString('vi-VN')} ₫ thành công!`);
+                    loadTableData('invoices', appData.invoices);
+                    closeModal();
+                    form.onsubmit = oldSubmit;
+                };
+            } else {
+                form.onsubmit = e => e.preventDefault();
+            }
+        }
+        
+        function deletePayment(invoiceId, index) {
+            if (!confirm('Xóa lần thanh toán này? Không thể khôi phục!')) return;
+        
+            const invoice = appData.invoices.find(inv => inv.id === invoiceId);
+            if (!invoice || !invoice.payments) return;
+        
+            invoice.payments.splice(index, 1);
+        
+            const totalPaid = invoice.payments.reduce((s, p) => s + Number(p.amount || 0), 0);
+            invoice.paidPercent = invoice.amount > 0 ? Math.round((totalPaid / invoice.amount) * 100) : 0;
+        
+            saveData('invoices', appData.invoices);
+            alert('Đã xóa thanh toán!');
+            loadTableData('invoices', appData.invoices);
+            closeModal();
+            openPaymentModal(invoiceId, 'list');
+        }  
         // ====== GẮN WINDOW ======
-        window.addPayment = addPayment;
+        window.openPaymentModal = openPaymentModal;
+        window.deletePayment = deletePayment;
         window.showModule = showModule;
         window.openModal = openModal;
         window.closeModal = closeModal;

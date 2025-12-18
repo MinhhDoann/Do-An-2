@@ -192,6 +192,11 @@ export function exportAllData() {
     URL.revokeObjectURL(url);
 }
 
+// Gắn ra window để các onclick trong HTML / dashboard.js dùng được an toàn
+if (typeof window !== 'undefined') {
+    window.exportAllData = exportAllData;
+}
+
 export function resetAllData() {
     const allModules = [
         'customers', 'contracts', 'vehicles', 'containers', 'containerhistory',

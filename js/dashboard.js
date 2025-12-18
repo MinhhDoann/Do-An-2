@@ -7,7 +7,7 @@ function showDashboard() {
         dashboard.className = 'module-content';
 
         dashboard.innerHTML = `
-            <h2>BÁO CÁO TỔNG HỢP</h2>
+            <h2 style="text-align:center; margin-bottom:30px;">BÁO CÁO TỔNG HỢP</h2>
 
             <!-- Lọc theo năm -->
             <div style="text-align:center; margin:30px 0;">
@@ -25,134 +25,108 @@ function showDashboard() {
                     style="margin-left:20px; padding:12px 25px;
                            background:#007bff; color:white; border:none;
                            border-radius:8px; font-size:17px; cursor:pointer;">
-                    Xem báo cáo năm
+                    Xem báo cáo
                 </button>
             </div>
 
-            <div class="stats-grid">
-                <div class="stat-card"><h3>Số hợp đồng</h3><p id="totalContracts">0</p></div>
-                <div class="stat-card"><h3>Doanh thu phải thu</h3><p id="totalRevenue">0 ₫</p></div>
-                <div class="stat-card"><h3>Đã thu trong năm</h3><p id="totalPaid">0 ₫</p></div>
-                <div class="stat-card"><h3>Công nợ còn lại</h3><p id="totalDebt">0 ₫</p></div>
-                <div class="stat-card"><h3>Chi phí nội bộ</h3><p id="totalInternalCost">0 ₫</p></div>
-                <div class="stat-card"><h3>Chưa thu trong năm</h3><p id="unpaidRevenue">0 ₫</p></div>
+            <!-- Các chỉ số chính -->
+            <div class="stats-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px,1fr)); gap:20px; margin:40px 0;">
+                <div class="stat-card" style="background:#e3f2fd; padding:20px; border-radius:12px; text-align:center; box-shadow:0 4px 10px rgba(0,0,0,0.1);">
+                    <h3 style="margin:0 0 10px; color:#1976d2;">Số hợp đồng</h3>
+                    <p id="totalContracts" style="font-size:28px; font-weight:bold; margin:0; color:#1976d2;">0</p>
+                </div>
+                <div class="stat-card" style="background:#e8f5e8; padding:20px; border-radius:12px; text-align:center; box-shadow:0 4px 10px rgba(0,0,0,0.1);">
+                    <h3 style="margin:0 0 10px; color:#388e3c;">Doanh thu phải thu</h3>
+                    <p id="totalRevenue" style="font-size:28px; font-weight:bold; margin:0; color:#388e3c;">0 ₫</p>
+                </div>
+                <div class="stat-card" style="background:#fff3e0; padding:20px; border-radius:12px; text-align:center; box-shadow:0 4px 10px rgba(0,0,0,0.1);">
+                    <h3 style="margin:0 0 10px; color:#f57c00;">Đã thu trong năm</h3>
+                    <p id="totalPaid" style="font-size:28px; font-weight:bold; margin:0; color:#f57c00;">0 ₫</p>
+                </div>
             </div>
 
-            <h3>
-                Top 5 khách hàng công nợ cao nhất
-                (tính đến 31/12/<span id="currentYearDisplay"></span>)
+            <!-- Top 5 công nợ -->
+            <h3 style="text-align:center; margin:40px 0 20px;">
+                Top 5 khách hàng công nợ cao nhất 
+                (tính đến 31/12/<span id="currentYearDisplay">${new Date().getFullYear()}</span>)
             </h3>
 
-            <table class="table">
-                <thead>
+            <table class="table" style="width:100%; border-collapse:collapse; background:white; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+                <thead style="background:#1976d2; color:white;">
                     <tr>
-                        <th>Khách hàng</th>
-                        <th>Số HĐ</th>
-                        <th>Công nợ</th>
+                        <th style="padding:15px; text-align:left;">Khách hàng</th>
+                        <th style="padding:15px; text-align:center;">Số HĐ</th>
+                        <th style="padding:15px; text-align:right;">Công nợ</th>
                     </tr>
                 </thead>
-                <tbody id="topDebtors"></tbody>
+                <tbody id="topDebtors" style="font-size:16px;"></tbody>
             </table>
 
-            <button onclick="exportAllData()"
-                style="margin-top:30px; padding:12px 25px; background-color: #66FFCC; font-size:16px; cursor:pointer;">
-                Xuất toàn bộ dữ liệu (Backup)
-            </button>
+            <div style="text-align:center; margin-top:40px;">
+                <button onclick="exportAllData()"
+                    style="padding:12px 30px; background:#66FFCC; border:none; border-radius:8px; 
+                           font-size:16px; cursor:pointer; font-weight:bold;">
+                    📥 Xuất toàn bộ dữ liệu (Backup)
+                </button>
+            </div>
         `;
 
         document.querySelector('.main-content').appendChild(dashboard);
     }
 
-    showModule('dashboard');
+    if (window.showModule) {
+        window.showModule('dashboard');
+    }
 
- 
     setTimeout(() => {
         const btnRefresh = document.getElementById('btnRefreshReport');
-        const yearSelect = document.getElementById('reportYear');
-
-
-        document.getElementById('currentYearDisplay').textContent = yearSelect.value;
-
         if (btnRefresh) {
-            btnRefresh.onclick = updateDashboard; 
+            btnRefresh.onclick = updateDashboard;
         }
-
-        updateDashboard(); 
+        updateDashboard(); // Load ngay lần đầu
     }, 0);
 }
 
-
 function updateDashboard() {
-    if (!appData) return;
+    const appData = window.appData;
+    if (!appData || !appData.invoices || !appData.contracts || !appData.customers) return;
 
     const year = parseInt(document.getElementById('reportYear').value);
     document.getElementById('currentYearDisplay').textContent = year;
 
-    const startDate = new Date(year, 0, 1);
-    const endDate   = new Date(year, 11, 31, 23, 59, 59);
+    const startDate = new Date(year, 0, 1);       
+    const endDate   = new Date(year + 1, 0, 1); 
 
-    // 1. Hợp đồng trong năm
+ 
     const contractsInYear = appData.contracts.filter(c => {
-        const d = new Date(c.signDate || '2000-01-01');
-        return d.getFullYear() === year;
+        if (!c.signDate) return false;
+        const d = new Date(c.signDate);
+        return d >= startDate && d < endDate;
     });
 
-    // 2. Hóa đơn thuộc hợp đồng năm đó
     const invoicesInYear = appData.invoices.filter(inv =>
         contractsInYear.some(c => c.id === inv.contractId)
     );
 
-    const totalRevenue = invoicesInYear.reduce(
-        (s, i) => s + Number(i.amount || 0), 0
-    );
+    const totalRevenue = invoicesInYear.reduce((sum, inv) => sum + Number(inv.amount || 0), 0);
 
-    // 3. Thanh toán trong năm
-    const paymentsInYear = appData.payments.filter(p => {
-        const d = new Date(p.time || p.date || '2000-01-01');
-        return d.getFullYear() === year;
-    });
-
-    const totalPaid = paymentsInYear.reduce(
-        (s, p) => s + Number(p.amount || 0), 0
-    );
-
-    // 4. Chi phí nội bộ
-    const internalCosts = appData.costs.filter(c => {
-        const d = new Date(c.time || c.date || '2000-01-01');
-        return c.billToCustomer === 'Không' && d.getFullYear() === year;
-    });
-
-    const totalInternalCost = internalCosts.reduce(
-        (s, c) => s + Number(c.amount || 0), 0
-    );
-
-    // 5. Công nợ toàn hệ thống
-    let totalDebt = 0;
+    let totalPaidInYear = 0;
     appData.invoices.forEach(inv => {
-        const paid = appData.payments
-            .filter(p => p.invoiceId === inv.id)
-            .reduce((s, p) => s + Number(p.amount || 0), 0);
-        totalDebt += (inv.amount - paid);
+        if (!inv.payments || !Array.isArray(inv.payments)) return;
+        inv.payments.forEach(p => {
+            if (!p.time) return;
+            const payDate = new Date(p.time);
+            if (payDate >= startDate && payDate < endDate) {
+                totalPaidInYear += Number(p.amount || 0);
+            }
+        });
     });
 
-    // 6. Doanh thu chưa thu trong năm
-    const unpaidRevenue = invoicesInYear.reduce((s, inv) => {
-        const paid = paymentsInYear
-            .filter(p => p.invoiceId === inv.id)
-            .reduce((s, p) => s + Number(p.amount || 0), 0);
-        return s + (inv.amount - paid);
-    }, 0);
-
-    // cập nhật số liệu
     document.getElementById('totalContracts').textContent = contractsInYear.length;
     document.getElementById('totalRevenue').textContent = totalRevenue.toLocaleString('vi-VN') + ' ₫';
-    document.getElementById('totalPaid').textContent = totalPaid.toLocaleString('vi-VN') + ' ₫';
-    document.getElementById('totalDebt').textContent = totalDebt.toLocaleString('vi-VN') + ' ₫';
-    document.getElementById('totalInternalCost').textContent = totalInternalCost.toLocaleString('vi-VN') + ' ₫';
-    document.getElementById('unpaidRevenue').textContent = unpaidRevenue.toLocaleString('vi-VN') + ' ₫';
+    document.getElementById('totalPaid').textContent = totalPaidInYear.toLocaleString('vi-VN') + ' ₫';
 
-    // ===== TOP 5 CÔNG NỢ =====
-    const debtMap = {};
+    const debtByCustomer = {};
 
     appData.invoices.forEach(inv => {
         const contract = appData.contracts.find(c => c.id === inv.contractId);
@@ -161,38 +135,42 @@ function updateDashboard() {
         const customer = appData.customers.find(cus => cus.id === contract.customerId);
         if (!customer) return;
 
-        const paid = appData.payments
-            .filter(p => p.invoiceId === inv.id)
-            .reduce((s, p) => s + Number(p.amount || 0), 0);
+        const totalPaid = (inv.payments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
+        const debt = Number(inv.amount || 0) - totalPaid;
 
-        const debt = inv.amount - paid;
         if (debt > 0) {
-            debtMap[customer.name] = (debtMap[customer.name] || 0) + debt;
+            if (!debtByCustomer[customer.name]) {
+                debtByCustomer[customer.name] = { debt: 0, contractCount: 0 };
+            }
+            debtByCustomer[customer.name].debt += debt;
+            debtByCustomer[customer.name].contractCount += 1;
         }
     });
 
-    const top5 = Object.entries(debtMap)
-        .sort((a, b) => b[1] - a[1])
+    const top5 = Object.entries(debtByCustomer)
+        .sort((a, b) => b[1].debt - a[1].debt)
         .slice(0, 5);
 
     const tbody = document.getElementById('topDebtors');
-    tbody.innerHTML = top5.length === 0
-        ? `<tr><td colspan="3" style="text-align:center; padding:30px; color:#27ae60;">
-                Không có công nợ
-           </td></tr>`
-        : top5.map(([name, debt]) => `
+    if (top5.length === 0) {
+        tbody.innerHTML = `
             <tr>
-                <td><strong>${name}</strong></td>
-                <td>${appData.invoices.filter(inv => {
-                    const c = appData.contracts.find(ct => ct.id === inv.contractId);
-                    return c && appData.customers.find(cus => cus.id === c.customerId)?.name === name;
-                }).length}</td>
-                <td style="color:#e74c3c; font-weight:bold;">
-                    ${debt.toLocaleString('vi-VN')} ₫
+                <td colspan="3" style="text-align:center; padding:40px; color:#4caf50; font-size:18px;">
+                    🎉 Không có công nợ nào đến ngày 31/12/${year}!
+                </td>
+            </tr>`;
+    } else {
+        tbody.innerHTML = top5.map(([name, data]) => `
+            <tr>
+                <td style="padding:15px;"><strong>${name}</strong></td>
+                <td style="padding:15px; text-align:center;">${data.contractCount}</td>
+                <td style="padding:15px; text-align:right; color:#d32f2f; font-weight:bold;">
+                    ${data.debt.toLocaleString('vi-VN')} ₫
                 </td>
             </tr>
         `).join('');
+    }
 }
 
-// expose
+// Gắn ra ngoài để gọi từ menu
 window.showDashboard = showDashboard;
