@@ -70,3 +70,4 @@ function renderYard() {
         }); yard.appendChild(cell);
     }
 }
+

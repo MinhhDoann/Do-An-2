@@ -18,11 +18,9 @@
                 <li><button data-section="cargo">Hàng trong Container</button></li>
                 <li><button data-section="transport">Vận tải</button></li>
                 <li><button data-section="depot">Cảng & Depot</button></li>
-                <li><button data-section="docs">Chứng từ & Hải quan</button></li>
                 <li><button data-section="finance">Tài chính & Chi phí</button></li>
                 <li><button data-section="partners">Khách hàng & Đối tác</button></li>
                 <li><button data-section="staff">Nhân sự & Thiết bị</button></li>
-                <li><button data-section="it">CNTT & Hệ thống</button></li>
             </ul>
             <div style="position:absolute;bottom:18px;left:20px;font-size:13px;opacity:.9">Container Logictic</div>
         </aside>
@@ -75,7 +73,7 @@
                     </div>
 
                     <div class="card">
-                        <h4>Recent Containers</h4>
+                        <h4>Containers gần đây</h4>
                         <table id="recentContainers">
                             <thead>
                                 <tr>
@@ -91,7 +89,7 @@
                     </div>
 
                     <div class="card">
-                        <h4>Recent Bookings / Docs</h4>
+                        <h4>Bookings / Chứng từ gần đây</h4>
                         <table id="recentDocs">
                             <thead>
                                 <tr>
@@ -143,10 +141,10 @@
                         <div class="form-row"><input id="cLocation" placeholder="Vị trí (Depot / Port / Onboard)" />
                         </div>
                         <div class="form-row"><select id="cStatus">
-                                <option>Empty</option>
-                                <option>Full</option>
-                                <option>In Transit</option>
-                                <option>Maintenance</option>
+                                <option>Rỗng</option>
+                                <option>Đầy hàng</option>
+                                <option>Đang vận chuyển</option>
+                                <option>Bảo trì</option>
                             </select></div>
                         <div style="display:flex;gap:8px"><button class="btn" id="saveContainer">Lưu</button><button
                                 onclick="clearContainerForm()" class="btn" style="background:#6b7280">Hủy</button></div>
@@ -238,41 +236,6 @@
                 </div>
             </section>
 
-            <!-- Docs -->
-            <section id="docs" class="card-section" style="display:none">
-                <div class="grid">
-                    <div class="card">
-                        <h3>Chứng từ</h3>
-                        <input id="docRef" placeholder="Ref / B/L" />
-                        <select id="docType">
-                            <option>Vận đơn</option>
-                            <option>Hóa đơn</option>
-                            <option>Phiếu đóng gói</option>
-                            <option>Chứng nhận xuất xứ</option>
-                        </select>
-                        <div style="margin-top:8px"><button class="btn" id="saveDoc">Lưu chứng từ</button></div>
-                        <hr />
-                        <table id="tblDocs">
-                            <thead>
-                                <tr>
-                                    <th>STT</th>
-                                    <th>Mã tham chiếu</th>
-                                    <th>Loại</th>
-                                    <th>Trạng thái</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-
-                    <div class="card">
-                        <h3>Upload chứng từ (mô phỏng)</h3>
-                        <input type="file" id="fileDoc" />
-                        <div class="small" style="margin-top:6px">Tệp sẽ được đọc và lưu tên trong localStorage (mô phỏng)</div>
-                    </div>
-                </div>
-            </section>
-
             <!-- Finance -->
             <section id="finance" class="card-section" style="display:none">
                 <div class="grid">
@@ -357,21 +320,6 @@
                             </thead>
                             <tbody></tbody>
                         </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- IT -->
-            <section id="it" class="card-section" style="display:none">
-                <div class="grid">
-                    <div class="card full-width">
-                        <h3>Thông tin Hệ thống & Kết nối</h3>
-                        <div class="small">API / EDI / Tracking</div>
-                        <div style="margin-top:10px">
-                            <label class="small">API Base URL</label>
-                            <input id="apiBase" placeholder="https://api.example.com" />
-                            <div style="margin-top:8px"><button class="btn" id="saveIt">Lưu cấu hình</button></div>
-                        </div>
                     </div>
                 </div>
             </section>
