@@ -128,6 +128,69 @@ function clearTransportForm() {
     document.getElementById('saveTransport').textContent = 'Lưu';
 }
 
+//---Quản lý Container---
+const btnSaveContainer = document.getElementById('saveContainer');
+if (btnSaveContainer) {
+  btnSaveContainer.addEventListener('click', () => {
+    const no = document.getElementById('cNumber').value.trim().toUpperCase();
+    const type = document.getElementById('cType').value;
+    const loc = document.getElementById('cLocation').value.trim();
+    const status = document.getElementById('cStatus').value;
+
+    if (!no) return alert('Vui lòng nhập Container No');
+
+    const data = { no, type, loc, status };
+
+    if (editingContainerId) {
+      const idx = DB.containers.findIndex(c => c && c.id === editingContainerId);
+      if (idx !== -1) DB.containers[idx] = { ...DB.containers[idx], ...data };
+      editingContainerId = null;
+      btnSaveContainer.textContent = 'Lưu';
+    } else {
+      DB.containers.unshift({ id: Date.now(), ...data });
+    }
+
+    saveDB();
+    clearContainerForm();
+  });
+}
+
+function editContainer(id) {
+  const c = DB.containers.find(item => item && item.id === id);
+  if (!c) return;
+
+  document.getElementById('cNumber').value = c.no || '';
+  document.getElementById('cType').value = c.type || '20DC';
+  document.getElementById('cLocation').value = c.loc || '';
+  document.getElementById('cStatus').value = c.status || 'Rỗng';
+
+  editingContainerId = id;
+  document.getElementById('saveContainer').textContent = 'Cập nhật';
+}
+
+function removeContainer(id) {
+  if (!confirm('Xóa container này?')) return;
+
+  DB.containers = DB.containers.filter(c => !(c && c.id === id));
+  saveDB();
+
+  // nếu đang sửa đúng container bị xóa
+  if (editingContainerId === id) clearContainerForm();
+}
+
+function clearContainerForm() {
+  ['cNumber', 'cLocation'].forEach(fid => {
+    const el = document.getElementById(fid);
+    if (el) el.value = '';
+  });
+  document.getElementById('cType').value = '20DC';
+  document.getElementById('cStatus').value = 'Rỗng';
+
+  editingContainerId = null;
+  document.getElementById('saveContainer').textContent = 'Lưu';
+}
+
+
 // --- 4. Sơ đồ bãi (Yard Map) ---
 function renderYard() {
     const yard = document.getElementById('yard');
@@ -201,6 +264,71 @@ function renderContainers() {
                 <button class="btn btn-delete" onclick="removeContainer(${c.id})">Xóa</button>
             </td>
         </tr>`).join('');
+}
+
+
+
+// ---Quản lý Lô hàng (Cargo) ---
+const btnSaveCargo = document.getElementById('saveCargo');
+if (btnSaveCargo) {
+    btnSaveCargo.addEventListener('click', () => {
+        const desc = document.getElementById('gDesc')?.value.trim();
+        const container = document.getElementById('gContainer')?.value;
+        const qty = document.getElementById('gQty')?.value.trim();
+        const type = document.getElementById('gType')?.value;
+
+        if (!desc || !container || !qty) {
+            return alert('Vui lòng nhập Mô tả, Chọn Container và Số lượng');
+        }
+
+        const data = { desc, container, qty, type };
+
+        if (editingCargoId) {
+            const idx = DB.cargo.findIndex(g => g.id === editingCargoId);
+            if (idx !== -1) DB.cargo[idx] = { ...DB.cargo[idx], ...data };
+            editingCargoId = null;
+            btnSaveCargo.textContent = 'Lưu';
+        } else {
+            DB.cargo.unshift({ id: Date.now(), ...data });
+        }
+
+        saveDB();
+        clearCargoForm();
+    });
+}
+
+function editCargo(id) {
+    const g = DB.cargo.find(item => item.id === id);
+    if (!g) return;
+    const elDesc = document.getElementById('gDesc');
+    const elContainer = document.getElementById('gContainer');
+    const elQty = document.getElementById('gQty');
+    const elType = document.getElementById('gType');
+
+    if (elDesc) elDesc.value = g.desc || '';
+    if (elContainer) elContainer.value = g.container || '';
+    if (elQty) elQty.value = g.qty || '';
+    if (elType) elType.value = g.type || '';
+
+    editingCargoId = id;
+    document.getElementById('saveCargo').textContent = 'Cập nhật';
+}
+
+function removeCargo(id) {
+    if(confirm('Xóa lô hàng này?')) {
+        DB.cargo = DB.cargo.filter(g => g.id !== id);
+        saveDB();
+    }
+}
+
+function clearCargoForm() {
+    ['gDesc', 'gQty', 'gType', 'gContainer'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    editingCargoId = null;
+    const btn = document.getElementById('saveCargo');
+    if (btn) btn.textContent = 'Lưu';
 }
 
 function renderCargo() {

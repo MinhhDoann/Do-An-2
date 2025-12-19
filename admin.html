@@ -252,23 +252,50 @@
 
             <!-- Finance -->
             <section id="finance" class="card-section" style="display:none">
-                <div class="grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="grid" style="grid-template-columns: 1fr 1fr; gap:16px;">
                     <div class="card">
                         <h3>Tính toán chi phí</h3>
-                        <div class="form-row">
-                            <select id="fSelectContainer" onchange="updateFinanceDetail()">
+                            <div class="form-row">
+                                <select id="fSelectContainer" onchange="updateFinanceDetail()">
                                 <option value="">- Chọn Container cần tính -</option>
-                            </select>
-                        </div>
-                        <div class="form-row"><input id="fBase" placeholder="Cước cơ bản (VND)" type="number" /></div>
-                        <div class="form-row"><input id="fDemDet" placeholder="Phí DEM/DET" type="number" /></div>
-                        <div class="form-row"><input id="fLocal" placeholder="Phí Local/Seal" type="number" /></div>
-                        <button class="btn" onclick="calculateFinance()">Tính tổng phí</button>
-                        <div id="costResult" style="margin-top:15px; font-weight:bold; color:var(--accent); font-size:1.2rem"></div>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <input id="fBase" placeholder="Cước cơ bản (VND)" type="number" />
+                            </div>
+                            <div class="form-row">
+                                <input id="fDemDet" placeholder="Phí DEM/DET (VND)" type="number" />
+                            </div>
+                            <div class="form-row">
+                                <input id="fLocal" placeholder="Phí Local/Seal (VND)" type="number" />
+                            </div>
+                            <button class="btn" id="btnSaveFinance" onclick="saveFinance()">Thêm</button>
+                            <div id="costResult" style="margin-top:15px; font-weight:bold; color:var(--accent); font-size:1.2rem"></div>
                     </div>
+
                     <div class="card" id="financeDetailBox">
-                        <h3>Chi tiết Container</h3>
-                        <p class="small">Chọn một container bên trái để xem thông tin chi tiết.</p>
+                    <h3>Chi tiết Container</h3>
+                        <div class="form-row">
+                            <input id="fExtra" placeholder="Phí phát sinh (VND) - nếu có" type="number" />
+                        </div>
+                        <div style="overflow:auto; margin-top:10px;">
+                            <table class="tbl" style="width:100%;">
+                            <thead>
+                                <tr>
+                                <th>Container</th>
+                                <th>Cước</th>
+                                <th>DEM/DET</th>
+                                <th>Local/Seal</th>
+                                <th>Phát sinh</th>
+                                <th>Tổng phí</th>
+                                <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tblFinanceBody">
+                                <tr><td colspan="7" style="text-align:center">Chưa có dữ liệu</td></tr>
+                            </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </section>
