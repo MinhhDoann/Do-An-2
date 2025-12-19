@@ -387,8 +387,46 @@
             // TỰ ĐỘNG CẬP NHẬT TRẠNG THÁI CONTAINER + XE + CHUYẾN
             updateRelatedStatus(history);
         
-            // Thông báo + refresh bảng liên quan
-            alert(`Đã ghi lịch sử và cập nhật trạng thái!\nContainer ${container.id} → ${container.status}`);
+            if (history.action === 'Xuất kho' && container.vehicleId) {
+                const vehicleId = container.vehicleId;
+                const vehicle = appData.vehicles.find(v => v.id === vehicleId);
+        
+                // Kiểm tra xem xe đã có chuyến active chưa
+                const hasActiveTrip = appData.trips.some(t => 
+                    t.vehicleId === vehicleId && 
+                    ['Chuẩn bị', 'Đang chạy'].includes(t.status)
+                );
+        
+                if (!hasActiveTrip) {
+                    // Tạo chuyến đi mới tự động
+                    const newTripId = generateTransportsID(appData.trips);
+        
+                    const newTrip = {
+                        id: newTripId,
+                        voyageNumber: newTripId,
+                        fromPortId: '',
+                        toPortId: '',
+                        etd: new Date().toISOString().split('T')[0],  // hôm nay làm ETD mặc định
+                        eta: '',
+                        vehicleId: vehicleId,
+                        status: 'Đang chạy'  // vì đã xuất kho rồi
+                    };
+        
+                    appData.trips.push(newTrip);
+                    saveData('trips', appData.trips);
+        
+                    alert(`✅ Đã ghi lịch sử "${history.action}"!\n\n` +
+                          `Container: ${container.id} → Đang vận chuyển\n` +
+                          `Xe: ${vehicle.licensePlate || vehicleId} → Đang vận chuyển\n` +
+                          `ĐÃ TỰ ĐỘNG TẠO CHUYẾN ĐI MỚI: ${newTripId}\n\n` +
+                          `Vui lòng vào mục Chuyến đi để bổ sung cảng đi/đến và ETA.`);
+                } else {
+                    alert(`✅ Đã ghi lịch sử "${history.action}"!\n\n` +
+                          `Trạng thái đã cập nhật.\nChuyến đi hiện tại của xe đã được chuyển sang "Đang chạy".`);
+                }
+            } else {
+                alert(`Đã ghi lịch sử và cập nhật trạng thái!\nContainer ${container.id} → ${container.status}`);
+            }
         
             loadTableData('containers', appData.containers);
             loadTableData('vehicles', appData.vehicles);
@@ -961,11 +999,12 @@
                     
                             alert(`Tạo hóa đơn thủ công thành công: ${newItem.id}`);
                         }
+  
                         else {
                             appData[moduleId].push(newItem);
                             saveData(moduleId, appData[moduleId]);
                         }
-                    } 
+                    }
                     else {
                         const idx = appData[moduleId].findIndex(i => i.id === id);
                         if (idx >= 0) {
