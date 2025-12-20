@@ -108,7 +108,10 @@
             <div id="containerhistory" class="module-content">
                 <div class="header">
                   <h2>📜 Lịch sử Container</h2>
-                  <button onclick="openModal('add','containerhistory')">Thêm Lịch sử</button>
+                  <div class="header-actions">
+                    <input type="text" class="search-input" placeholder="Tìm kiếm lịch sử container..." data-table="containerhistory">
+                    <button onclick="openModal('add','containerhistory')">Thêm Lịch Sử Container</button>
+                   </div>
                 </div>
                 <table>
                   <thead>
@@ -129,7 +132,10 @@
               <div id="itemTypes" class="module-content">
                 <div class="header">
                   <h2>📂 Loại hàng</h2>
-                  <button onclick="openModal('add','itemTypes')">Thêm loại hàng</button>
+                    <div class="header-actions">
+                        <input type="text" class="search-input" placeholder="Tìm kiếm Loại Hàng..." data-table="itemTypes">
+                        <button onclick="openModal('add','itemTypes')">Thêm Loại Hàng</button>
+                    </div>
                 </div>
                 <table>
                   <thead>
@@ -150,7 +156,10 @@
             <div id="warehouses" class="module-content">
                 <div class="header">
                     <h2>🏭 Kho lưu trữ</h2>
-                    <button onclick="openModal('add','warehouses')">Thêm Kho</button>
+                    <div class="header-actions">
+                        <input type="text" class="search-input" placeholder="Tìm kiếm Kho..." data-table="warehouses">
+                        <button onclick="openModal('add','warehouses')">Thêm Kho</button>
+                    </div>
                 </div>
                 <table>
                     <thead>
@@ -172,7 +181,10 @@
             <div id="customers" class="module-content">
                 <div class="header">
                     <h2>👥 Quản lý Khách hàng</h2>
-                    <button onclick="openModal('add','customers')">Thêm Khách hàng</button>
+                    <div class="header-actions">
+                        <input type="text" class="search-input" placeholder="Tìm kiếm Khách Hàng..." data-table="customers">
+                        <button onclick="openModal('add','customers')">Thêm Khách Hàng</button>
+                    </div>
                 </div>
                 <table>
                     <thead>
@@ -194,7 +206,10 @@
             <div id="vehicles" class="module-content active">
                 <div class="header">
                     <h2>🚚 Quản lý Phương tiện</h2>
-                    <button onclick="openModal('add','vehicles')">Thêm Phương tiện</button>
+                    <div class="header-actions">
+                        <input type="text" class="search-input" placeholder="Tìm kiếm Phương Tiện..." data-table="vehicles">
+                        <button onclick="openModal('add','vehicles')">Thêm Phương Tiện</button>
+                    </div>
                 </div>
                 <table>
                     <thead>
@@ -218,7 +233,10 @@
             <div id="trips" class="module-content">
                 <div class="header">
                     <h2>🚢 Quản lý Chuyến Đi</h2>
-                    <button onclick="openModal('add','trips')">Thêm Lịch trình</button>
+                    <div class="header-actions">
+                        <input type="text" class="search-input" placeholder="Tìm kiếm Chuyến Đi..." data-table="trips">
+                        <button onclick="openModal('add','trips')">Thêm Chuyến Đi</button>
+                    </div>
                 </div>
                 <table>
                     <thead>
@@ -242,7 +260,10 @@
             <div id="ports" class="module-content">
                 <div class="header">
                     <h2>Danh mục Cảng</h2>
-                    <button onclick="openModal('add','ports')">Thêm Cảng</button>
+                    <div class="header-actions">
+                        <input type="text" class="search-input" placeholder="Tìm kiếm Cảng..." data-table="ports">
+                        <button onclick="openModal('add','ports')">Thêm Cảng</button>
+                    </div>
                 </div>
                 <table>
                     <thead>
@@ -263,7 +284,10 @@
             <div id="contracts" class="module-content">
                 <div class="header">
                     <h2>📄 Quản lý Hợp đồng</h2>
-                    <button onclick="openModal('add','contracts')">Thêm Hợp đồng</button>
+                    <div class="header-actions">
+                        <input type="text" class="search-input" placeholder="Tìm kiếm Hợp Đồng..." data-table="contracts">
+                        <button onclick="openModal('add','contracts')">Thêm Hợp Đồng</button>
+                    </div>
                 </div>
                 <table>
                     <thead>
@@ -285,7 +309,10 @@
             <div id="costs" class="module-content">
                 <div class="header">
                     <h2>💰 Quản lý Chi phí</h2>
-                    <button onclick="openModal('add','costs')">Thêm Chi phí</button>
+                    <div class="header-actions">
+                        <input type="text" class="search-input" placeholder="Tìm kiếm Chi Phí..." data-table="costs">
+                        <button onclick="openModal('add','costs')">Thêm Chi Phí</button>
+                    </div>
                 </div>
                 <table>
                     <thead>
@@ -306,7 +333,10 @@
             <div id="invoices" class="module-content">
                 <div class="header">
                     <h2>🧾 Quản lý Hóa đơn</h2>
-                    <button onclick="openModal('add','invoices')">Thêm Hóa đơn</button>
+                    <div class="header-actions">
+                        <input type="text" class="search-input" placeholder="Tìm kiếm hóa đơn..." data-table="invoices">
+                        <button onclick="openModal('add','invoices')">Thêm Hóa Đơn</button>
+                    </div>
                 </div>
                 <table>
                     <thead>
@@ -329,7 +359,10 @@
             <div id="users" class="module-content">
                 <div class="header">
                     <h2>Quản lý Người dùng</h2>
-                    <button onclick="openModal('add','users')">Thêm Người dùng</button>
+                    <div class="header-actions">
+                        <input type="text" class="search-input" placeholder="Tìm kiếm người dùng..." data-table="users">
+                        <button onclick="openModal('add','users')">Thêm Người Dùng</button>
+                    </div>
                 </div>
                 <table>
                     <thead>
