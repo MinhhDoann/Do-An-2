@@ -893,25 +893,25 @@
                             return;
                         }
                     
-                        if (['Chuẩn bị', 'Đang chạy'].includes(newItem.status)) {
-                            const containersOnVehicle = appData.containers.filter(c => c.vehicleId === vehicleId);
-                    
-                            if (containersOnVehicle.length === 0) {
-                                alert(`Xe ${vehicle.licensePlate || vehicleId} chưa có container nào.\nKhông thể bắt đầu chuyến đi!`);
-                                return;
-                            }
-                    
-                            const hasLoadedContainer = containersOnVehicle.some(c => 
-                                c.status !== 'Rỗng' && 
-                                c.status !== 'Cần bảo trì' && 
-                                c.status !== 'Đã Giao'
-                            );
-                    
-                            if (!hasLoadedContainer) {
-                                const containerIds = containersOnVehicle.map(c => c.id).join(', ');
-                                alert(`Xe ${vehicle.licensePlate || vehicleId} chỉ đang chở container rỗng hoặc không có hàng (${containerIds}).\nKhông được phép chạy chuyến đi với container rỗng!`);
-                                return;
-                            }
+                        const containersOnVehicle = appData.containers.filter(c => c.vehicleId === vehicleId);
+
+                        if (containersOnVehicle.length === 0) {
+                            alert(`Xe ${vehicle.licensePlate || vehicleId} chưa được gắn container nào.\nKhông thể tạo chuyến đi!`);
+                            return;
+                        }
+
+                        const hasLoadedContainer = containersOnVehicle.some(c => c.status === 'Đã đóng hàng');
+
+                        if (!hasLoadedContainer) {
+                            const containerIds = containersOnVehicle.map(c => c.id).join(', ');
+                            const statuses = [...new Set(containersOnVehicle.map(c => c.status))].join(', ');
+                            
+                            alert(`❌ Không thể tạo chuyến đi!\n\n` +
+                                `Xe ${vehicle.licensePlate || vehicleId} đang gắn container: ${containerIds}\n` +
+                                `Trạng thái hiện tại: ${statuses}\n\n` +
+                                `Yêu cầu: Phải có ít nhất 1 container ở trạng thái "Đã đóng hàng".\n` +
+                                `Vui lòng đóng hàng cho container trước (qua mục Lịch sử container → hành động "Đóng hàng").`);
+                            return;
                         }
                     }
                     if (isAdd) {

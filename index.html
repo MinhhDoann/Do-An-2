@@ -82,7 +82,10 @@
             <div id="containers" class="module-content active">
                 <div class="header">
                     <h2>📦 Danh sách Container</h2>
-                    <button onclick="openModal('add','containers')">Thêm Container</button>
+                    <div class="header-actions">
+                        <input type="text" class="search-input" placeholder="Tìm kiếm container..." data-table="containers">
+                        <button onclick="openModal('add','containers')">Thêm Container</button>
+                    </div>
                 </div>
                 <table>
                     <thead>
@@ -380,5 +383,6 @@
     <script type="module" src="./js/index.js"></script>
     <script type="module" src="Login.js"></script>
     <script type="module" src="./js/dashboard.js"></script>
+    <script type="module" src="./js/Search.js"></script>
 </body>
 </html>
