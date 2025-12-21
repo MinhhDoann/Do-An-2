@@ -43,7 +43,7 @@ function showSection(id) {
         case 'transport': renderTransport(); break;
         case 'depot': renderYard(); break;
         case 'docs': renderDocs(); break;
-        case 'finance': /* nothing extra */ break;
+        case 'finance':  break;
         case 'partners': renderPartners(); break;
         case 'staff': renderStaff(); break;
         case 'equipment': renderEquip(); break;
@@ -62,6 +62,9 @@ const DB = {
     equip: []
 };
 
+// ✅ BIẾN MỚI: hỗ trợ chế độ sửa
+let editingContainerId = null;
+
 function loadDB() {
     try {
         const raw = localStorage.getItem('cl_db');
@@ -76,31 +79,52 @@ function saveDB() {
 }
 
 // --- Containers ---
-document.getElementById('saveContainer').addEventListener('click', () => {
+document.getElementById('saveContainer').addEventListener('click', function() {
     const no = document.getElementById('cNumber').value.trim();
     if (!no) return alert('Nhập số container');
 
-    // Kiểm tra trùng số container
-    if (DB.containers.some(c => c.no === no)) {
-        return alert('Số container đã tồn tại!');
+    const type = document.getElementById('cType').value;
+    const loc = document.getElementById('cLocation').value;
+    const status = document.getElementById('cStatus').value;
+
+    if (editingContainerId) {
+        const isDuplicate = DB.containers.some(c => c.no === no && c.id !== editingContainerId);
+        if (isDuplicate) return alert('Số container đã tồn tại!');
+        
+        const container = DB.containers.find(c => c.id === editingContainerId);
+        if (container) {
+            container.no = no;
+            container.type = type;
+            container.loc = loc;
+            container.status = status;
+            saveDB();
+            alert('✅ Cập nhật container thành công!');
+        }
+    } else {
+        if (DB.containers.some(c => c.no === no)) {
+            return alert('Số container đã tồn tại!');
+        }
+        DB.containers.unshift({
+            id: Date.now(),
+            no,
+            type,
+            loc,
+            status
+        });
+        saveDB();
+        alert('✅ Thêm container thành công!');
     }
 
-    const rec = {
-        id: Date.now(),
-        no,
-        type: document.getElementById('cType').value,
-        loc: document.getElementById('cLocation').value,
-        status: document.getElementById('cStatus').value
-    };
-    DB.containers.unshift(rec);
-    saveDB();
     clearContainerForm();
-    showSection('containers');
+    renderContainers();
 });
 
 function clearContainerForm() {
     ['cNumber', 'cLocation'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('cType').value = '20DC';
     document.getElementById('cStatus').value = 'Empty';
+    editingContainerId = null;
+    document.getElementById('saveContainer').textContent = 'Lưu';
 }
 
 function renderContainers() {
@@ -120,7 +144,10 @@ function renderContainers() {
             <td>${c.type}</td>
             <td>${c.loc}</td>
             <td>${c.status}</td>
-            <td><button class="btn-sm" onclick="removeContainer(${c.id})">Xóa</button></td>
+            <td>
+                <button class="btn-sm" onclick="editContainer(${c.id})">Sửa</button>
+                <button class="btn-sm" onclick="removeContainer(${c.id})">Xóa</button>
+            </td>
         `;
         tbody.appendChild(tr);
     });
@@ -128,10 +155,36 @@ function renderContainers() {
 }
 
 function removeContainer(id) {
-    if (!confirm('Xóa container này?')) return;
+    if (!confirm('Xóa container này? Hành động không thể hoàn tác!')) return;
     DB.containers = DB.containers.filter(c => c.id !== id);
     saveDB();
     renderContainers();
+    alert('🗑️ Đã xóa container.');
+}
+
+// HÀM MỚI: Sửa container
+function editContainer(id) {
+    const container = DB.containers.find(c => c.id === id);
+    if (!container) {
+        alert('Không tìm thấy container!');
+        return;
+    }
+
+    // Điền dữ liệu vào form
+    document.getElementById('cNumber').value = container.no;
+    document.getElementById('cType').value = container.type;
+    document.getElementById('cLocation').value = container.loc;
+    document.getElementById('cStatus').value = container.status;
+
+    // Chuyển sang chế độ sửa
+    editingContainerId = id;
+    document.getElementById('saveContainer').textContent = 'Cập nhật';
+
+    // Cuộn lên form (tuỳ chọn)
+    const content = document.querySelector('.content');
+    if (content) {
+        content.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 }
 
 // --- Cargo ---
@@ -230,7 +283,6 @@ function renderYard() {
         cell.style.cursor = 'pointer';
         cell.dataset.idx = i;
 
-        // Tìm container đang ở vị trí yard này
         const containerHere = DB.containers.find(c => 
             c.loc === 'Yard' && c.yardPosition == i
         );
@@ -241,28 +293,23 @@ function renderYard() {
         cell.addEventListener('click', () => {
             const currentNo = containerHere ? containerHere.no : '';
             const no = prompt('Nhập số container (để trống để xóa):', currentNo);
-            
             if (no === null) return;
 
             const trimmed = no.trim();
 
             if (trimmed === '') {
-                // Xóa container khỏi yard
                 if (containerHere) {
                     DB.containers = DB.containers.filter(c => c.id !== containerHere.id);
                 }
             } else {
-                // Kiểm tra trùng số
                 if (DB.containers.some(c => c.no === trimmed && c.id !== (containerHere?.id || -1))) {
                     alert('Số container đã tồn tại!');
                     return;
                 }
 
                 if (containerHere) {
-                    // Cập nhật container hiện có
                     containerHere.no = trimmed;
                 } else {
-                    // Tạo mới
                     DB.containers.push({
                         id: Date.now(),
                         no: trimmed,
@@ -308,7 +355,7 @@ document.getElementById('fileDoc').addEventListener('change', e => {
         status: 'Uploaded'
     });
     saveDB();
-    e.target.value = ''; // reset input
+    e.target.value = '';
 });
 
 function renderDocs() {
@@ -430,14 +477,12 @@ function populateContainerSelect() {
 function renderAll() {
     loadDB();
 
-    // Stats
     document.getElementById('stat-containers').textContent = DB.containers.length;
     document.getElementById('stat-intransit').textContent = 
         DB.containers.filter(c => c.status === 'In Transit').length;
     document.getElementById('stat-docs').textContent = 
         DB.docs.filter(d => d.status === 'Pending').length;
 
-    // Recent tables
     const rc = document.querySelector('#recentContainers tbody');
     rc.innerHTML = '';
     DB.containers.slice(0, 6).forEach((c, i) => {
@@ -466,7 +511,7 @@ function renderAll() {
     });
 }
 
-// ---  Mock Data ---
+// --- Mock Data ---
 function initMockData() {
     if (DB.containers.length > 0) return;
 
@@ -518,25 +563,22 @@ function initMockData() {
     console.log("✅ Đã khởi tạo dữ liệu mẫu.");
 }
 
-// --- Global Search (nút "Tìm") ---
+// --- Global Search ---
 function performGlobalSearch() {
     const query = document.getElementById('globalSearch').value.trim().toLowerCase();
     if (!query) {
-        // Xoá highlight nếu không tìm
         document.querySelectorAll('mark.search-highlight').forEach(el => {
             el.outerHTML = el.textContent; 
         });
         return;
     }
 
-    // Xoá highlight cũ
     document.querySelectorAll('mark.search-highlight').forEach(el => {
         el.outerHTML = el.textContent;
     });
 
     let found = false;
 
-    // Hàm highlight trong 1 ô
     const highlightInCell = (cell, term) => {
         const text = cell.textContent || '';
         const lowerText = text.toLowerCase();
@@ -549,7 +591,6 @@ function performGlobalSearch() {
         }
     };
 
-    // Các bảng cần tìm
     const tables = [
         { selector: '#tblContainers tbody tr', cols: [1, 2, 3, 4] },
         { selector: '#tblCargo tbody tr', cols: [1, 2, 4] },
@@ -576,14 +617,9 @@ function performGlobalSearch() {
     }
 }
 
-// Gắn sự kiện cho nút "Tìm"
 document.getElementById('searchBtn')?.addEventListener('click', performGlobalSearch);
-
-// Tìm khi nhấn Enter
 document.getElementById('globalSearch')?.addEventListener('keypress', e => {
-    if (e.key === 'Enter') {
-        performGlobalSearch();
-    }
+    if (e.key === 'Enter') performGlobalSearch();
 });
 
 // --- Init App ---
@@ -592,7 +628,6 @@ document.addEventListener("DOMContentLoaded", () => {
     initMockData();
     renderAll();
 
-    // User menu
     const userIcon = document.getElementById("userIcon");
     const userDropdown = document.getElementById("userDropdown");
     const logoutBtn = document.getElementById("logoutBtn");
@@ -611,9 +646,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-     logoutBtn?.addEventListener("click", () => {
-    if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
-        window.location.href = 'index.html';
-    }
+    logoutBtn?.addEventListener("click", () => {
+        if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+            window.location.href = 'index.html';
+        }
     });
 });
