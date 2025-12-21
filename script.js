@@ -334,8 +334,28 @@ function clearTransportForm() {
     ['tRef', 'tVehicle'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('tType').value = 'Trucking';
     document.getElementById('tETA').value = '';
+    
+    // Reset nút & chế độ
+    editingTransportId = null;
+    const saveBtn = document.getElementById('saveTransport');
+    saveBtn.textContent = 'Lưu';
+    // Khôi phục hành vi gốc
+    saveBtn.onclick = function() {
+        const ref = document.getElementById('tRef').value.trim();
+        if (!ref) return alert('Nhập ref');
+        const rec = {
+            id: Date.now(),
+            ref,
+            type: document.getElementById('tType').value,
+            vehicle: document.getElementById('tVehicle').value || 'N/A',
+            eta: document.getElementById('tETA').value || ''
+        };
+        DB.transports.unshift(rec);
+        saveDB();
+        clearTransportForm();
+        renderTransport();
+    };
 }
-
 function renderTransport() {
     const tbody = document.querySelector('#tblTransport tbody');
     tbody.innerHTML = '';
@@ -347,9 +367,66 @@ function renderTransport() {
             <td>${t.type}</td>
             <td>${t.vehicle}</td>
             <td>${t.eta || '-'}</td>
+            <td>
+                <button class="btn-sm" onclick="editTransport(${t.id})">Sửa</button>
+                <button class="btn-sm" onclick="removeTransport(${t.id})">Xóa</button>
+            </td>
         `;
         tbody.appendChild(tr);
     });
+}
+
+// --- BIẾN TOÀN CỤC CHO TRANSPORT ---
+let editingTransportId = null;
+
+// XÓA LỊCH TRÌNH
+function removeTransport(id) {
+    if (!confirm('Xóa lịch trình này?')) return;
+    DB.transports = DB.transports.filter(t => t.id !== id);
+    saveDB();
+    renderTransport();
+    alert('🗑️ Đã xóa lịch trình.');
+}
+
+// SỬA LỊCH TRÌNH
+function editTransport(id) {
+    const transport = DB.transports.find(t => t.id === id);
+    if (!transport) {
+        alert('Không tìm thấy lịch trình!');
+        return;
+    }
+
+    // Điền dữ liệu vào form
+    document.getElementById('tRef').value = transport.ref;
+    document.getElementById('tType').value = transport.type;
+    document.getElementById('tVehicle').value = transport.vehicle || '';
+    document.getElementById('tETA').value = transport.eta || '';
+
+    // Chuyển sang chế độ sửa
+    editingTransportId = id;
+    const saveBtn = document.getElementById('saveTransport');
+    saveBtn.textContent = 'Cập nhật';
+    saveBtn.onclick = () => updateTransport(id);
+}
+
+// CẬP NHẬT LỊCH TRÌNH
+function updateTransport(id) {
+    const ref = document.getElementById('tRef').value.trim();
+    if (!ref) return alert('Nhập ref');
+
+    const transport = DB.transports.find(t => t.id === id);
+    if (!transport) return alert('Lịch trình không tồn tại!');
+
+    // Cập nhật
+    transport.ref = ref;
+    transport.type = document.getElementById('tType').value;
+    transport.vehicle = document.getElementById('tVehicle').value || 'N/A';
+    transport.eta = document.getElementById('tETA').value || '';
+
+    saveDB();
+    alert('✅ Cập nhật lịch trình thành công!');
+    clearTransportForm();
+    renderTransport();
 }
 
 // --- Yard (depot)
