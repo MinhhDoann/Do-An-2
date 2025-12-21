@@ -240,7 +240,7 @@
         const formFields = {
             containers: [
                 { id: 'itemTypeId', label: 'Loại hàng', type: 'select', required: true },
-                { id: 'weight', label: 'Trọng lượng (kg)', type: 'number', min:'0', max:'10000' },
+                { id: 'weight', label: 'Trọng lượng (kg)', type: 'number', min:'0.1', max:'20' },
                 { id: 'status', label: 'Trạng thái', type: 'select', options: ['Rỗng', 'Đã đóng hàng', 'Đang vận chuyển', 'Cần bảo trì', 'Đã Giao'], defaultValue:"Rỗng"},
                 { id: 'warehouseId', label: 'Kho', type: 'number' },
                 { id: 'vehicleId', label: 'Phương tiện', type: 'number' },
@@ -265,7 +265,7 @@
             ],
             warehouses: [
                 { id: 'name', label: 'Tên kho', type: 'text'},
-                { id: 'capacity', label: 'Sức chứa (tấn)', type: 'number', min:'0' },
+                { id: 'capacity', label: 'Sức chứa (tấn)', type: 'number', min:'1' },
                 { id: 'location', label: 'Vị trí', type: 'text'},
                 { id: 'manager', label: 'Người phụ trách', type: 'text' }
             ],
@@ -277,19 +277,19 @@
             ],
             vehicles: [
                 { id: 'vehicleType', label: 'Loại xe', type: 'select', options: ['Xe tải', 'Xe container', 'Xe khách', 'Xe đầu kéo'] },
-                { id: 'licensePlate', label: 'Biển số xe', type: 'text' },
+                { id: 'licensePlate', label: 'Biển số xe', type: 'text', required: true, minLength: 5, pattern: '^[0-9]{2}[A-Z]{1,2}-[0-9]{3}(\\.[0-9]{2})?$', title: 'Ví dụ: 51A-123.45 hoặc 29H-56789'},
                 { id: 'image', label: 'Hình ảnh', type: 'file' },
-                { id: 'capacity', label: 'Tải trọng (tấn)', type: 'number' , min: '0', max: '20' },
-                { id: 'status', label: 'Trạng thái', type: 'select', options: ['Đang hoạt động', 'Đang bảo trì', 'Đang vận chuyển', 'Ngừng sử dụng'] },
+                { id: 'capacity', label: 'Tải trọng (tấn)', type: 'number' , min: '0.1', max: '20', required: true },
+                { id: 'status', label: 'Trạng thái', type: 'select', options: ['Đang hoạt động', 'Đang bảo trì', 'Đang vận chuyển', 'Ngừng sử dụng'], defaultValue: 'Đang hoạt động' },
                 { id: 'description', label: 'Mô tả chi tiết', type: 'textarea' }
             ],
             trips: [
-                { id: 'voyageNumber', label: 'Mã chuyến', type: 'text' },
-                { id: 'fromPortId', label: 'Cảng đi', type: 'number' },
-                { id: 'toPortId', label: 'Cảng đến', type: 'number' },
-                { id: 'etd', label: 'ETD', type: 'date' },
-                { id: 'eta', label: 'ETA', type: 'date' },
-                { id: 'vehicleId', label: 'Phương tiện', type: 'number' },
+                {id: 'voyageNumber', label: 'Mã chuyến', type: 'text', required: true },
+                { id: 'fromPortId', label: 'Cảng đi', type: 'number', required: true },
+                { id: 'toPortId', label: 'Cảng đến', type: 'number', required: true },
+                { id: 'etd', label: 'ETD (Ngày khởi hành)', type: 'date', required: true, min: new Date().toISOString().split('T')[0] },
+                { id: 'eta', label: 'ETA (Ngày đến)', type: 'date', required: true },
+                { id: 'vehicleId', label: 'Phương tiện', type: 'number', required: true },
                 { id: 'status', label: 'Trạng thái', type: 'select', options: ['Chuẩn bị', 'Đang chạy', 'Hoàn thành', 'Hủy'], disabled: true }
             ],
             ports: [ 
@@ -298,14 +298,14 @@
             { id: 'location', label: 'Vị trí', type: 'text'}
             ],
             contracts: [
-                { id: 'customerId', label: 'Khách hàng', type: 'number' },
-                { id: 'signDate', label: 'Ngày ký', type: 'date' },
-                { id: 'expiryDate', label: 'Ngày hết hạn', type: 'date' },
-                { id: 'value', label: 'Giá trị hợp đồng', type: 'number', min:'0' }
+                { id: 'customerId', label: 'Khách hàng', type: 'number', required: true },
+                { id: 'signDate', label: 'Ngày ký', type: 'date', required: true },
+                { id: 'expiryDate', label: 'Ngày hết hạn', type: 'date', required: true },
+                { id: 'value', label: 'Giá trị hợp đồng (VND)', type: 'number', min: '100000', required: true }
             ],
             invoices: [
                 { id: 'contractId', label: 'Hợp đồng', type: 'number' },
-                { id: 'amount', label: 'Số tiền', type: 'number', min:'0' },
+                { id: 'amount', label: 'Số tiền (VND)', type: 'number', min: '100000', required: true },
                 { id: 'issueDate', label: 'Ngày phát hành', type: 'date' },
                 { id: 'paidPercent', label: 'Đã thanh toán (%)', type:'text', disabled: true }
             ],
@@ -316,13 +316,13 @@
                 { id: 'billToCustomer', label: 'Thu khách hàng?', type: 'select', options: ['Có', 'Không'], defaultValue: 'Không' }
             ],
             users: [
-            { id: 'name', label: 'Họ tên', type: 'text'},
-            { id: 'email', label: 'Email', type: 'email'},
-            { id: 'role', label: 'Vai trò', type: 'select', options: ['admin','quản lý kho','Điều Phối'] },
-            { id: 'password', label: 'Mật khẩu', type: 'password'},
-            { id: 'warehouseId', label: 'Kho', type: 'number' },
-            { id: 'status', label: 'Trạng thái', type: 'select', options: ['Hoạt động','Khóa'] }
-        ]
+                { id: 'name', label: 'Họ tên', type: 'text', required: true },
+                { id: 'email', label: 'Email', type: 'email', required: true },
+                { id: 'role', label: 'Vai trò', type: 'select', options: ['admin', 'quản lý kho', 'Điều Phối'], required: true },
+                { id: 'password', label: 'Mật khẩu', type: 'password', minLength: 6, required: true },
+                { id: 'warehouseId', label: 'Kho', type: 'number' },
+                { id: 'status', label: 'Trạng thái', type: 'select', options: ['Hoạt động', 'Khóa'], defaultValue: 'Hoạt động' }
+            ]
         };
 
         const ACTION_EFFECTS = {
@@ -556,6 +556,17 @@
                 if (f.maxLength) input.maxLength = f.maxLength;
                 if (f.min) input.min = f.min;
                 if (f.max) input.max = f.max;
+                if (f.minLength) input.minLength = f.minLength;
+                if (f.disabled) input.disabled = true;
+                if (f.placeholder) input.placeholder = f.placeholder; 
+                if (f.defaultValue !== undefined) {
+                    input.value = f.defaultValue;                   
+                }
+                if (f.rows && f.type === 'textarea') {
+                    input.rows = f.rows;                            
+                }
+                if (f.options && f.type === 'select') {
+                }
                 
                 if (existingItem && f.type !== 'file') {
                     input.value = existingItem[f.id] || '';
@@ -858,7 +869,7 @@
                             return; 
                         }
                     }
-                    
+
                     if (moduleId === 'containers') {
                         const vehicleId = newItem.vehicleId;
                         const currentStatus = newItem.status;
