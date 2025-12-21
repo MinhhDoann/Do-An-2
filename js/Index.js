@@ -757,6 +757,14 @@
             });
             return "CP" + (max + 1).toString().padStart(3, "0");
         }
+        function isLicensePlateTaken(licensePlate, excludeId = null) {
+            if (!licensePlate || licensePlate.trim() === '') return false;
+            
+            return appData.vehicles.some(vehicle => {
+                if (excludeId && vehicle.id === excludeId) return false;
+                return (vehicle.licensePlate || '').trim().toUpperCase() === licensePlate.trim().toUpperCase();
+            });
+        }
 
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -835,6 +843,22 @@
                             }
                         }
                     }
+                    if (moduleId === 'vehicles') {
+                        const licensePlate = newItem.licensePlate?.trim();
+                        
+                        if (!licensePlate) {
+                            alert('Vui lòng nhập biển số xe!');
+                            return; 
+                        }
+                    
+                        const isTaken = isLicensePlateTaken(licensePlate, isAdd ? null : id);
+                        
+                        if (isTaken) {
+                            alert(`Biển số "${licensePlate}" đã được sử dụng bởi xe khác!\nVui lòng nhập biển số mới.`);
+                            return; 
+                        }
+                    }
+                    
                     if (moduleId === 'containers') {
                         const vehicleId = newItem.vehicleId;
                         const currentStatus = newItem.status;
