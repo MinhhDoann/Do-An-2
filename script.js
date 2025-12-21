@@ -62,7 +62,7 @@ const DB = {
     equip: []
 };
 
-// ✅ BIẾN MỚI: hỗ trợ chế độ sửa
+// BIẾN MỚI: hỗ trợ chế độ sửa
 let editingContainerId = null;
 
 function loadDB() {
@@ -212,6 +212,29 @@ function clearCargoForm() {
     ['gDesc', 'gQty'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('gType').value = 'General';
     document.getElementById('gContainer').value = '';
+    
+    // Reset chế độ sửa & nút
+    editingCargoId = null;
+    const saveBtn = document.getElementById('saveCargo');
+    saveBtn.textContent = 'Lưu';
+    // Khôi phục hành vi gốc
+    saveBtn.onclick = function() {
+        const desc = document.getElementById('gDesc').value.trim();
+        if (!desc) return alert('Nhập mô tả hàng');
+        const containerNo = document.getElementById('gContainer').value;
+        if (!containerNo) return alert('Chọn container');
+        const rec = {
+            id: Date.now(),
+            desc,
+            qty: document.getElementById('gQty').value || 'N/A',
+            type: document.getElementById('gType').value,
+            container: containerNo
+        };
+        DB.cargo.unshift(rec);
+        saveDB();
+        clearCargoForm();
+        renderCargo();
+    };
 }
 
 function renderCargo() {
@@ -225,11 +248,70 @@ function renderCargo() {
             <td>${g.container || '-'}</td>
             <td>${g.qty}</td>
             <td>${g.type}</td>
+            <td>
+                <button class="btn-sm" onclick="editCargo(${g.id})">Sửa</button>
+                <button class="btn-sm" onclick="removeCargo(${g.id})">Xóa</button>
+            </td>
         `;
         tbody.appendChild(tr);
     });
 }
 
+// --- BIẾN TOÀN CỤC CHO CARGO ---
+let editingCargoId = null;
+
+// XÓA HÀNG
+function removeCargo(id) {
+    if (!confirm('Xóa lô hàng này?')) return;
+    DB.cargo = DB.cargo.filter(g => g.id !== id);
+    saveDB();
+    renderCargo();
+    alert('🗑️ Đã xóa lô hàng.');
+}
+
+// SỬA HÀNG
+function editCargo(id) {
+    const cargo = DB.cargo.find(g => g.id === id);
+    if (!cargo) {
+        alert('Không tìm thấy lô hàng!');
+        return;
+    }
+
+    // Điền dữ liệu vào form
+    document.getElementById('gDesc').value = cargo.desc;
+    document.getElementById('gQty').value = cargo.qty;
+    document.getElementById('gType').value = cargo.type;
+    document.getElementById('gContainer').value = cargo.container || '';
+
+    // Chuyển sang chế độ sửa
+    editingCargoId = id;
+    const saveBtn = document.getElementById('saveCargo');
+    saveBtn.textContent = 'Cập nhật';
+    saveBtn.onclick = () => updateCargo(id);
+}
+
+// CẬP NHẬT HÀNG
+function updateCargo(id) {
+    const desc = document.getElementById('gDesc').value.trim();
+    if (!desc) return alert('Nhập mô tả hàng');
+
+    const containerNo = document.getElementById('gContainer').value;
+    if (!containerNo) return alert('Chọn container');
+
+    const cargo = DB.cargo.find(g => g.id === id);
+    if (!cargo) return alert('Lô hàng không tồn tại!');
+
+    // Cập nhật
+    cargo.desc = desc;
+    cargo.qty = document.getElementById('gQty').value || 'N/A';
+    cargo.type = document.getElementById('gType').value;
+    cargo.container = containerNo;
+
+    saveDB();
+    alert('✅ Cập nhật lô hàng thành công!');
+    clearCargoForm(); 
+    renderCargo();    
+}
 // --- Transport ---
 document.getElementById('saveTransport').addEventListener('click', () => {
     const ref = document.getElementById('tRef').value.trim();
