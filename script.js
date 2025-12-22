@@ -753,20 +753,25 @@ function getContractFormData() {
     const start = document.getElementById('cStart')?.value || '';
     const end = document.getElementById('cEnd')?.value || '';
     const value = Number(document.getElementById('cValue')?.value || 0);
-    const status = document.getElementById('cStatus')?.value?.trim() || '';
+    const status = document.getElementById('cStatus')?.value?.trim() || 'Chờ ký';
     const note = document.getElementById('cNote')?.value?.trim() || '';
     return { no, partner, start, end, value, status, note };
 }
 
 function clearContractForm() {
-    const ids = ['cNo','cPartner','cStart','cEnd','cValue','cStatus','cNote'];
-    ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-    editingContractId = null;
-    const t = document.getElementById('contractFormTitle');
-    if (t) t.textContent = 'Thêm hợp đồng';
-    const del = document.getElementById('deleteContract');
-    if (del) del.style.display = 'none';
+  const ids = ['cNo','cPartner','cStart','cEnd','cValue','cNote'];
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+
+  const st = document.getElementById('cStatus');
+  if (st) st.value = 'Chờ ký';   // ✅ mặc định
+
+  editingContractId = null;
+  const t = document.getElementById('contractFormTitle');
+  if (t) t.textContent = 'Thêm hợp đồng';
+  const del = document.getElementById('deleteContract');
+  if (del) del.style.display = 'none';
 }
+
 
 function editContract(id) {
     const c = (DB.contracts || []).find(x => x.id === id);
