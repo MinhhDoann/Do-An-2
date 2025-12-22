@@ -11,6 +11,7 @@
                 source.map(item => [item[keyName], item[valueName] || item[keyName]])
             );
         }
+        let currentModuleId;
 
         let displayMaps = {};   
 
@@ -64,7 +65,7 @@
             ports: { fields: ['id', 'name', 'code', 'location'] },                                                                  
             users: { fields: ['id', 'name', 'email', 'role', 'password', 'warehouseId', 'status'] },                               
             contracts: { fields: ['id', 'customerId', 'signDate', 'expiryDate', 'value'] },
-            invoices: { fields: ['id', 'contractId', 'amount', 'issueDate', 'paidPercent', 'payments'] },
+            invoices: { fields: ['id', 'contractId', 'amount', 'issueDate', 'payments'] },
             costs: { fields: ['id', 'contractId', 'costType', 'amount'] }
         };
 
@@ -132,9 +133,6 @@
                 
                         const displayName = getDisplayValue(relModule, value);
                         cell.textContent = displayName || '-';
-                    }
-                    else if (f === 'paidPercent') {
-                        cell.textContent = (value ?? 0) + "%";
                     }
                     else if (f === 'payments') {
                         const payments = item.payments || [];
@@ -307,7 +305,6 @@
                 { id: 'contractId', label: 'Hợp đồng', type: 'number' },
                 { id: 'amount', label: 'Số tiền (VND)', type: 'number', min: '100000', required: true },
                 { id: 'issueDate', label: 'Ngày phát hành', type: 'date' },
-                { id: 'paidPercent', label: 'Đã thanh toán (%)', type:'text', disabled: true }
             ],
             costs: [
                 { id: 'contractId', label: 'Hợp đồng', type: 'number' },
@@ -436,6 +433,7 @@
         
         // ====== HÀM MỞ / ĐÓNG MODAL ======
         function openModal(action, moduleId, id = null) {
+            currentModuleId = moduleId;
             const modal = document.getElementById('dynamicModal');
             const modalTitle = document.getElementById('modalTitle');
             const formFieldsDiv = document.getElementById('formFields');
@@ -785,7 +783,7 @@
                     e.preventDefault();
                     const modalTitle = document.getElementById('modalTitle').textContent;
                     const isAdd = modalTitle.includes('Thêm');
-                    const moduleId = modalTitle.replace('Thêm ', '').replace('Sửa ', '').trim();
+                    const moduleId = currentModuleId;
                     const fields = formFields[moduleId];
                     let id = document.getElementById('entityId').value;
                     if (!id) {
@@ -824,10 +822,14 @@
                             id = generateCostsID(appData.costs);
                         }
                         else {
-                            const prefix = moduleId === 'ports' ? 'PORT' : 
-                                        moduleId === 'users' ? 'USER' : 
-                                        moduleId.toUpperCase().slice(0,2);
-                            id = `${prefix}${(appData[moduleId]?.length || 0) + 1}`;
+                            if (!moduleId) {
+                                console.error('❌ moduleId undefined → không tạo ID');
+                                return;
+                            }
+                            
+                            const prefix = moduleId === 'ports' ? 'PORT' :
+                                           moduleId === 'users' ? 'USER' :
+                                           moduleId.toUpperCase().slice(0, 2);
                         }
                     }
                 

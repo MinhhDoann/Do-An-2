@@ -38,7 +38,6 @@ document.querySelectorAll('.search-input').forEach(input => {
 });
 
 function showModule(moduleId) {
-    // ... code cũ của bạn ...
 
     // Reset ô tìm kiếm khi chuyển tab
     const searchInput = document.querySelector(`.search-input[data-table="${moduleId}"]`);
