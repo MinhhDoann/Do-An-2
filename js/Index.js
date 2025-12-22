@@ -146,7 +146,7 @@
                         if (payments.length === 0) {
                             paymentsList = '<em style="color:#999; font-style:italic;">Chưa có thanh toán</em>';
                         } else {
-                            paymentsList = '<ul style="margin:6px 0; padding-left:20px; font-size:13px; max-height:120px; overflow-y:auto; list-style:none;">';
+                            paymentsList = '<ul style="margin:6px 0; font-size:13px; max-height:120px; overflow-y:auto; list-style:none;">';
                             payments.forEach(p => {
                                 const time = p.time ? new Date(p.time).toLocaleString('vi-VN') : 'Không rõ thời gian';
                                 paymentsList += `
@@ -1101,7 +1101,7 @@
               sidebar.classList.toggle('active');
             });
           });
-          function openPaymentModal(invoiceId, mode = 'add') {
+        function openPaymentModal(invoiceId, mode = 'add') {
             const invoice = appData.invoices.find(inv => inv.id === invoiceId);
             if (!invoice) {
                 alert("Không tìm thấy hóa đơn!");
@@ -1159,13 +1159,30 @@
                 });
         
             } else if (mode === 'list') {
+                const printBtn = document.createElement('button');
+                printBtn.textContent = 'In hóa đơn';
+                printBtn.style.cssText = `
+                    margin-top:10px;
+                    width:100%;
+                    padding:12px;
+                    background:#34495e;
+                    color:white;
+                    border:none;
+                    border-radius:6px;
+                    font-size:15px;
+                    cursor:pointer;
+                `;
+                printBtn.onclick = () => printInvoice(invoiceId);
+
+                formFieldsDiv.appendChild(printBtn);
+
                 modalTitle.textContent = `Quản lý thanh toán – Hóa đơn ${invoiceId}`;
         
                 if (payments.length === 0) {
                     formFieldsDiv.innerHTML += '<p style="text-align:center; color:#999; padding:30px;">Chưa có thanh toán nào.</p>';
                 } else {
                     const list = document.createElement('div');
-                    list.style.cssText = 'max-height:400px; overflow-y:auto; border:1px solid #ddd; border-radius:8px; padding:10px;';
+                    list.style.cssText = 'max-height:200px; overflow-y:auto; border:1px solid #ddd; border-radius:8px; padding:10px;';
         
                     payments.forEach((p, idx) => {
                         const timeStr = p.time ? new Date(p.time).toLocaleString('vi-VN') : 'Không rõ';
@@ -1248,6 +1265,112 @@
             closeModal();
             openPaymentModal(invoiceId, 'list');
         }  
+        function printInvoice(invoiceId) {
+            const invoice = appData.invoices.find(inv => inv.id === invoiceId);
+            if (!invoice) return alert('Không tìm thấy hóa đơn');
+
+            const contract = appData.contracts.find(c => c.id === invoice.contractId);
+
+            const customer = contract
+                ? appData.customers.find(cus => cus.id === contract.customerId)
+                : null;
+        
+            const payments = invoice.payments || [];
+            const totalPaid = payments.reduce((s, p) => s + Number(p.amount || 0), 0);
+            const remaining = invoice.amount - totalPaid;
+        
+            let paymentRows = '';
+            payments.forEach((p, i) => {
+                paymentRows += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${Number(p.amount).toLocaleString('vi-VN')} ₫</td>
+                        <td>${p.method || '-'}</td>
+                        <td>${p.time ? new Date(p.time).toLocaleString('vi-VN') : '-'}</td>
+                    </tr>
+                `;
+            });
+        
+            const printWindow = window.open('', '', 'width=900,height=650');
+            printWindow.document.write(`
+            <html>
+            <head>
+                <title>Hóa đơn ${invoice.id}</title>
+                <style>
+                    body { font-family: Arial; padding: 30px; }
+                    h2 { text-align:center; }
+                    table { width:100%; border-collapse: collapse; margin-top:20px; }
+                    th, td { border:1px solid #333; padding:8px; text-align:left; vertical-align:top; }
+                    th { background:#f0f0f0; }
+                </style>
+            </head>
+            <body>
+                <h2>HÓA ĐƠN THANH TOÁN</h2>
+
+                <!-- THÔNG TIN NGANG -->
+                <table>
+                    <tr>
+                        <th>Khách hàng</th>
+                        <th>Hợp đồng</th>
+                        <th>Hóa đơn</th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong>Tên:</strong> ${customer?.name || '---'}<br>
+                            <strong>SĐT:</strong> ${customer?.phone || '---'}<br>
+                            <strong>Địa chỉ:</strong> ${customer?.address || '---'}
+                        </td>
+                        <td>
+                            <strong>Mã hợp đồng:</strong> ${contract?.id || '---'}
+                        </td>
+                        <td>
+                            <strong>Mã hóa đơn:</strong> ${invoice.id}<br>
+                            <strong>Tổng:</strong> ${invoice.amount.toLocaleString('vi-VN')} ₫<br>
+                            <strong>Đã thu:</strong> ${totalPaid.toLocaleString('vi-VN')} ₫<br>
+                            <strong>Còn:</strong> ${remaining.toLocaleString('vi-VN')} ₫
+                        </td>
+                    </tr>
+                </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Số tiền</th>
+                            <th>Phương thức</th>
+                            <th>Thời gian</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${paymentRows || `
+                            <tr>
+                                <td colspan="4" style="text-align:center">
+                                    Chưa có thanh toán
+                                </td>
+                            </tr>
+                        `}
+                    </tbody>
+                </table>
+                <div style="margin-top:40px; text-align:right;">
+                    <div style="display:inline-block; text-align:center; margin-right:40px;">
+                        <div style="margin-bottom:10px;">
+                            Khoái Châu, ngày ..... tháng ..... năm 2025
+                        </div>
+                        <div style="margin-top:20px; font-weight:bold;">
+                            Người lập hóa đơn
+                        </div>
+                        <div style="font-style:italic;">
+                            (Ký, ghi rõ họ tên)
+                        </div>
+                    </div>
+                </div>
+                <script>
+                    window.onload = () => window.print();
+                </script>
+            </body>
+            </html>
+            `);
+            printWindow.document.close();
+        }        
         // ====== GẮN WINDOW ======
         window.openPaymentModal = openPaymentModal;
         window.deletePayment = deletePayment;
