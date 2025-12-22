@@ -43,7 +43,9 @@ function showSection(id) {
         case 'transport': renderTransport(); break;
         case 'depot': renderYard(); break;
         case 'contracts': renderContracts(); break;
-        case 'finance':  break;
+        case 'finance':
+        setTimeout(populateFinanceContainerSelect, 100); 
+        break;
         case 'partners': renderPartners(); break;
         case 'staff': renderStaff(); break;
         case 'equipment': renderEquip(); break;
@@ -732,6 +734,123 @@ function handleSaveContract() {
     document.getElementById('ctCargoDesc').value = '';
 }
 
+// finance
+document.getElementById('saveCost')?.addEventListener('click', function() {
+    if (!window.tempCostData) return alert('Không có dữ liệu để lưu!');
+
+    const contract = DB.contracts.find(ct => ct.containerNo === window.tempCostData.containerNo);
+    if (!contract) {
+        return alert('Không tìm thấy hợp đồng cho container này!');
+    }
+
+    contract.cost = window.tempCostData;
+    saveDB();
+    alert('✅ Đã lưu chi phí vào hợp đồng ' + contract.ref);
+});
+// Điền danh sách container vào dropdown
+function populateFinanceContainerSelect() {
+    const sel = document.getElementById('fContainerSelect');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">-- Chọn container --</option>';
+    DB.containers.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.no;
+        opt.textContent = `${c.no} • ${c.type} • ${c.loc}`;
+        sel.appendChild(opt);
+    });
+}
+
+// HÀM TÍNH CHI PHÍ CHI TIẾT
+function calculateCost() {
+    const containerNo = document.getElementById('fContainerSelect')?.value;
+    const dateInStr = document.getElementById('fDateIn')?.value;
+    const dateOutStr = document.getElementById('fDateOut')?.value;
+    const freeDays = parseInt(document.getElementById('fFreeDays')?.value) || 7;
+
+    if (!containerNo || !dateInStr || !dateOutStr) {
+        alert('Vui lòng nhập đầy đủ thông tin!');
+        return;
+    }
+
+    const dateIn = new Date(dateInStr);
+    const dateOut = new Date(dateOutStr);
+    
+    if (dateOut < dateIn) {
+        alert('Ngày lấy không được sớm hơn ngày nhập!');
+        return;
+    }
+
+    // Tính số ngày bãi
+    const totalDays = Math.ceil((dateOut - dateIn) / (1000 * 60 * 60 * 24));
+    const overDays = Math.max(0, totalDays - freeDays);
+
+    // BẢNG GIÁ MẪU (điều chỉnh theo thực tế)
+    const RATE = {
+        base: 200000,      // Phí cơ bản/ngày
+        over: 300000,      // Phạt quá hạn/ngày
+        handling: 150000   // Phí xếp dỡ
+    };
+
+    // Tính chi phí
+    const baseCost = totalDays * RATE.base;
+    const overCost = overDays * RATE.over;
+    const total = baseCost + overCost + RATE.handling;
+
+    // Hiển thị kết quả chi tiết
+    const breakdown = `
+        <div style="background:#f8fafc;padding:12px;border-radius:8px">
+            <h4 style="margin:0 0 10px;font-size:16px">📦 Container: ${containerNo}</h4>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <div><strong>Ngày nhập:</strong> ${dateInStr}</div>
+                <div><strong>Ngày lấy:</strong> ${dateOutStr}</div>
+                <div><strong>Tổng ngày bãi:</strong> ${totalDays} ngày</div>
+                <div><strong>Ngày miễn phí:</strong> ${freeDays} ngày</div>
+                <div><strong>Ngày quá hạn:</strong> <span style="color:#ef4444">${overDays}</span> ngày</div>
+            </div>
+        </div>
+        <div style="margin-top:16px">
+            <h4 style="margin:0 0 10px;font-size:16px">📊 Chi tiết chi phí</h4>
+            <ul style="padding-left:20px;line-height:1.6">
+                <li>Phí bãi cơ bản (${totalDays} ngày × ${RATE.base.toLocaleString()} VND): 
+                    <strong>${baseCost.toLocaleString()} VND</strong></li>
+                <li>Phạt quá hạn (${overDays} ngày × ${RATE.over.toLocaleString()} VND): 
+                    <strong style="color:#ef4444">${overCost.toLocaleString()} VND</strong></li>
+                <li>Phí xếp dỡ: <strong>${RATE.handling.toLocaleString()} VND</strong></li>
+            </ul>
+        </div>
+    `;
+
+    document.getElementById('costBreakdown').innerHTML = breakdown;
+    document.getElementById('totalAmount').textContent = total.toLocaleString();
+    document.getElementById('saveCost').style.display = 'inline-block';
+
+    // Lưu tạm dữ liệu để lưu vào hợp đồng
+    window.tempCostData = {
+        containerNo,
+        dateIn: dateInStr,
+        dateOut: dateOutStr,
+        freeDays,
+        totalDays,
+        overDays,
+        baseCost,
+        overCost,
+        handling: RATE.handling,
+        total
+    };
+}
+
+// Làm lại form
+function clearCostForm() {
+    document.getElementById('fContainerSelect').value = '';
+    document.getElementById('fDateIn').value = '';
+    document.getElementById('fDateOut').value = '';
+    document.getElementById('fFreeDays').value = '7';
+    document.getElementById('costBreakdown').innerHTML = '<p>→ Nhập thông tin để tính chi phí</p>';
+    document.getElementById('totalAmount').textContent = '0';
+    document.getElementById('saveCost').style.display = 'none';
+    delete window.tempCostData;
+}
+
 // --- Partners ---
 document.getElementById('savePartner').addEventListener('click', () => {
     const name = document.getElementById('pName').value.trim();
@@ -1000,6 +1119,20 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+
+    // Cập nhật dropdown container khi vào finance
+    if (document.getElementById('finance').style.display !== 'none' || 
+        document.getElementById('sectionTitle').textContent.includes('Tài chính')) {
+        populateFinanceContainerSelect();
+    }
+    // Tự động điền ngày khi chọn container (tuỳ chọn)
+    document.getElementById('fContainerSelect')?.addEventListener('change', function() {
+        if (this.value) {
+        }
+    });
+    // Xử lý tính chi phí
+    document.getElementById('calcCost')?.addEventListener('click', calculateCost);
+    document.getElementById('clearCost')?.addEventListener('click', clearCostForm);
 
     logoutBtn?.addEventListener("click", () => {
         if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {

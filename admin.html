@@ -21,6 +21,7 @@
                         <li><button data-section="cargo">Hàng trong Container</button></li>
                     </ul>
                 </li>
+
                 <li class="has-submenu">
                     <button class="submenu-toggle">Vận tải</button>
                     <ul class="submenu">
@@ -28,12 +29,14 @@
                         <li><button data-section="depot">Cảng & Depot</button></li>
                     </ul>
                 </li>
-                <li class="has-submenu">
-                    <button class="submenu-toggle">Chứng từ & Hải quan</button>
+
+               <li class="has-submenu">
+                    <button class="submenu-toggle">Hợp đồng</button>
                     <ul class="submenu">
-                        <li><button data-section="docs">Quản lý chứng từ</button></li>
+                        <li><button data-section="contracts">Danh sách Hợp đồng</button></li>
                     </ul>
                 </li>
+
                 <li class="has-submenu">
                     <button class="submenu-toggle">Tài chính & Chi phí</button>
                     <ul class="submenu">
@@ -144,7 +147,7 @@
                             <div class="form-row">
                                 <select id="cLocationMain" required>
                                     <option value="">-- Chọn vị trí --</option>
-                                    <option value="Yard">Bãi (Yard Map)</option>
+                                    <option value="Yard">Yard</option>
                                     <option value="Depot">Depot</option>
                                     <option value="Onboard">Onboard</option>
                                 </select>
@@ -168,16 +171,17 @@
                                 <label>Tên tàu</label>
                                 <input id="cOnboardVessel" placeholder="Nhập tên tàu" />
                             </div>
-                        <div class="form-row"><select id="cStatus">
-                                <option>Empty</option><option>Full</option><option>In Transit</option><option>Maintenance</option>
-                            </select></div>
-                        <div style="display:flex;gap:8px">
-                            <button class="btn" id="saveContainer">Lưu</button>
-                            <button onclick="clearContainerForm()" class="btn" style="background:#6b7280">Hủy</button>
+
+                            <div class="form-row"><select id="cStatus">
+                                    <option>Empty</option><option>Full</option><option>In Transit</option><option>Maintenance</option>
+                                </select></div>
+                            <div style="display:flex;gap:8px">
+                                <button class="btn" id="saveContainer">Lưu</button>
+                                <button onclick="clearContainerForm()" class="btn" style="background:#6b7280">Hủy</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
             <section id="cargo" class="card-section" style="display:none">
                 <div class="grid">
@@ -243,46 +247,84 @@
                 </div>
             </section>
 
-            <section id="docs" class="card-section" style="display:none">
+            <!--Section Hợp đồng -->
+            <section id="contracts" class="card-section" style="display:none">
                 <div class="grid">
                     <div class="card">
-                        <h3>Chứng từ</h3>
-                        <input id="docRef" placeholder="Ref / B/L" />
-                        <select id="docType">
-                            <option>BL</option><option>Invoice</option><option>Packing List</option><option>CO</option>
-                        </select>
-                        <div style="margin-top:8px"><button class="btn" id="saveDoc">Lưu chứng từ</button></div>
-                        <hr />
-                        <table id="tblDocs">
-                            <thead><tr><th>#</th><th>Ref</th><th>Loại</th><th>Trạng thái</th></tr></thead>
+                        <h3>Danh sách Hợp đồng</h3>
+                        <table id="tblContracts">
+                            <thead><tr><th>#</th><th>Số HĐ</th><th>Khách hàng</th><th>Ngày ký</th><th>Trạng thái</th><th>Hành động</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
 
                     <div class="card">
-                        <h3>Upload chứng từ (mô phỏng)</h3>
-                        <input type="file" id="fileDoc" />
-                        <div class="small" style="margin-top:6px">Tệp sẽ được đọc và lưu tên trong localStorage (mô phỏng)</div>
+                        <h3>Tạo Hợp đồng Mới</h3>
+                        <div class="form-row"><input id="ctRef" placeholder="Số hợp đồng" required></div>
+                        <div class="form-row"><input id="ctCustomerName" placeholder="Tên khách hàng" required></div>
+                        <div class="form-row"><input id="ctCustomerPhone" placeholder="SĐT"></div>
+                        <div class="form-row"><input id="ctCustomerEmail" placeholder="Email"></div>
+                        <div class="form-row"><input id="ctCustomerAddr" placeholder="Địa chỉ"></div>
+                        <div class="form-row"><input id="ctDateIn" type="date" placeholder="Ngày nhập bãi"></div>
+                        <div class="form-row"><input id="ctDateOut" type="date" placeholder="Ngày lấy"></div>
+                        <div class="form-row"><input id="ctContainerNo" placeholder="Số container"></div>
+                        <div class="form-row"><input id="ctContainerType" placeholder="Loại container (20DC, 40HC...)"></div>
+                        <div class="form-row"><input id="ctCargoDesc" placeholder="Mô tả hàng"></div>
+                        <div class="form-row"><input id="ctCargoQty" placeholder="Số lượng / Trọng lượng"></div>
+                        <div class="form-row">
+                            <select id="ctCargoType">
+                                <option value="General">General</option>
+                                <option value="Reefer">Reefer</option>
+                                <option value="Dangerous (DG)">Dangerous (DG)</option>
+                            </select>
+                        </div>
+                        <button class="btn" id="saveContract">Lưu hợp đồng</button>
                     </div>
                 </div>
             </section>
 
             <section id="finance" class="card-section" style="display:none">
                 <div class="grid">
+                    <!-- Form tính chi phí -->
                     <div class="card">
-                        <h3>Tính chi phí nhanh</h3>
-                        <div class="form-row"><input id="fBase" placeholder="Cước cơ bản" type="number" /></div>
-                        <div class="form-row"><input id="fDemDet" placeholder="DEM/DET" type="number" /></div>
-                        <div class="form-row"><input id="fLocal" placeholder="Phí local" type="number" /></div>
-                        <div style="display:flex;gap:8px">
-                            <button class="btn" id="calcCost">Tính</button>
-                            <div id="costResult" style="align-self:center"></div>
+                        <h3>Tính chi phí container</h3>
+                        <div class="form-row">
+                            <label>Số container</label>
+                            <select id="fContainerSelect">
+                                <option value="">-- Chọn container --</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label>Ngày nhập bãi</label>
+                            <input type="date" id="fDateIn" required>
+                        </div>
+                        <div class="form-row">
+                            <label>Ngày lấy container</label>
+                            <input type="date" id="fDateOut" required>
+                        </div>
+                        <div class="form-row">
+                            <label>Miễn phí DEM/DET (ngày)</label>
+                            <input type="number" id="fFreeDays" value="7" min="0">
+                            <div class="small">Ngày miễn phí trước khi tính quá hạn</div>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:10px">
+                            <button class="btn" id="calcCost">Tính chi phí</button>
+                            <button class="btn" style="background:#6b7280" id="clearCost">Làm lại</button>
                         </div>
                     </div>
 
+                    <!-- Kết quả chi tiết -->
                     <div class="card">
-                        <h3>Hóa đơn & Báo cáo</h3>
-                        <button class="btn" onclick="downloadReport()">Tải báo cáo (JSON)</button>
+                        <h3>Kết quả tính toán</h3>
+                        <div id="costBreakdown" style="font-size:14px;line-height:1.6">
+                            <p>→ Nhập thông tin để tính chi phí</p>
+                        </div>
+                        <div id="costTotal" style="margin-top:16px;font-size:18px;font-weight:bold;color:#1e293b">
+                            Tổng: <span id="totalAmount">0</span> VND
+                        </div>
+                        <button class="btn" id="saveCost" style="margin-top:12px;display:none">
+                            Lưu vào hợp đồng
+                        </button>
                     </div>
                 </div>
             </section>
@@ -309,7 +351,7 @@
                 </div>
             </section>
 
-            <!-- ✅ Nhân sự -->
+            <!-- Nhân sự -->
             <section id="staff" class="card-section" style="display:none">
                 <div class="grid">
                     <div class="card">
@@ -322,7 +364,7 @@
                 </div>
             </section>
 
-            <!-- ✅ Thiết bị (đã tách riêng) -->
+            <!-- Thiết bị (đã tách riêng) -->
             <section id="equipment" class="card-section" style="display:none">
                 <div class="grid">
                     <div class="card">
