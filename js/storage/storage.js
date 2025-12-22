@@ -40,9 +40,9 @@ export const defaultData = {
         }
     ],
     containers: [
-        { id: 'CTN001', itemTypeId: 'HH001', weight: 5000, status: 'Lưu kho', warehouseId: 'KHO001', vehicleId: 'XE001', customerId: 'KH001' },
-        { id: 'CTN002', itemTypeId: 'HH002', weight: 3000, status: 'Đang vận chuyển', warehouseId: 'KHO001', vehicleId: 'XE002', customerId: 'KH002' },
-        { id: 'CTN003', itemTypeId: 'HH003', weight: 4000, status: 'Lưu kho', warehouseId: 'KHO002', vehicleId: 'XE003', customerId: 'KH003' }
+        { id: 'CTN001', itemTypeId: 'HH001', weight: 5000, status: 'Lưu kho', warehouseId: 'KHO001', vehicleId: 'XE001', contractId: 'HD001' },
+        { id: 'CTN002', itemTypeId: 'HH002', weight: 3000, status: 'Đang vận chuyển', warehouseId: 'KHO001', vehicleId: 'XE002', contractId: 'HD002' },
+        { id: 'CTN003', itemTypeId: 'HH003', weight: 4000, status: 'Lưu kho', warehouseId: 'KHO002', vehicleId: 'XE003', contractId: 'HD003' }
     ],
     itemTypes: [
         { 

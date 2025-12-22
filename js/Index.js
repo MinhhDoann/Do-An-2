@@ -53,7 +53,7 @@
 
         // ====== CẤU HÌNH CÁC BẢNG ======
         const tableConfigs = {
-            containers: { fields: ['id', 'itemTypeId', 'weight', 'status', 'warehouseId', 'vehicleId', 'customerId'] },
+            containers: { fields: ['id', 'itemTypeId', 'weight', 'status', 'warehouseId', 'vehicleId', 'contractId'] },
             itemTypes: { fields: ['id', 'name', 'description','category'] },
             containerhistory: { fields: ['id', 'containerId', 'action', 'time', 'location'] },
             warehouses: { fields: ['id', 'name', 'capacity', 'location', 'manager'] },
@@ -71,7 +71,7 @@
 
         // ====== RÀNG BUỘC QUAN HỆ DỮ LIỆU ======
         const dataRelations = {
-            containers: { warehouseId: 'warehouses', vehicleId: 'vehicles', customerId: 'customers', itemTypeId: 'itemTypes' },
+            containers: { warehouseId: 'warehouses', vehicleId: 'vehicles', contractId: 'contracts', itemTypeId: 'itemTypes' },
             containerhistory: { containerId: 'containers' },
             trips: { fromPortId: 'ports', toPortId: 'ports', vehicleId: 'vehicles' },
             contracts: { customerId: 'customers' },
@@ -238,11 +238,11 @@
         const formFields = {
             containers: [
                 { id: 'itemTypeId', label: 'Loại hàng', type: 'select', required: true },
-                { id: 'weight', label: 'Trọng lượng (kg)', type: 'number', min:'0.1', max:'20' },
+                { id: 'weight', label: 'Trọng lượng (kg)', type: 'number', min:'0', max:'20' },
                 { id: 'status', label: 'Trạng thái', type: 'select', options: ['Rỗng', 'Đã đóng hàng', 'Đang vận chuyển', 'Cần bảo trì', 'Đã Giao'], defaultValue:"Rỗng"},
                 { id: 'warehouseId', label: 'Kho', type: 'number' },
                 { id: 'vehicleId', label: 'Phương tiện', type: 'number' },
-                { id: 'customerId', label: 'Khách hàng', type: 'number' }
+                { id: 'contractId', label: 'Hợp đồng', type: 'number', required: true } 
             ],
             itemTypes: [
                 { id: 'name',        label: 'Tên loại hàng',    type: 'text',      required: true, options:"" },
@@ -1268,14 +1268,19 @@
         function printInvoice(invoiceId) {
             const invoice = appData.invoices.find(inv => inv.id === invoiceId);
             if (!invoice) return alert('Không tìm thấy hóa đơn');
-
-            const contract = appData.contracts.find(c => c.id === invoice.contractId);
-
-            const customer = contract
-                ? appData.customers.find(cus => cus.id === contract.customerId)
-                : null;
         
-            const payments = invoice.payments || [];
+            const contract = appData.contracts.find(
+                hd => hd.id === invoice.contractId
+            );
+        
+            const customer = appData.customers.find(
+                kh => kh.id === contract?.customerId
+            );
+        
+            const payments = appData.payments.filter(
+                p => p.invoiceId === invoice.id
+            );
+        
             const totalPaid = payments.reduce((s, p) => s + Number(p.amount || 0), 0);
             const remaining = invoice.amount - totalPaid;
         
