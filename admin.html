@@ -334,7 +334,7 @@
                     <div class="card">
                         <h3>Danh sách Đối tác / Khách hàng</h3>
                         <table id="tblPartners">
-                            <thead><tr><th>#</th><th>Tên</th><th>Loại</th><th>Liên hệ</th></tr></thead>
+                            <thead><tr><th>#</th><th>Tên</th><th>Loại</th><th>Liên hệ</th><th>Hành động</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -342,13 +342,18 @@
                     <div class="card">
                         <h3>Thêm Đối tác</h3>
                         <div class="form-row"><input id="pName" placeholder="Tên" /></div>
-                        <div class="form-row"><select id="pType">
-                                <option>Shipper</option><option>Consignee</option><option>Carrier</option><option>Forwarder</option>
-                            </select></div>
+                        <div class="form-row">
+                            <select id="pType">
+                                <option value="Shipper">Shipper</option>
+                                <option value="Consignee">Consignee</option>
+                                <option value="Carrier">Carrier</option>
+                                <option value="Forwarder">Forwarder</option>
+                            </select>
+                        </div>
                         <div class="form-row"><input id="pContact" placeholder="SĐT / Email" /></div>
                         <div style="display:flex;gap:8px"><button class="btn" id="savePartner">Lưu</button></div>
                     </div>
-                </div>
+                </div>  
             </section>
 
             <!-- Nhân sự -->

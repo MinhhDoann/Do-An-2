@@ -878,9 +878,146 @@ function renderPartners() {
             <td>${p.name}</td>
             <td>${p.type}</td>
             <td>${p.contact}</td>
+            <td>
+                <button class="btn-sm" onclick="editPartner(${p.id})">Sửa</button>
+                <button class="btn-sm" onclick="removePartner(${p.id})">Xóa</button>
+            </td>
         `;
         tbody.appendChild(tr);
     });
+}
+
+function editPartner(id) {
+    const partner = DB.partners.find(p => p.id === id);
+    if (!partner) return alert('Không tìm thấy đối tác!');
+
+    // Điền dữ liệu vào form
+    document.getElementById('pName').value = partner.name;
+    document.getElementById('pType').value = partner.type;
+    document.getElementById('pContact').value = partner.contact;
+
+    // Chuyển nút "Lưu" → "Cập nhật"
+    const saveBtn = document.getElementById('savePartner');
+    saveBtn.textContent = 'Cập nhật';
+
+    // Gắn lại sự kiện cho nút (để xử lý cập nhật)
+    saveBtn.onclick = function() {
+        updatePartner(id);
+    };
+
+    // Cuộn lên form (tuỳ chọn)
+    document.querySelector('.content')?.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updatePartner(id) {
+    const name = document.getElementById('pName').value.trim();
+    if (!name) return alert('Nhập tên đối tác!');
+
+    const partner = DB.partners.find(p => p.id === id);
+    if (!partner) return alert('Đối tác không tồn tại!');
+
+    // Cập nhật dữ liệu
+    partner.name = name;
+    partner.type = document.getElementById('pType').value;
+    partner.contact = document.getElementById('pContact').value;
+
+    saveDB();
+    alert('✅ Cập nhật đối tác thành công!');
+
+    // Reset form về chế độ "Thêm mới"
+    document.getElementById('pName').value = '';
+    document.getElementById('pContact').value = '';
+    document.getElementById('pType').value = 'Shipper';
+    document.getElementById('savePartner').textContent = 'Lưu';
+    document.getElementById('savePartner').onclick = function() {
+        // Gắn lại sự kiện gốc (thêm mới)
+        const name = document.getElementById('pName').value.trim();
+        if (!name) return alert('Nhập tên!');
+        DB.partners.unshift({
+            id: Date.now(),
+            name,
+            type: document.getElementById('pType').value,
+            contact: document.getElementById('pContact').value || 'N/A'
+        });
+        saveDB();
+        alert('✅ Thêm đối tác thành công!');
+        renderPartners();
+    };
+
+    renderPartners();
+}
+
+// XÓA ĐỐI TÁC
+function removePartner(id) {
+    if (!confirm('Xóa đối tác này? Hành động không thể hoàn tác!')) return;
+    DB.partners = DB.partners.filter(p => p.id !== id);
+    saveDB();
+    renderPartners();
+    alert('🗑️ Đã xóa đối tác.');
+}
+
+// SỬA ĐỐI TÁC
+function editPartner(id) {
+    const partner = DB.partners.find(p => p.id === id);
+    if (!partner) return alert('Không tìm thấy đối tác!');
+
+    // Điền dữ liệu
+    document.getElementById('pName').value = partner.name;
+    document.getElementById('pType').value = partner.type; // ✅ Cần value trong option
+    document.getElementById('pContact').value = partner.contact;
+
+    // Đổi nút → Cập nhật
+    const btn = document.getElementById('savePartner');
+    btn.textContent = 'Cập nhật';
+    btn.onclick = () => updatePartner(id);
+    
+    // Cuộn lên
+    document.querySelector('.content')?.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// CẬP NHẬT ĐỐI TÁC
+function updatePartner(id) {
+    const name = document.getElementById('pName').value.trim();
+    const type = document.getElementById('pType').value;
+    const contact = document.getElementById('pContact').value.trim();
+
+    if (!name) return alert('Vui lòng nhập tên!');
+
+    const partner = DB.partners.find(p => p.id === id);
+    if (!partner) return alert('Đối tác không tồn tại!');
+
+    partner.name = name;
+    partner.type = type;
+    partner.contact = contact;
+
+    saveDB();
+    alert('✅ Cập nhật thành công!');
+    clearPartnerForm(); // reset form
+    renderPartners();
+}
+
+// RESET FORM
+function clearPartnerForm() {
+    document.getElementById('pName').value = '';
+    document.getElementById('pContact').value = '';
+    document.getElementById('pType').value = 'Shipper'; // ✅ Đặt lại giá trị mặc định
+    const btn = document.getElementById('savePartner');
+    btn.textContent = 'Lưu';
+    // Gắn lại sự kiện gốc (thêm mới)
+    btn.onclick = function() {
+        const name = document.getElementById('pName').value.trim();
+        if (!name) return alert('Nhập tên!');
+        DB.partners.unshift({
+            id: Date.now(),
+            name,
+            type: document.getElementById('pType').value,
+            contact: document.getElementById('pContact').value || 'N/A'
+        });
+        saveDB();
+        alert('✅ Thêm đối tác thành công!');
+        clearPartnerForm();
+        renderPartners();
+    };
 }
 
 // --- Staff & Equip ---
