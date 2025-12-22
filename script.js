@@ -84,7 +84,17 @@ document.getElementById('saveContainer').addEventListener('click', function() {
     if (!no) return alert('Nhập số container');
 
     const type = document.getElementById('cType').value;
-    const loc = document.getElementById('cLocation').value;
+   // Lấy vị trí theo hệ thống mới
+    const mainLoc = document.getElementById('cLocationMain')?.value || '';
+    let loc = mainLoc;
+
+    if (mainLoc === 'Depot') {
+        const port = document.getElementById('cDepotPort')?.value || '';
+        loc = port ? `Depot - ${port}` : 'Depot';
+    } else if (mainLoc === 'Onboard') {
+        const vessel = document.getElementById('cOnboardVessel')?.value?.trim() || '';
+        loc = vessel ? `Onboard - ${vessel}` : 'Onboard';
+    }
     const status = document.getElementById('cStatus').value;
 
     if (editingContainerId) {
@@ -120,9 +130,24 @@ document.getElementById('saveContainer').addEventListener('click', function() {
 });
 
 function clearContainerForm() {
-    ['cNumber', 'cLocation'].forEach(id => document.getElementById(id).value = '');
+    const fields = ['cNumber', 'cOnboardVessel'];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+
+    const selects = ['cType', 'cStatus', 'cLocationMain', 'cDepotPort'];
+    selects.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = el.options[0]?.value || '';
+    });
+
+    document.getElementById('depotPortRow').style.display = 'none';
+    document.getElementById('onboardVesselRow').style.display = 'none';
+
+    editingContainerId = null;
+    document.getElementById('saveContainer').textContent = 'Lưu';
     document.getElementById('cType').value = '20DC';
-    document.getElementById('cStatus').value = 'Empty';
     editingContainerId = null;
     document.getElementById('saveContainer').textContent = 'Lưu';
 }
@@ -173,7 +198,32 @@ function editContainer(id) {
     // Điền dữ liệu vào form
     document.getElementById('cNumber').value = container.no;
     document.getElementById('cType').value = container.type;
-    document.getElementById('cLocation').value = container.loc;
+    const loc = container.loc || '';
+    const mainSelect = document.getElementById('cLocationMain');
+    const depotRow = document.getElementById('depotPortRow');
+    const onboardRow = document.getElementById('onboardVesselRow');
+    // Ẩn hết
+    depotRow.style.display = 'none';
+    onboardRow.style.display = 'none';
+
+    if (loc === 'Yard') {
+        mainSelect.value = 'Yard';
+    } else if (loc.startsWith('Depot')) {
+        mainSelect.value = 'Depot';
+        const port = loc.split(' - ')[1] || '';
+        document.getElementById('cDepotPort').value = port;
+        depotRow.style.display = 'block';
+    } else if (loc.startsWith('Onboard')) {
+        mainSelect.value = 'Onboard';
+        const vessel = loc.split(' - ')[1] || '';
+        document.getElementById('cOnboardVessel').value = vessel;
+        onboardRow.style.display = 'block';
+    } else {
+        mainSelect.value = '';
+    }
+
+    // Kích hoạt sự kiện để đồng bộ
+    mainSelect.dispatchEvent(new Event('change'));
     document.getElementById('cStatus').value = container.status;
 
     // Chuyển sang chế độ sửa
@@ -187,6 +237,21 @@ function editContainer(id) {
     }
 }
 
+// Xử lý ẩn/hiện phần phụ khi chọn vị trí
+const locMain = document.getElementById('cLocationMain');
+if (locMain) {
+    locMain.addEventListener('change', function() {
+        const depotRow = document.getElementById('depotPortRow');
+        const onboardRow = document.getElementById('onboardVesselRow');
+        depotRow.style.display = 'none';
+        onboardRow.style.display = 'none';
+        if (this.value === 'Depot') {
+            depotRow.style.display = 'block';
+        } else if (this.value === 'Onboard') {
+            onboardRow.style.display = 'block';
+        }
+    });
+}
 // --- Cargo ---
 document.getElementById('saveCargo').addEventListener('click', () => {
     const desc = document.getElementById('gDesc').value.trim();
