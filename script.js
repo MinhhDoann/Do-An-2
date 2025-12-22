@@ -84,9 +84,11 @@ document.getElementById('saveContainer').addEventListener('click', function() {
     if (!no) return alert('Nhập số container');
 
     const type = document.getElementById('cType').value;
-   // Lấy vị trí theo hệ thống mới
+    const status = document.getElementById('cStatus').value;
+
     const mainLoc = document.getElementById('cLocationMain')?.value || '';
     let loc = mainLoc;
+    let yardPosition = null; 
 
     if (mainLoc === 'Depot') {
         const port = document.getElementById('cDepotPort')?.value || '';
@@ -94,19 +96,29 @@ document.getElementById('saveContainer').addEventListener('click', function() {
     } else if (mainLoc === 'Onboard') {
         const vessel = document.getElementById('cOnboardVessel')?.value?.trim() || '';
         loc = vessel ? `Onboard - ${vessel}` : 'Onboard';
+    } else if (mainLoc === 'Yard') {
+        loc = 'Yard';
+        const usedPositions = DB.containers
+            .filter(c => c.loc === 'Yard' && c.yardPosition != null)
+            .map(c => c.yardPosition);
+        yardPosition = usedPositions.length < 32 ? usedPositions.length : 0;
     }
-    const status = document.getElementById('cStatus').value;
 
     if (editingContainerId) {
         const isDuplicate = DB.containers.some(c => c.no === no && c.id !== editingContainerId);
         if (isDuplicate) return alert('Số container đã tồn tại!');
-        
+
         const container = DB.containers.find(c => c.id === editingContainerId);
         if (container) {
             container.no = no;
             container.type = type;
             container.loc = loc;
             container.status = status;
+            if (yardPosition !== null) {
+                container.yardPosition = yardPosition;
+            } else {
+                delete container.yardPosition;
+            }
             saveDB();
             alert('✅ Cập nhật container thành công!');
         }
@@ -114,19 +126,20 @@ document.getElementById('saveContainer').addEventListener('click', function() {
         if (DB.containers.some(c => c.no === no)) {
             return alert('Số container đã tồn tại!');
         }
-        DB.containers.unshift({
-            id: Date.now(),
-            no,
-            type,
-            loc,
-            status
-        });
+        const newContainer = { id: Date.now(), no, type, loc, status };
+        if (yardPosition !== null) {
+            newContainer.yardPosition = yardPosition;
+        }
+        DB.containers.unshift(newContainer);
         saveDB();
         alert('✅ Thêm container thành công!');
     }
 
     clearContainerForm();
     renderContainers();
+    if (document.getElementById('depot')?.style.display !== 'none') {
+        renderYard();
+    }
 });
 
 function clearContainerForm() {
