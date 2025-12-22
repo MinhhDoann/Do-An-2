@@ -24,7 +24,7 @@ document.getElementById("loginForm").addEventListener("submit", function (e) {
         message.textContent = "Đăng nhập thành công với quyền Nhân viên!";
         message.style.color = "green";
         setTimeout(() => {
-            window.location.href = "index.html";  // 👉 chuyển sang index.html (giao diện nhân viên)
+            window.location.href = "admin.html";  // 👉 chuyển sang index.html (giao diện nhân viên)
         }, 1000);
     }
     else {

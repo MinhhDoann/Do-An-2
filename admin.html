@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Dashboard Quản lý Container Logistics - Mẫu</title>
     <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
 </head>
-
 <body>
     <div class="app">
         <aside class="sidebar">
@@ -17,10 +17,11 @@
                 <li><button data-section="containers">Quản lý Container</button></li>
                 <li><button data-section="cargo">Hàng trong Container</button></li>
                 <li><button data-section="transport">Vận tải</button></li>
-                <li><button data-section="depot">Cảng & Depot</button></li>
-                <li><button data-section="finance">Tài chính & Chi phí</button></li>
+                                <li><button data-section="finance">Tài chính & Chi phí</button></li>
+                <li><button data-section="contracts">Hợp đồng</button></li>
+                <li><button data-section="invoices">Hóa đơn</button></li>
                 <li><button data-section="partners">Khách hàng & Đối tác</button></li>
-                <li><button data-section="staff">Nhân sự & Thiết bị</button></li>
+                <li><button data-section="staff">Nhân sự</button></li>
             </ul>
             <div style="position:absolute;bottom:18px;left:20px;font-size:13px;opacity:.9">Container Logictic</div>
         </aside>
@@ -239,17 +240,6 @@
                 </div>
             </section>
 
-            <!-- Depot -->
-            <section id="depot" class="card-section" style="display:none">
-                <div class="grid">
-                    <div class="card full-width">
-                        <h3>Quản lý Bãi (Yard Map)</h3>
-                        <div id="yard" style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:10px">
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             <!-- Finance -->
             <section id="finance" class="card-section" style="display:none">
                 <div class="grid">
@@ -301,7 +291,133 @@
                 </div>
             </section>
 
-            <!-- Partners -->
+            <!-- Contracts -->
+            <section id="contracts" class="card-section" style="display:none">
+                <div class="grid">
+                    <div class="card">
+                        <h3>Hợp đồng</h3>
+                        <table id="tblContracts">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Số HĐ</th>
+                                    <th>Đối tác</th>
+                                    <th>Hiệu lực</th>
+                                    <th>Giá trị</th>
+                                    <th>Trạng thái</th>
+                                    <th style="width:120px">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <div class="card">
+                        <h3 id="contractFormTitle">Thêm hợp đồng</h3>
+                        <div class="form-row"><input id="cNo" placeholder="Số hợp đồng" /></div>
+                        <div class="form-row"><input id="cPartner" placeholder="Khách hàng / Đối tác" /></div>
+                        <div class="form-row form-row-2">
+                            <input id="cStart" type="date" />
+                            <input id="cEnd" type="date" />
+                        </div>
+                        <div class="form-row"><input id="cValue" type="number" placeholder="Giá trị (VNĐ)" /></div>
+                        <div class="form-row">
+                            <select id="cStatus">
+                                <option value="" disabled selected>Trạng thái</option>
+                                <option>Chờ ký</option>
+                                <option>Hiệu lực</option>
+                                <option>Hết hạn</option>
+                                <option>Hủy</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <textarea id="cNote" placeholder="Ghi chú" rows="3"></textarea>
+                        </div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap">
+                            <button class="btn" id="saveContract">Lưu</button>
+                            <button class="btn" id="clearContract" style="background:#6b7280">Hủy</button>
+                            <button class="btn" id="deleteContract" style="background:#ef4444;display:none">Xóa</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!--Invoices -->
+            <section id="invoices" class="card-section" style="display:none">
+                <div class="grid">
+                    <div class="card">
+                        <h3>Hóa đơn</h3>
+                        <table id="tblInvoices">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Số HĐơn</th>
+                                    <th>Hợp đồng</th>
+                                    <th>Đối tác</th>
+                                    <th>Container</th>
+                                    <th>Ngày xuất</th>
+                                    <th>Hạn TT</th>
+                                    <th>Tổng tiền</th>
+                                    <th>Trạng thái</th>
+                                    <th style="width:120px">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <div class="card">
+                        <h3 id="invoiceFormTitle">Thêm hóa đơn</h3>
+                        <div class="form-row"><input id="iNo" placeholder="Số hóa đơn" /></div>
+                        <div class="form-row">
+                            <select id="iContract">
+                                <option value="" disabled selected>Chọn hợp đồng</option>
+                            </select>
+                        </div>
+                        <div class="form-row"><input id="iPartner" placeholder="Đối tác" disabled /></div>
+
+                        <div class="form-row">
+                            <select id="iContainer">
+                                <option value="">- Chọn container -</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row form-row-2">
+                            <input id="iIssue" type="date" />
+                            <input id="iDue" type="date" />
+                        </div>
+
+                        <div class="form-row"><input id="iAmount" type="number" placeholder="Tiền hàng (VNĐ)" /></div>
+
+                        <div class="form-row form-row-2">
+                            <input id="iVat" type="number" placeholder="VAT (%)" />
+                            <input id="iTotal" type="number" placeholder="Tổng tiền" disabled />
+                        </div>
+
+                        <div class="form-row">
+                            <select id="iPaid">
+                                <option>Chưa thanh toán</option>
+                                <option>Đã thanh toán</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <input id="iPaidDate" type="date" />
+                        </div>
+
+                        <div class="form-row">
+                            <textarea id="iNote" placeholder="Ghi chú" rows="3"></textarea>
+                        </div>
+
+                        <div style="display:flex;gap:8px;flex-wrap:wrap">
+                            <button class="btn" id="saveInvoice">Lưu</button>
+                            <button class="btn" id="clearInvoice" style="background:#6b7280">Hủy</button>
+                            <button class="btn" id="deleteInvoice" style="background:#ef4444;display:none">Xóa</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <section id="partners" class="card-section" style="display:none">
                 <div class="grid">
                     <div class="card">
@@ -310,9 +426,11 @@
                             <thead>
                                 <tr>
                                     <th>STT</th>
+                                    <th>Nhóm</th>
                                     <th>Tên</th>
-                                    <th>Loại</th>
+                                    <th>Vai trò</th>
                                     <th>Liên hệ</th>
+                                    <th>Trạng thái</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -320,23 +438,48 @@
                     </div>
 
                     <div class="card">
-                        <h3>Thêm Đối tác</h3>
-                        <div class="form-row"><input id="pName" placeholder="Tên" /></div>
-                        <div class="form-row"><select id="pType">
-                                <option>Người gửi</option>
-                                <option>Người nhận</option>
-                                <option>Đơn vị vận chuyển</option>
-                                <option>Người giao nhận</option>
-                            </select></div>
-                        <div class="form-row"><input id="pContact" placeholder="SĐT / Email" /></div>
-                        <div style="display:flex;gap:8px"><button class="btn" id="savePartner">Lưu</button></div>
+                    <h3 id="partnerFormTitle">Thêm đối tác</h3>
+
+                    <div class="form-row">
+                        <select id="pGroup">
+                        <option>Đối tác</option>
+                        <option>Khách hàng</option>
+                        </select>
                     </div>
-                </div>
+
+                    <div class="form-row"><input id="pName" placeholder="Tên" /></div>
+
+                    <div class="form-row">
+                        <select id="pType">
+                        <option>Người gửi</option>
+                        <option>Người nhận</option>
+                        <option>Đơn vị vận chuyển</option>
+                        <option>Người giao nhận</option>
+                        <option>Khác</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row"><input id="pContact" placeholder="SĐT / Email" /></div>
+
+                    <div class="form-row">
+                        <select id="pStatus">
+                        <option>Hoạt động</option>
+                        <option>Tạm ngừng</option>
+                        </select>
+                    </div>
+
+                    <div style="display:flex;gap:8px">
+                        <button class="btn" id="savePartner">Lưu</button>
+                        <button class="btn" id="clearPartner" style="background:#6b7280">Hủy</button>
+                    </div>
+                    </div>
+
             </section>
 
-            <!-- Staff & Equipment -->
+            
+            <!-- Staff -->
             <section id="staff" class="card-section" style="display:none">
-                <div class="grid">
+                <div class="grid grid-wide">
                     <div class="card">
                         <h3>Nhân sự</h3>
                         <table id="tblStaff">
@@ -346,6 +489,7 @@
                                     <th>Tên</th>
                                     <th>Vai trò</th>
                                     <th>SĐT</th>
+                                    <th>Trạng thái</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -353,26 +497,35 @@
                     </div>
 
                     <div class="card">
-                        <h3>Thiết bị</h3>
-                        <table id="tblEquip">
-                            <thead>
-                                <tr>
-                                    <th>STT</th>
-                                    <th>Tên</th>
-                                    <th>Loại thiết bị</th>
-                                    <th>Trạng thái</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                        <h3 id="staffFormTitle">Thêm nhân sự</h3>
+                        <div class="form-row"><input id="sName" placeholder="Tên" /></div>
+                        <div class="form-row">
+                            <select id="sRole">
+                                <option value="" disabled selected>Vai trò</option>
+                                <option>Tài xế</option>
+                                <option>Điều phối</option>
+                                <option>Kho bãi</option>
+                                <option>Kế toán</option>
+                                <option>CSKH</option>
+                                <option>Khác</option>
+                            </select>
+                        </div>
+                        <div class="form-row"><input id="sContact" placeholder="SĐT / Email" /></div>
+                        <div class="form-row">
+                            <select id="sStatus">
+                                <option>Đang làm</option>
+                                <option>Tạm nghỉ</option>
+                                <option>Nghỉ việc</option>
+                            </select>
+                        </div>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn" id="saveStaff">Lưu</button>
+                            <button class="btn" id="clearStaff" style="background:#6b7280">Hủy</button>
+                        </div>
                     </div>
                 </div>
             </section>
-
         </main>
     </div>
-
 </body>
-<script src="script.js"></script>
-
 </html>

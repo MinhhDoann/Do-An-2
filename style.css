@@ -213,6 +213,30 @@ textarea {
     align-items: start;
 }
 
+#staff .grid{
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+#invoices .grid{
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    gap: 20px;
+    align-items: start;
+
+}
+
+#contracts .grid{
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    align-items: start;
+
+}
+
+
 @media(max-width:900px) {
     .grid {
         grid-template-columns: 1fr
@@ -229,4 +253,8 @@ textarea {
     .content {
         padding: 12px
     }
+}
+
+.btn.btn-delete {
+    background: #ef4444;
 }
