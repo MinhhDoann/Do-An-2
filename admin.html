@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="script.js" defer></script>
 </head>
+
 <body>
     <div class="app">
         <aside class="sidebar">
@@ -17,7 +18,7 @@
                 <li><button data-section="containers">Quản lý Container</button></li>
                 <li><button data-section="cargo">Hàng trong Container</button></li>
                 <li><button data-section="transport">Vận tải</button></li>
-                                <li><button data-section="finance">Tài chính & Chi phí</button></li>
+                <li><button data-section="finance">Tài chính & Chi phí</button></li>
                 <li><button data-section="contracts">Hợp đồng</button></li>
                 <li><button data-section="invoices">Hóa đơn</button></li>
                 <li><button data-section="partners">Khách hàng & Đối tác</button></li>
@@ -322,12 +323,9 @@
                         </div>
                         <div class="form-row"><input id="cValue" type="number" placeholder="Giá trị (VNĐ)" /></div>
                         <div class="form-row">
-                            <select id="cStatus">
-                                <option value="" disabled selected>Trạng thái</option>
+                            <select id="contractStatus">
                                 <option>Chờ ký</option>
-                                <option>Hiệu lực</option>
-                                <option>Hết hạn</option>
-                                <option>Hủy</option>
+                                <option>Đã ký</option>
                             </select>
                         </div>
                         <div class="form-row">
@@ -353,8 +351,8 @@
                                     <th>STT</th>
                                     <th>Số HĐơn</th>
                                     <th>Hợp đồng</th>
-                                    <th>Đối tác</th>
                                     <th>Container</th>
+                                    <th>Đối tác</th>
                                     <th>Ngày xuất</th>
                                     <th>Hạn TT</th>
                                     <th>Tổng tiền</th>
@@ -374,13 +372,13 @@
                                 <option value="" disabled selected>Chọn hợp đồng</option>
                             </select>
                         </div>
-                        <div class="form-row"><input id="iPartner" placeholder="Đối tác" disabled /></div>
-
                         <div class="form-row">
                             <select id="iContainer">
-                                <option value="">- Chọn container -</option>
+                                <option value="" disabled selected>Chọn container</option>
                             </select>
                         </div>
+
+                        <div class="form-row"><input id="iPartner" placeholder="Đối tác" disabled /></div>
 
                         <div class="form-row form-row-2">
                             <input id="iIssue" type="date" />
@@ -426,54 +424,38 @@
                             <thead>
                                 <tr>
                                     <th>STT</th>
-                                    <th>Nhóm</th>
                                     <th>Tên</th>
-                                    <th>Vai trò</th>
+                                    <th>Loại</th>
                                     <th>Liên hệ</th>
                                     <th>Trạng thái</th>
-                                </tr>
+</tr>
                             </thead>
                             <tbody></tbody>
                         </table>
                     </div>
 
                     <div class="card">
-                    <h3 id="partnerFormTitle">Thêm đối tác</h3>
-
-                    <div class="form-row">
-                        <select id="pGroup">
-                        <option>Đối tác</option>
-                        <option>Khách hàng</option>
-                        </select>
+                        <h3 id="partnerFormTitle">Thêm đối tác</h3>
+                        <div class="form-row"><input id="pName" placeholder="Tên" /></div>
+                        <div class="form-row"><select id="pType">
+                                <option>Người gửi</option>
+                                <option>Người nhận</option>
+                                <option>Đơn vị vận chuyển</option>
+                                <option>Người giao nhận</option>
+                            </select></div>
+                        <div class="form-row"><input id="pContact" placeholder="SĐT / Email" /></div>
+                        <div class="form-row">
+                            <select id="pStatus">
+                                <option>Hoạt động</option>
+                                <option>Tạm ngưng</option>
+                            </select>
+                        </div>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn" id="savePartner">Lưu</button>
+                            <button class="btn btn-secondary" id="clearPartner">Hủy</button>
+                        </div>
                     </div>
-
-                    <div class="form-row"><input id="pName" placeholder="Tên" /></div>
-
-                    <div class="form-row">
-                        <select id="pType">
-                        <option>Người gửi</option>
-                        <option>Người nhận</option>
-                        <option>Đơn vị vận chuyển</option>
-                        <option>Người giao nhận</option>
-                        <option>Khác</option>
-                        </select>
-                    </div>
-
-                    <div class="form-row"><input id="pContact" placeholder="SĐT / Email" /></div>
-
-                    <div class="form-row">
-                        <select id="pStatus">
-                        <option>Hoạt động</option>
-                        <option>Tạm ngừng</option>
-                        </select>
-                    </div>
-
-                    <div style="display:flex;gap:8px">
-                        <button class="btn" id="savePartner">Lưu</button>
-                        <button class="btn" id="clearPartner" style="background:#6b7280">Hủy</button>
-                    </div>
-                    </div>
-
+                </div>
             </section>
 
             
@@ -513,11 +495,11 @@
                         <div class="form-row"><input id="sContact" placeholder="SĐT / Email" /></div>
                         <div class="form-row">
                             <select id="sStatus">
-                                <option>Đang làm</option>
-                                <option>Tạm nghỉ</option>
-                                <option>Nghỉ việc</option>
+                                <option>Hoạt động</option>
+                                <option>Tạm ngưng</option>
                             </select>
                         </div>
+
                         <div style="display:flex;gap:8px">
                             <button class="btn" id="saveStaff">Lưu</button>
                             <button class="btn" id="clearStaff" style="background:#6b7280">Hủy</button>
@@ -525,7 +507,10 @@
                     </div>
                 </div>
             </section>
+
         </main>
     </div>
+
 </body>
+
 </html>

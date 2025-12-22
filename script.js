@@ -3,13 +3,8 @@ let editingContainerId = null;
 let editingCargoId = null; 
 let editingTransportId = null; 
 
-let editingStaffId = null;
 let editingContractId = null;
 let editingInvoiceId = null;
-
-let editingPartnerId = null;
-let editingPartnerGroup = null;
-
 const DB = { 
     containers: [], 
     cargo: [], 
@@ -43,6 +38,25 @@ function normalizeDB() {
     if (!Array.isArray(DB.invoices)) DB.invoices = [];
     if (!Array.isArray(DB.finance)) DB.finance = [];
 }
+
+function normalizeContractStatus(raw) {
+    const s = (raw ?? '').toString().trim();
+    if (!s) return 'Chờ ký';
+    const signedSet = new Set(['Đã ký','Da ky','Signed','signed','Hiệu lực','Hieu luc','Active','active']);
+    if (signedSet.has(s)) return 'Đã ký';
+    return 'Chờ ký';
+}
+
+function migrateContractsStatus() {
+    if (!Array.isArray(DB.contracts)) DB.contracts = [];
+    let changed = false;
+    DB.contracts.forEach(c => {
+        const fixed = normalizeContractStatus(c.status);
+        if (c.status !== fixed) { c.status = fixed; changed = true; }
+    });
+    if (changed) saveDB();
+}
+
 
 function saveDB() { 
     localStorage.setItem('cl_db', JSON.stringify(DB)); 
@@ -256,15 +270,13 @@ function clearContainerForm() {
   document.getElementById('saveContainer').textContent = 'Lưu';
 }
 
-
-
 // --- 5. Các hàm Render khác & Tiện ích ---
 function populateAllSelects() { 
     const selects = [
         { id: 'gContainer', label: '- Chọn container chứa hàng -' },
         { id: 'tContainer', label: '-- Chọn container trên xe --' },
-        { id: 'iContainer', label: '- Chọn container -' },
-        { id: 'fSelectContainer', label: '- Chọn Container cần tính -' }
+        { id: 'fSelectContainer', label: '- Chọn Container cần tính -' },
+        { id: 'iContainer', label: '- Chọn container của hóa đơn -' }
     ];
 
     // Select Hợp đồng cho Hóa đơn
@@ -287,110 +299,6 @@ function populateAllSelects() {
         }
     });
 }
-// --- 6. Tài chính & Chi phí ---
-function calcFinanceTotal(base, demdet, local, extra) {
-    return Number(base || 0) + Number(demdet || 0) + Number(local || 0) + Number(extra || 0);
-}
-
-function getFinanceFormData() {
-    const container = document.getElementById('fSelectContainer')?.value || '';
-    const base = Number(document.getElementById('fBase')?.value || 0);
-    const demdet = Number(document.getElementById('fDemDet')?.value || 0);
-    const local = Number(document.getElementById('fLocal')?.value || 0);
-    const extra = Number(document.getElementById('fExtra')?.value || 0);
-    const total = calcFinanceTotal(base, demdet, local, extra);
-    return { container, base, demdet, local, extra, total };
-}
-
-function renderFinanceDetailRow(rec) {
-    const tbody = document.getElementById('tblFinanceBody');
-    if (!tbody) return;
-
-    if (!rec) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">Chưa có dữ liệu</td></tr>';
-        return;
-    }
-
-    tbody.innerHTML = `
-        <tr>
-            <td><strong>${escapeHtml(rec.container)}</strong></td>
-            <td>${fmtVND(rec.base)}</td>
-            <td>${fmtVND(rec.demdet)}</td>
-            <td>${fmtVND(rec.local)}</td>
-            <td>${fmtVND(rec.extra)}</td>
-            <td><strong>${fmtVND(rec.total)}</strong></td>
-            <td><button class="btn btn-edit" onclick="loadFinanceToForm(${JSON.stringify(rec.container)})">Sửa</button></td>
-        </tr>
-    `;
-}
-
-function loadFinanceToForm(containerNo) {
-    const rec = (DB.finance || []).find(x => x.container === containerNo);
-    if (!rec) return;
-
-    const sel = document.getElementById('fSelectContainer');
-    if (sel) sel.value = containerNo;
-
-    const b = document.getElementById('fBase'); if (b) b.value = String(rec.base || 0);
-    const d = document.getElementById('fDemDet'); if (d) d.value = String(rec.demdet || 0);
-    const l = document.getElementById('fLocal'); if (l) l.value = String(rec.local || 0);
-    const e = document.getElementById('fExtra'); if (e) e.value = String(rec.extra || 0);
-
-    const r = document.getElementById('costResult');
-    if (r) r.textContent = rec.total ? ('Tổng phí: ' + fmtVND(rec.total)) : '';
-    renderFinanceDetailRow(rec);
-}
-
-// onchange="updateFinanceDetail()" trong HTML
-function updateFinanceDetail() {
-    const containerNo = document.getElementById('fSelectContainer')?.value || '';
-    if (!containerNo) {
-        renderFinanceDetailRow(null);
-        const r = document.getElementById('costResult');
-        if (r) r.textContent = '';
-        return;
-    }
-
-    const rec = (DB.finance || []).find(x => x.container === containerNo) || null;
-    renderFinanceDetailRow(rec);
-
-    const r = document.getElementById('costResult');
-    if (r) r.textContent = rec?.total ? ('Tổng phí: ' + fmtVND(rec.total)) : 'Chưa có chi phí cho container này';
-}
-
-function clearFinanceForm(keepContainer = true) {
-    const ids = ['fBase', 'fDemDet', 'fLocal', 'fExtra'];
-    ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-    if (!keepContainer) {
-        const sel = document.getElementById('fSelectContainer');
-        if (sel) sel.value = '';
-    }
-}
-
-// onclick="saveFinance()" trong HTML
-function saveFinance() {
-    const data = getFinanceFormData();
-    if (!data.container) return alert('Vui lòng chọn Container cần tính');
-
-    // 1 container = 1 bản ghi chi phí (upsert)
-    DB.finance = DB.finance || [];
-    const idx = DB.finance.findIndex(x => x.container === data.container);
-    if (idx >= 0) {
-        DB.finance[idx] = { ...DB.finance[idx], ...data, updatedAt: Date.now() };
-    } else {
-        DB.finance.unshift({ id: Date.now(), ...data, updatedAt: Date.now() });
-    }
-
-    saveDB(); // sẽ renderAll()
-    clearFinanceForm(true);
-
-    // update UI ngay
-    const rec = (DB.finance || []).find(x => x.container === data.container) || null;
-    const r = document.getElementById('costResult');
-    if (r) r.textContent = rec?.total ? ('Tổng phí: ' + fmtVND(rec.total)) : '';
-    renderFinanceDetailRow(rec);
-}
-
 
 function renderContainers() { 
     const tbody = document.querySelector('#tblContainers tbody'); 
@@ -492,58 +400,156 @@ function renderCargo() {
 }
 
 
+
+// --- Đối tác / Khách hàng ---
+const btnSavePartner = document.getElementById('savePartner');
+const btnClearPartner = document.getElementById('clearPartner');
+
+function normalizePartnerStatus(raw) {
+    const s = (raw ?? '').toString().trim().toLowerCase();
+    if (!s) return 'Hoạt động';
+    const inactiveSet = new Set(['tạm ngưng','tam ngung','ngừng','ngung','inactive','disabled','disable','off']);
+    return inactiveSet.has(s) ? 'Tạm ngưng' : 'Hoạt động';
+}
+
+function clearPartnerForm() {
+    const n = document.getElementById('pName');
+    const t = document.getElementById('pType');
+    const c = document.getElementById('pContact');
+    const st = document.getElementById('pStatus');
+
+    if (n) n.value = '';
+    if (t) t.selectedIndex = 0;
+    if (c) c.value = '';
+    if (st) st.value = 'Hoạt động';
+}
+
+function getPartnerFormData() {
+    const name = document.getElementById('pName')?.value?.trim() || '';
+    const type = document.getElementById('pType')?.value || '';
+    const contact = document.getElementById('pContact')?.value?.trim() || '';
+    const status = normalizePartnerStatus(document.getElementById('pStatus')?.value);
+    return { name, type, contact, status };
+}
+
+if (btnClearPartner) btnClearPartner.addEventListener('click', (e) => {
+    e.preventDefault();
+    clearPartnerForm();
+});
+
+if (btnSavePartner) {
+    btnSavePartner.addEventListener('click', (e) => {
+        e.preventDefault();
+        const data = getPartnerFormData();
+        if (!data.name) return alert('Vui lòng nhập Tên đối tác/khách hàng');
+
+        DB.partners = DB.partners || [];
+        const dup = DB.partners.some(p =>
+            (p?.name || '').toLowerCase() === data.name.toLowerCase() &&
+            (p?.contact || '').toLowerCase() === (data.contact || '').toLowerCase()
+        );
+        if (dup) return alert('Đối tác/khách hàng này đã tồn tại');
+
+        DB.partners.unshift({ id: Date.now(), ...data });
+        saveDB();
+        clearPartnerForm();
+        renderPartners();
+    });
+}
+
+function togglePartnerStatus(id) {
+    const p = (DB.partners || []).find(x => x.id === id);
+    if (!p) return;
+    const cur = normalizePartnerStatus(p.status);
+    p.status = (cur === 'Tạm ngưng') ? 'Hoạt động' : 'Tạm ngưng';
+    saveDB();
+    renderPartners();
+}
+
+function renderPartners() {
+    const tbody = document.querySelector('#tblPartners tbody');
+    if (!tbody) return;
+
+    const list = (DB.partners || []);
+    if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#666">Chưa có đối tác/khách hàng</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = list.map((p, i) => `
+        <tr>
+            <td>${i + 1}</td>
+            <td>${escapeHtml(p.name || '')}</td>
+            <td>${escapeHtml(p.type || '')}</td>
+            <td>${escapeHtml(p.contact || '')}</td>
+            <td>
+                <button class="btn btn-secondary" onclick="togglePartnerStatus(${p.id})">${escapeHtml(normalizePartnerStatus(p.status))}</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
 // --- Nhân sự ---
 const btnSaveStaff = document.getElementById('saveStaff');
 const btnClearStaff = document.getElementById('clearStaff');
-const staffFormTitle = document.getElementById('staffFormTitle');
 
-function setStaffFormMode(isEdit) {
-    if (staffFormTitle) staffFormTitle.textContent = isEdit ? 'Cập nhật nhân sự' : 'Thêm nhân sự';
-    if (btnSaveStaff) btnSaveStaff.textContent = isEdit ? 'Cập nhật' : 'Lưu';
+function normalizeStaffStatus(raw) {
+    const s = (raw ?? '').toString().trim().toLowerCase();
+    if (!s) return 'Hoạt động';
+    const inactiveSet = new Set(['tạm ngưng','tam ngung','ngừng','ngung','inactive','disabled','disable','off']);
+    return inactiveSet.has(s) ? 'Tạm ngưng' : 'Hoạt động';
 }
 
 function clearStaffForm() {
-  const n = document.getElementById('sName');
-  const r = document.getElementById('sRole');
-  const c = document.getElementById('sContact');
-  const st = document.getElementById('sStatus');
+    const n = document.getElementById('sName');
+    const r = document.getElementById('sRole');
+    const c = document.getElementById('sContact');
+    const st = document.getElementById('sStatus');
 
-  if (n) n.value = '';
-  if (r) r.value = '';
-  if (c) c.value = '';
-  if (st) st.value = 'Đang làm';
-
-  editingStaffId = null;
-  setStaffFormMode(false);
+    if (n) n.value = '';
+    if (r) r.value = '';
+    if (c) c.value = '';
+    if (st) st.value = 'Hoạt động';
 }
 
-
-if (btnClearStaff) btnClearStaff.addEventListener('click', clearStaffForm);
+if (btnClearStaff) btnClearStaff.addEventListener('click', (e) => {
+    e.preventDefault();
+    clearStaffForm();
+});
 
 if (btnSaveStaff) {
-    btnSaveStaff.addEventListener('click', () => {
-        const name = document.getElementById('sName')?.value.trim();
-        const role = document.getElementById('sRole')?.value;
-        const contact = document.getElementById('sContact')?.value.trim();
-        const status = document.getElementById('sStatus')?.value || 'Đang làm';
+    btnSaveStaff.addEventListener('click', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('sName')?.value?.trim() || '';
+        const role = document.getElementById('sRole')?.value || '';
+        const contact = document.getElementById('sContact')?.value?.trim() || '';
+        const status = normalizeStaffStatus(document.getElementById('sStatus')?.value);
 
         if (!name || !role || !contact) {
             return alert('Vui lòng nhập Tên, Vai trò và SĐT/Email');
         }
 
-        const data = { name, role, contact, status };
+        DB.staff = DB.staff || [];
+        const dup = DB.staff.some(s =>
+            (s?.name || '').toLowerCase() === name.toLowerCase() &&
+            (s?.contact || '').toLowerCase() === contact.toLowerCase()
+        );
+        if (dup) return alert('Nhân sự này đã tồn tại');
 
-        if (editingStaffId) {
-            const idx = (DB.staff || []).findIndex(s => s.id === editingStaffId);
-            if (idx !== -1) DB.staff[idx] = { ...DB.staff[idx], ...data };
-        } else {
-            DB.staff = DB.staff || [];
-            DB.staff.unshift({ id: Date.now(), ...data });
-        }
-
+        DB.staff.unshift({ id: Date.now(), name, role, contact, status });
         saveDB();
         clearStaffForm();
+        renderStaff();
     });
+}
+
+function toggleStaffStatus(id) {
+    const s = (DB.staff || []).find(x => x.id === id);
+    if (!s) return;
+    const cur = normalizeStaffStatus(s.status);
+    s.status = (cur === 'Tạm ngưng') ? 'Hoạt động' : 'Tạm ngưng';
+    saveDB();
+    renderStaff();
 }
 
 function renderStaff() {
@@ -557,155 +563,17 @@ function renderStaff() {
     }
 
     tbody.innerHTML = list.map((s, i) => `
-        <tr style="cursor:pointer" onclick="editStaff(${s.id})">
+        <tr>
             <td>${i + 1}</td>
             <td>${escapeHtml(s.name)}</td>
             <td>${escapeHtml(s.role)}</td>
             <td>${escapeHtml(s.contact)}</td>
-            <td>${escapeHtml(s.status || 'Đang làm')}</td>
+            <td>
+                <button class="btn btn-secondary" onclick="toggleStaffStatus(${s.id})">${escapeHtml(normalizeStaffStatus(s.status))}</button>
+            </td>
         </tr>
     `).join('');
 }
-
-function editStaff(id) {
-    const s = (DB.staff || []).find(x => x.id === id);
-    if (!s) return;
-
-    const n = document.getElementById('sName');
-    const r = document.getElementById('sRole');
-    const c = document.getElementById('sContact');
-    const st = document.getElementById('sStatus');
-    if (n) n.value = s.name || '';
-    if (r) r.value = s.role || '';
-    if (c) c.value = s.contact || '';
-    if (st) st.value = s.status || 'Đang làm';
-
-    editingStaffId = id;
-    setStaffFormMode(true);
-}
-
-
-// --- Đối tác / Khách hàng ---
-const btnSavePartner = document.getElementById('savePartner');
-const btnClearPartner = document.getElementById('clearPartner');
-function setPartnerFormMode(isEdit) {
-    const groupSel = document.getElementById('pGroup');
-    const group = groupSel?.value || 'Đối tác';
-    const title = document.getElementById('partnerFormTitle');
-    const btn = document.getElementById('savePartner');
-
-    if (title) title.textContent = isEdit ? `Cập nhật ${group.toLowerCase()}` : `Thêm ${group.toLowerCase()}`;
-    if (btn) btn.textContent = isEdit ? 'Cập nhật' : 'Lưu';
-
-    // Khi đang sửa thì khoá chọn Nhóm để tránh đổi nhầm
-    if (groupSel) groupSel.disabled = !!isEdit;
-}
-
-
-function getPartnerForm() {
-    return {
-        group: document.getElementById('pGroup'),
-        name: document.getElementById('pName'),
-        type: document.getElementById('pType'),
-        contact: document.getElementById('pContact'),
-        status: document.getElementById('pStatus'),
-    };
-}
-
-
-function clearPartnerForms() {
-    const f = getPartnerForm();
-
-    if (f.group) { f.group.value = 'Đối tác'; f.group.disabled = false; }
-    if (f.name) f.name.value = '';
-    if (f.contact) f.contact.value = '';
-
-    // reset về option đầu (Vai trò)
-    if (f.type) f.type.selectedIndex = 0;
-
-    // reset trạng thái
-    if (f.status) f.status.value = 'Hoạt động';
-
-    editingPartnerId = null;
-    editingPartnerGroup = null;
-    setPartnerFormMode(false);
-}
-
-
-function savePartnerCustomer() {
-    const f = getPartnerForm();
-    const group = f.group?.value || 'Đối tác';
-    const name = (f.name?.value || '').trim();
-    const type = f.type?.value || '';
-    const contact = (f.contact?.value || '').trim();
-    const status = f.status?.value || 'Hoạt động';
-
-    if (!name || !contact) return alert('Vui lòng nhập Tên và Liên hệ');
-
-    const data = { group, name, type, contact, status };
-
-    if (editingPartnerId) {
-        const idx = (DB.partners || []).findIndex(x => x.id === editingPartnerId);
-        if (idx !== -1) DB.partners[idx] = { ...DB.partners[idx], ...data };
-    } else {
-        DB.partners = DB.partners || [];
-        DB.partners.unshift({ id: Date.now(), ...data });
-    }
-
-    saveDB();
-    clearPartnerForms();
-    renderPartners();
-}
-
-
-if (btnClearPartner) btnClearPartner.addEventListener('click', clearPartnerForms);
-if (btnSavePartner) btnSavePartner.addEventListener('click', savePartnerCustomer);
-
-// đổi nhóm sẽ cập nhật tiêu đề khi chưa ở chế độ sửa
-const pGroupSel = document.getElementById('pGroup');
-if (pGroupSel) pGroupSel.addEventListener('change', () => {
-    if (!editingPartnerId) setPartnerFormMode(false);
-});
-
-function renderPartners() {
-    const tbody = document.querySelector('#tblPartners tbody');
-    if (!tbody) return;
-
-    const list = (DB.partners || []);
-    if (list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8">Chưa có đối tác/khách hàng</td></tr>';
-        return;
-    }
-
-    tbody.innerHTML = list.map((p, i) => `
-        <tr style="cursor:pointer" onclick="editPartner(${p.id})">
-            <td>${i + 1}</td>
-            <td>${escapeHtml(p.group || '')}</td>
-            <td>${escapeHtml(p.name || '')}</td>
-            <td>${escapeHtml(p.type || '')}</td>
-            <td>${escapeHtml(p.contact || '')}</td>
-            <td>${escapeHtml(p.status || 'Hoạt động')}</td>
-        </tr>
-    `).join('');
-}
-
-function editPartner(id) {
-    const p = (DB.partners || []).find(x => x.id === id);
-    if (!p) return;
-
-    const f = getPartnerForm();
-
-    if (f.group) f.group.value = p.group || 'Đối tác';
-    if (f.name) f.name.value = p.name || '';
-    if (f.type) f.type.value = p.type || '';
-    if (f.contact) f.contact.value = p.contact || '';
-    if (f.status) f.status.value = p.status || 'Hoạt động';
-
-    editingPartnerId = id;
-    editingPartnerGroup = p.group || 'Đối tác';
-    setPartnerFormMode(true);
-}
-
 
 // --- Hợp đồng ---
 const btnSaveContract = document.getElementById('saveContract');
@@ -753,25 +621,22 @@ function getContractFormData() {
     const start = document.getElementById('cStart')?.value || '';
     const end = document.getElementById('cEnd')?.value || '';
     const value = Number(document.getElementById('cValue')?.value || 0);
-    const status = document.getElementById('cStatus')?.value?.trim() || 'Chờ ký';
+    const status = document.getElementById('contractStatus')?.value?.trim() || 'Chờ ký';
     const note = document.getElementById('cNote')?.value?.trim() || '';
     return { no, partner, start, end, value, status, note };
 }
 
 function clearContractForm() {
-  const ids = ['cNo','cPartner','cStart','cEnd','cValue','cNote'];
-  ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-
-  const st = document.getElementById('cStatus');
-  if (st) st.value = 'Chờ ký';   // ✅ mặc định
-
-  editingContractId = null;
-  const t = document.getElementById('contractFormTitle');
-  if (t) t.textContent = 'Thêm hợp đồng';
-  const del = document.getElementById('deleteContract');
-  if (del) del.style.display = 'none';
+    const ids = ['cNo','cPartner','cStart','cEnd','cValue','contractStatus','cNote'];
+    ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        const st = document.getElementById('contractStatus');
+    if (st) st.value = 'Chờ ký';
+editingContractId = null;
+    const t = document.getElementById('contractFormTitle');
+    if (t) t.textContent = 'Thêm hợp đồng';
+    const del = document.getElementById('deleteContract');
+    if (del) del.style.display = 'none';
 }
-
 
 function editContract(id) {
     const c = (DB.contracts || []).find(x => x.id === id);
@@ -782,7 +647,7 @@ function editContract(id) {
     document.getElementById('cStart').value = c.start || '';
     document.getElementById('cEnd').value = c.end || '';
     document.getElementById('cValue').value = Number(c.value || 0);
-    document.getElementById('cStatus').value = c.status || '';
+    document.getElementById('contractStatus').value = normalizeContractStatus(c.status);
     document.getElementById('cNote').value = c.note || '';
 
     editingContractId = id;
@@ -819,7 +684,7 @@ function renderContracts() {
             <td>${escapeHtml(c.partner)}</td>
             <td>${fmtDateRange(c.start, c.end)}</td>
             <td>${fmtVND(c.value)}</td>
-            <td>${escapeHtml(c.status)}</td>
+            <td>${escapeHtml(normalizeContractStatus(c.status))}</td>
             <td>
                 <button class="btn btn-edit" onclick="editContract(${c.id})">Sửa</button>
                 <button class="btn btn-delete" onclick="removeContract(${c.id})">Xóa</button>
@@ -828,23 +693,15 @@ function renderContracts() {
     `).join('');
 }
 
-
-function setContainerOnboard(containerNo) {
-    if (!containerNo) return;
-    const c = (DB.containers || []).find(x => x && x.no === containerNo);
-    if (!c) return;
-    c.loc = 'Onboard';
-    // nếu không phải bảo trì thì gợi ý trạng thái đang vận chuyển
-    if (c.status && c.status !== 'Bảo trì') c.status = 'Đang vận chuyển';
-}
-
 // --- Hóa đơn ---
 const btnSaveInvoice = document.getElementById('saveInvoice');
 if (btnSaveInvoice) {
-    btnSaveInvoice.addEventListener('click', () => {
+    btnSaveInvoice.addEventListener('click', (e) => {
+        e.preventDefault();
         const data = getInvoiceFormData();
         if (!data.no) return alert('Vui lòng nhập Số hóa đơn');
         if (!data.contractNo) return alert('Vui lòng chọn Hợp đồng');
+        if (!data.containerNo) return alert('Vui lòng chọn Container');
 
         if (!editingInvoiceId && (DB.invoices || []).some(i => i.no === data.no)) {
             return alert('Số hóa đơn đã tồn tại');
@@ -854,11 +711,9 @@ if (btnSaveInvoice) {
             const idx = (DB.invoices || []).findIndex(i => i.id === editingInvoiceId);
             if (idx >= 0) DB.invoices[idx] = { ...DB.invoices[idx], ...data };
         } else {
+            DB.invoices = DB.invoices || [];
             DB.invoices.unshift({ id: Date.now(), ...data });
         }
-
-        // Nếu hóa đơn có container -> chuyển trạng thái/địa điểm container thành Onboard
-        if (data.container) setContainerOnboard(data.container);
 
         saveDB();
         clearInvoiceForm();
@@ -866,7 +721,11 @@ if (btnSaveInvoice) {
     });
 }
 
-document.getElementById('clearInvoice')?.addEventListener('click', clearInvoiceForm);
+document.getElementById('clearInvoice')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    clearInvoiceForm();
+});
+
 document.getElementById('deleteInvoice')?.addEventListener('click', () => {
     if (!editingInvoiceId) return;
     if (!confirm('Xóa hóa đơn này?')) return;
@@ -898,7 +757,6 @@ document.getElementById('iPaid')?.addEventListener('change', () => {
     const paid = document.getElementById('iPaid')?.value;
     const paidDate = document.getElementById('iPaidDate');
     if (!paidDate) return;
-    // nếu đã thanh toán mà chưa có ngày, gợi ý hôm nay
     if (paid === 'Đã thanh toán' && !paidDate.value) {
         paidDate.value = new Date().toISOString().slice(0, 10);
     }
@@ -907,8 +765,11 @@ document.getElementById('iPaid')?.addEventListener('change', () => {
 function getInvoiceFormData() {
     const no = document.getElementById('iNo')?.value?.trim() || '';
     const contractNo = document.getElementById('iContract')?.value || '';
+    const containerNo = document.getElementById('iContainer')?.value || '';
+
     const c = (DB.contracts || []).find(x => x.no === contractNo);
     const partner = c?.partner || (document.getElementById('iPartner')?.value?.trim() || '');
+
     const issue = document.getElementById('iIssue')?.value || '';
     const due = document.getElementById('iDue')?.value || '';
     const amount = Number(document.getElementById('iAmount')?.value || 0);
@@ -916,20 +777,23 @@ function getInvoiceFormData() {
     const total = Math.round(amount + amount * (vat / 100));
     const paid = document.getElementById('iPaid')?.value || 'Chưa thanh toán';
     const paidDate = document.getElementById('iPaidDate')?.value || '';
-    const container = document.getElementById('iContainer')?.value || '';
     const note = document.getElementById('iNote')?.value?.trim() || '';
-    return { no, contractNo, partner, container, issue, due, amount, vat, total, paid, paidDate, note };
+    return { no, contractNo, containerNo, partner, issue, due, amount, vat, total, paid, paidDate, note };
 }
 
 function clearInvoiceForm() {
     const ids = ['iNo','iIssue','iDue','iAmount','iVat','iTotal','iPaidDate','iNote'];
-    const contEl = document.getElementById('iContainer');
-    if (contEl) contEl.value = '';
     ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+
     const contractEl = document.getElementById('iContract');
     if (contractEl) contractEl.value = '';
+
+    const containerEl = document.getElementById('iContainer');
+    if (containerEl) containerEl.value = '';
+
     const partnerEl = document.getElementById('iPartner');
     if (partnerEl) partnerEl.value = '';
+
     const paidEl = document.getElementById('iPaid');
     if (paidEl) paidEl.value = 'Chưa thanh toán';
 
@@ -956,10 +820,12 @@ function editInvoice(id) {
 
     const contractEl = document.getElementById('iContract');
     if (contractEl) contractEl.value = inv.contractNo || '';
+
+    const containerEl = document.getElementById('iContainer');
+    if (containerEl) containerEl.value = inv.containerNo || '';
+
     const partnerEl = document.getElementById('iPartner');
     if (partnerEl) partnerEl.value = inv.partner || '';
-    const contEl = document.getElementById('iContainer');
-    if (contEl) contEl.value = inv.container || '';
 
     editingInvoiceId = id;
     const t = document.getElementById('invoiceFormTitle');
@@ -1003,8 +869,8 @@ function renderInvoices() {
             <td>${i + 1}</td>
             <td><strong>${escapeHtml(inv.no)}</strong></td>
             <td>${escapeHtml(inv.contractNo)}</td>
+            <td>${escapeHtml(inv.containerNo || '')}</td>
             <td>${escapeHtml(inv.partner)}</td>
-            <td>${escapeHtml(inv.container || '')}</td>
             <td>${fmtDate(inv.issue)}</td>
             <td>${fmtDate(inv.due)}</td>
             <td>${fmtVND(inv.total)}</td>
@@ -1013,6 +879,101 @@ function renderInvoices() {
                 <button class="btn btn-edit" onclick="editInvoice(${inv.id})">Sửa</button>
                 <button class="btn btn-delete" onclick="removeInvoice(${inv.id})">Xóa</button>
             </td>
+        </tr>
+    `).join('');
+}
+
+// --- Tài chính & Chi phí ---
+function calcFinanceTotal(base, demdet, local, extra) {
+    const b = Number(base || 0);
+    const d = Number(demdet || 0);
+    const l = Number(local || 0);
+    const e = Number(extra || 0);
+    return Math.round(b + d + l + e);
+}
+
+function updateFinanceDetail() {
+    const sel = document.getElementById('fSelectContainer');
+    if (!sel) return;
+    const container = sel.value || '';
+
+    const box = document.getElementById('costResult');
+    if (!container) {
+        if (box) box.textContent = '';
+        ['fBase', 'fDemDet', 'fLocal', 'fExtra'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        return;
+    }
+
+    const rec = (DB.finance || []).find(x => x && x.container === container);
+    const baseEl = document.getElementById('fBase');
+    const demEl = document.getElementById('fDemDet');
+    const localEl = document.getElementById('fLocal');
+    const extraEl = document.getElementById('fExtra');
+
+    if (baseEl) baseEl.value = rec ? (rec.base ?? '') : '';
+    if (demEl) demEl.value = rec ? (rec.demdet ?? '') : '';
+    if (localEl) localEl.value = rec ? (rec.local ?? '') : '';
+    if (extraEl) extraEl.value = rec ? (rec.extra ?? '') : '';
+
+    const total = calcFinanceTotal(baseEl?.value, demEl?.value, localEl?.value, extraEl?.value);
+    if (box) box.textContent = total ? ('Tổng phí: ' + fmtVND(total)) : '';
+}
+
+function saveFinance() {
+    const container = document.getElementById('fSelectContainer')?.value || '';
+    if (!container) return alert('Vui lòng chọn Container cần tính');
+
+    const base = Number(document.getElementById('fBase')?.value || 0);
+    const demdet = Number(document.getElementById('fDemDet')?.value || 0);
+    const local = Number(document.getElementById('fLocal')?.value || 0);
+    const extra = Number(document.getElementById('fExtra')?.value || 0);
+    const total = calcFinanceTotal(base, demdet, local, extra);
+
+    DB.finance = DB.finance || [];
+    const idx = DB.finance.findIndex(x => x && x.container === container);
+    const data = { id: Date.now(), container, base, demdet, local, extra, total };
+
+    if (idx >= 0) {
+        // giữ id cũ để nút xóa ổn định
+        data.id = DB.finance[idx].id ?? data.id;
+        DB.finance[idx] = { ...DB.finance[idx], ...data };
+    } else {
+        DB.finance.unshift(data);
+    }
+
+    saveDB();
+    updateFinanceDetail();
+}
+
+function removeFinance(id) {
+    if (!confirm('Xóa dòng chi phí này?')) return;
+    DB.finance = (DB.finance || []).filter(x => x && x.id !== id);
+    saveDB();
+    updateFinanceDetail();
+}
+
+function renderFinance() {
+    const tbody = document.getElementById('tblFinanceBody');
+    if (!tbody) return;
+
+    const list = (DB.finance || []).filter(x => x && x.container);
+    if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">Chưa có dữ liệu</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = list.map((x) => `
+        <tr>
+            <td><strong>${escapeHtml(x.container)}</strong></td>
+            <td>${fmtVND(x.base)}</td>
+            <td>${fmtVND(x.demdet)}</td>
+            <td>${fmtVND(x.local)}</td>
+            <td>${fmtVND(x.extra)}</td>
+            <td><strong>${fmtVND(x.total)}</strong></td>
+            <td><button class="btn btn-delete" onclick="removeFinance(${x.id})">Xóa</button></td>
         </tr>
     `).join('');
 }
@@ -1050,23 +1011,18 @@ function renderAll() {
     renderTransport();
     renderCargo();
     populateAllSelects();
-    updateFinanceDetail();
-
-    // Đối tác / Khách hàng
     renderPartners();
-
-    // Nhân sự
     renderStaff();
-
-    // Hợp đồng & Hóa đơn
     renderContracts();
     renderInvoices();
+    renderFinance();
 }
 
 // Khởi chạy
 document.addEventListener('DOMContentLoaded', () => {
     loadDB();
     normalizeDB();
+    migrateContractsStatus();
     renderAll();
     renderContracts();
     renderInvoices();
@@ -1076,4 +1032,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const s = document.getElementById('globalSearch');
     if (s) s.addEventListener('input', () => applyGlobalSearch(s.value));
     document.getElementById('exportBtn')?.addEventListener('click', exportJSON);
+
+    ['fBase','fDemDet','fLocal','fExtra'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', updateFinanceDetail);
+    });
 });
