@@ -50,7 +50,7 @@
                     <button class="submenu-toggle">Nhân sự & Thiết bị</button>
                     <ul class="submenu">
                         <li><button data-section="staff">Nhân sự</button></li>
-                        <li><button data-section="equipment">Thiết bị</button></li> <!-- ✅ ĐÃ SỬA -->
+                        <li><button data-section="equipment">Thiết bị</button></li> 
                     </ul>
                 </li>
             </ul>
@@ -140,7 +140,34 @@
                         <div class="form-row"><select id="cType">
                                 <option>20DC</option><option>40HC</option><option>REEFER</option><option>OPEN_TOP</option>
                             </select></div>
-                        <div class="form-row"><input id="cLocation" placeholder="Vị trí (Depot / Port / Onboard)" /></div>
+                       <!-- Vị trí chính -->
+                            <div class="form-row">
+                                <select id="cLocationMain" required>
+                                    <option value="">-- Chọn vị trí --</option>
+                                    <option value="Yard">Bãi (Yard Map)</option>
+                                    <option value="Depot">Depot</option>
+                                    <option value="Onboard">Onboard</option>
+                                </select>
+                            </div>
+
+                            <!-- Chọn cảng  -->
+                            <div class="form-row" id="depotPortRow" style="display:none">
+                                <label>Cảng</label>
+                                <select id="cDepotPort">
+                                    <option value="">-- Chọn cảng --</option>
+                                    <option value="Tân Cảng">Tân Cảng</option>
+                                    <option value="SITC">SITC</option>
+                                    <option value="Cát Lái">Cát Lái</option>
+                                    <option value="Cái Mép">Cái Mép</option>
+                                    <option value="Hải Phòng">Hải Phòng</option>
+                                </select>
+                            </div>
+
+                            <!-- Nhập tên tàu  -->
+                            <div class="form-row" id="onboardVesselRow" style="display:none">
+                                <label>Tên tàu</label>
+                                <input id="cOnboardVessel" placeholder="Nhập tên tàu" />
+                            </div>
                         <div class="form-row"><select id="cStatus">
                                 <option>Empty</option><option>Full</option><option>In Transit</option><option>Maintenance</option>
                             </select></div>
