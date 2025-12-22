@@ -42,7 +42,7 @@ function showSection(id) {
         case 'cargo': renderCargo(); populateContainerSelect(); break;
         case 'transport': renderTransport(); break;
         case 'depot': renderYard(); break;
-        case 'docs': renderDocs(); break;
+        case 'contracts': renderContracts(); break;
         case 'finance':  break;
         case 'partners': renderPartners(); break;
         case 'staff': renderStaff(); break;
@@ -56,7 +56,7 @@ const DB = {
     containers: [],
     cargo: [],
     transports: [],
-    docs: [],
+    contracts: [],
     partners: [],
     staff: [],
     equip: []
@@ -200,14 +200,12 @@ function removeContainer(id) {
     alert('🗑️ Đã xóa container.');
 }
 
-// HÀM MỚI: Sửa container
 function editContainer(id) {
     const container = DB.containers.find(c => c.id === id);
     if (!container) {
         alert('Không tìm thấy container!');
         return;
     }
-
     // Điền dữ liệu vào form
     document.getElementById('cNumber').value = container.no;
     document.getElementById('cType').value = container.type;
@@ -249,7 +247,6 @@ function editContainer(id) {
         content.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
-
 // Xử lý ẩn/hiện phần phụ khi chọn vị trí
 const locMain = document.getElementById('cLocationMain');
 if (locMain) {
@@ -565,74 +562,174 @@ function renderYard() {
     }
 }
 
-// --- Docs ---
-document.getElementById('saveDoc').addEventListener('click', () => {
-    const r = document.getElementById('docRef').value.trim();
-    if (!r) return alert('Nhập ref');
+// --- Contracts ---
+document.getElementById('saveContract')?.addEventListener('click', () => {
+    const ref = document.getElementById('ctRef').value.trim();
+    if (!ref) return alert('Nhập số hợp đồng!');
 
-    const doc = {
-        id: Date.now(),
-        ref: r,
-        type: document.getElementById('docType').value,
-        status: 'Pending'
+    const customer = {
+        name: document.getElementById('ctCustomerName').value.trim(),
+        phone: document.getElementById('ctCustomerPhone').value.trim(),
+        email: document.getElementById('ctCustomerEmail').value.trim(),
+        addr: document.getElementById('ctCustomerAddr').value.trim()
     };
-    DB.docs.unshift(doc);
-    saveDB();
-    document.getElementById('docRef').value = '';
-    showSection('docs');
-});
 
-document.getElementById('fileDoc').addEventListener('change', e => {
-    const f = e.target.files[0];
-    if (!f) return;
-    DB.docs.unshift({
+    if (!customer.name) return alert('Nhập tên khách hàng!');
+
+    const dateIn = document.getElementById('ctDateIn').value;
+    const dateOut = document.getElementById('ctDateOut').value;
+    if (!dateIn || !dateOut) return alert('Chọn ngày nhập và ngày lấy!');
+
+    const containerNo = document.getElementById('ctContainerNo').value.trim();
+    if (!containerNo) return alert('Nhập số container!');
+
+    const containerType = document.getElementById('ctContainerType').value.trim() || '20DC';
+
+    // 1. Tự động thêm đối tác (nếu chưa có)
+    let partner = DB.partners.find(p => p.name === customer.name);
+    if (!partner) {
+        partner = {
+            id: Date.now(),
+            name: customer.name,
+            type: 'Shipper',
+            contact: customer.phone || customer.email || ''
+        };
+        DB.partners.unshift(partner);
+    }
+
+    // 2. Tự động thêm container (vào Yard)
+    const container = {
+        id: Date.now() + 1,
+        no: containerNo,
+        type: containerType,
+        loc: 'Yard',
+        status: 'Full',
+        yardPosition: DB.containers.filter(c => c.loc === 'Yard').length % 32
+    };
+    DB.containers.unshift(container);
+
+    // 3. Tự động thêm hàng
+    const cargoDesc = document.getElementById('ctCargoDesc').value.trim();
+    if (cargoDesc) {
+        DB.cargo.unshift({
+            id: Date.now() + 2,
+            desc: cargoDesc,
+            qty: document.getElementById('ctCargoQty').value || 'N/A',
+            type: document.getElementById('ctCargoType').value,
+            container: containerNo
+        });
+    }
+
+    // 4. Lưu hợp đồng
+    DB.contracts.unshift({
         id: Date.now(),
-        ref: f.name,
-        type: 'File',
-        status: 'Uploaded'
+        ref,
+        customer,
+        dateIn,
+        dateOut,
+        containerNo,
+        cargoDesc,
+        status: 'Active'
     });
+
     saveDB();
-    e.target.value = '';
+    alert('✅ Hợp đồng đã được lưu!\n→ Container, hàng, đối tác đã được tạo tự động.');
+    
+    // Làm sạch form
+    ['ctRef', 'ctCustomerName', 'ctCustomerPhone', 'ctCustomerEmail', 'ctCustomerAddr',
+     'ctContainerNo', 'ctContainerType', 'ctCargoDesc', 'ctCargoQty'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
+    document.getElementById('ctDateIn').value = '';
+    document.getElementById('ctDateOut').value = '';
+    document.getElementById('ctCargoType').value = 'General';
+
+    showSection('contracts');
 });
 
-function renderDocs() {
-    const tbody = document.querySelector('#tblDocs tbody');
+function renderContracts() {
+    const tbody = document.querySelector('#tblContracts tbody');
+    if (!tbody) return;
     tbody.innerHTML = '';
-    DB.docs.forEach((d, i) => {
+
+    DB.contracts.forEach((ct, i) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${i + 1}</td>
-            <td>${d.ref}</td>
-            <td>${d.type}</td>
-            <td>${d.status}</td>
+            <td>${ct.ref}</td>
+            <td>${ct.customer.name}</td>
+            <td>${ct.dateIn}</td>
+            <td>${ct.status}</td>
+            <td>
+                <button class="btn-sm" onclick="viewContract(${ct.id})">Xem</button>
+                <button class="btn-sm" onclick="deleteContract(${ct.id})">Xóa</button>
+            </td>
         `;
         tbody.appendChild(tr);
     });
 }
 
-// --- Finance ---
-document.getElementById('calcCost').addEventListener('click', () => {
-    const base = parseFloat(document.getElementById('fBase').value) || 0;
-    const dem = parseFloat(document.getElementById('fDemDet').value) || 0;
-    const local = parseFloat(document.getElementById('fLocal').value) || 0;
+function viewContract(id) {
+    const ct = DB.contracts.find(c => c.id === id);
+    if (!ct) return;
+    alert(`
+        HỢP ĐỒNG: ${ct.ref}
+        Khách hàng: ${ct.customer.name}
+        SĐT: ${ct.customer.phone}
+        Email: ${ct.customer.email}
+        Địa chỉ: ${ct.customer.addr}
+        Ngày nhập bãi: ${ct.dateIn}
+        Ngày lấy: ${ct.dateOut}
+        Container: ${ct.containerNo}
+        Hàng: ${ct.cargoDesc || 'Không có'}
+    `.trim());
+}
+
+function deleteContract(id) {
+    if (!confirm('Xóa hợp đồng này?')) return;
+    DB.contracts = DB.contracts.filter(c => c.id !== id);
+    saveDB();
+    renderContracts();
+    alert('🗑️ Đã xóa hợp đồng.');
+}
+// HÀM XỬ LÝ LƯU HỢP ĐỒNG
+function handleSaveContract() {
+    const ref = document.getElementById('ctRef')?.value.trim();
+    if (!ref) return alert('Nhập số hợp đồng!');
+
+    const customerName = document.getElementById('ctCustomerName')?.value.trim();
+    if (!customerName) return alert('Nhập tên khách hàng!');
+
+    const dateIn = document.getElementById('ctDateIn')?.value;
+    const dateOut = document.getElementById('ctDateOut')?.value;
+    if (!dateIn || !dateOut) return alert('Chọn ngày nhập và ngày lấy!');
+
+    const containerNo = document.getElementById('ctContainerNo')?.value.trim();
+    if (!containerNo) return alert('Nhập số container!');
+
+    // Thêm hợp đồng
+    DB.contracts.unshift({
+        id: Date.now(),
+        ref,
+        customer: { name: customerName },
+        dateIn,
+        dateOut,
+        containerNo,
+        cargoDesc: document.getElementById('ctCargoDesc')?.value.trim() || 'N/A',
+        status: 'Active'
+    });
+
+    saveDB();
+    alert('Hợp đồng đã được lưu!');
+    renderContracts();
     
-    if (isNaN(base) || isNaN(dem) || isNaN(local)) {
-        return alert('Vui lòng nhập số hợp lệ.');
-    }
-
-    const total = base + dem + local;
-    document.getElementById('costResult').textContent = 
-        `Tổng: ${total.toLocaleString('vi-VN')} VND`;
-});
-
-function downloadReport() {
-    const blob = new Blob([JSON.stringify(DB, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'report_cl_db.json';
-    a.click();
-    URL.revokeObjectURL(url);
+    // Làm sạch form
+    document.getElementById('ctRef').value = '';
+    document.getElementById('ctCustomerName').value = '';
+    document.getElementById('ctDateIn').value = '';
+    document.getElementById('ctDateOut').value = '';
+    document.getElementById('ctContainerNo').value = '';
+    document.getElementById('ctCargoDesc').value = '';
 }
 
 // --- Partners ---
@@ -717,8 +814,9 @@ function renderAll() {
     document.getElementById('stat-containers').textContent = DB.containers.length;
     document.getElementById('stat-intransit').textContent = 
         DB.containers.filter(c => c.status === 'In Transit').length;
-    document.getElementById('stat-docs').textContent = 
-        DB.docs.filter(d => d.status === 'Pending').length;
+    document.getElementById('stat-docs').textContent = DB.contracts.length;
+    const statLabel = document.querySelector('#stat-docs').closest('.stat').querySelector('.small');
+    if (statLabel) statLabel.textContent = 'Hợp đồng';
 
     const rc = document.querySelector('#recentContainers tbody');
     rc.innerHTML = '';
@@ -736,13 +834,13 @@ function renderAll() {
 
     const rd = document.querySelector('#recentDocs tbody');
     rd.innerHTML = '';
-    DB.docs.slice(0, 6).forEach((d, i) => {
+    DB.contracts.slice(0, 6).forEach((ct, i) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${i + 1}</td>
-            <td>${d.ref}</td>
-            <td>${d.type}</td>
-            <td>${d.status}</td>
+            <td>${ct.ref}</td>
+            <td>Hợp đồng</td>
+            <td>${ct.status}</td>
         `;
         rd.appendChild(tr);
     });
@@ -771,12 +869,28 @@ function initMockData() {
         { id: 202, ref: "BK-2025-002", type: "Feeder", vehicle: "MV SEA VIP", eta: "2025-12-10" }
     ];
 
-    DB.docs = [
-        { id: 301, ref: "HLCU2468135-BL", type: "BL", status: "Pending" },
-        { id: 302, ref: "INV-DEC2025", type: "Invoice", status: "Approved" },
-        { id: 303, ref: "PL-MSKU789", type: "Packing List", status: "Pending" },
-        { id: 304, ref: "CO-VN-2025", type: "CO", status: "Issued" }
-    ];
+    DB.contracts = [
+    { 
+        id: 1001, 
+        ref: "HD-2025-001", 
+        customer: { name: "Công ty TNHH ABC Logistics", phone: "0909 123 456", email: "abc@logistics.vn" },
+        dateIn: "2025-12-01",
+        dateOut: "2025-12-05",
+        containerNo: "TGHU1234567",
+        cargoDesc: "Máy lạnh Daikin",
+        status: "Active"
+    },
+    { 
+        id: 1002, 
+        ref: "HD-2025-002", 
+        customer: { name: "Xuất khẩu Nông sản Miền Tây", phone: "0933 789 012" },
+        dateIn: "2025-12-03",
+        dateOut: "2025-12-08",
+        containerNo: "MSKU7890123",
+        cargoDesc: "Hải sản đông lạnh",
+        status: "Active"
+    }
+];
 
     DB.partners = [
         { id: 401, name: "Công ty TNHH ABC Logistics", type: "Forwarder", contact: "abc@logistics.vn" },
@@ -833,6 +947,7 @@ function performGlobalSearch() {
         { selector: '#tblCargo tbody tr', cols: [1, 2, 4] },
         { selector: '#tblTransport tbody tr', cols: [1, 2, 3] },
         { selector: '#tblDocs tbody tr', cols: [1, 2, 3] },
+        { selector: '#tblContracts tbody tr', cols: [1, 2, 3] },
         { selector: '#tblPartners tbody tr', cols: [1, 2, 3] },
         { selector: '#tblStaff tbody tr', cols: [1, 2, 3] },
         { selector: '#tblEquip tbody tr', cols: [1, 2, 3] },
@@ -864,6 +979,9 @@ document.addEventListener("DOMContentLoaded", () => {
     loadDB();
     initMockData();
     renderAll();
+
+    renderContracts(); 
+    document.getElementById('saveContract')?.addEventListener('click', handleSaveContract);
 
     const userIcon = document.getElementById("userIcon");
     const userDropdown = document.getElementById("userDropdown");
