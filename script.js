@@ -2,8 +2,6 @@
 let editingContainerId = null; 
 let editingCargoId = null; 
 let editingTransportId = null; 
-
-
 let editingPartnerId = null;
 let editingStaffId = null;
 let editingContractId = null;
@@ -23,7 +21,6 @@ const DB = {
 
 // --- 1. Quản lý Lưu trữ ---
 function loadDB() {
- 
     try { 
         const raw = localStorage.getItem('cl_db'); 
         if (raw) Object.assign(DB, JSON.parse(raw)); 
@@ -61,7 +58,6 @@ function migrateContractsStatus() {
     if (changed) saveDB();
 }
 
-
 function normalizeActiveStatus(raw) {
     const s = (raw ?? '').toString().trim();
     return (s === 'Tạm ngưng') ? 'Tạm ngưng' : 'Hoạt động';
@@ -83,12 +79,9 @@ function migratePartnerStaffStatus() {
     });
 
     if (changed) {
-        // lưu thầm, không render lại lần nữa
         try { localStorage.setItem('cl_db', JSON.stringify(DB)); } catch {}
     }
 }
-
-
 
 function saveDB() { 
     localStorage.setItem('cl_db', JSON.stringify(DB)); 
