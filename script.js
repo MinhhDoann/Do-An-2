@@ -1093,7 +1093,7 @@ function renderDashboard() {
 
 function renderAll() {
     renderDashboard();
-renderContainers();
+    renderContainers();
     renderTransport();
     renderCargo();
     populateAllSelects();

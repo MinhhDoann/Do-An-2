@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Dashboard Quản lý Container Logistics - Mẫu</title>
+    <title>Dashboard Quản lý Container Logistics</title>
     <link rel="stylesheet" href="style.css">
     <script src="script.js" defer></script>
 </head>
@@ -79,7 +79,7 @@
                         <table id="recentContainers">
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th>STT</th>
                                     <th>Container</th>
                                     <th>Loại</th>
                                     <th>Vị trí</th>
@@ -91,12 +91,12 @@
                     </div>
 
                     <div class="card">
-                        <h4>Bookings / Chứng từ gần đây</h4>
+                        <h4>Bookings gần đây</h4>
                         <table id="recentDocs">
                             <thead>
                                 <tr>
-                                    <th>#</th>
-                                    <th>Ref</th>
+                                    <th>STT</th>
+                                    <th>Mã</th>
                                     <th>Loại</th>
                                     <th>Trạng thái</th>
                                 </tr>
@@ -372,9 +372,9 @@
                                 <option value="" disabled selected>Chọn hợp đồng</option>
                             </select>
                         </div>
-                        <div class=\"form-row\">
-                            <select id=\"iContainer\">
-                                <option value=\"\" selected>Chọn container</option>
+                        <div class="form-row">
+                            <select id="iContainer">
+                                <option value="" selected>Chọn container</option>
                             </select>
                         </div>
                         <div class="form-row"><input id="iPartner" placeholder="Đối tác" disabled /></div>
@@ -457,7 +457,7 @@
             
             <!-- Staff -->
             <section id="staff" class="card-section" style="display:none">
-                <div class="grid grid-wide">
+                <div class="grid">
                     <div class="card">
                         <h3>Nhân sự</h3>
                         <table id="tblStaff">
