@@ -48,7 +48,7 @@ function showSection(id) {
         break;
         case 'partners': renderPartners(); break;
         case 'staff': renderStaff(); break;
-        case 'equipment': renderEquip(); break;
+        case 'equipment': renderEquip(); break; 
         default: renderAll();
     }
 }
@@ -1020,7 +1020,44 @@ function clearPartnerForm() {
     };
 }
 
-// --- Staff & Equip ---
+// NHÂN SỰ 
+let editingStaffId = null;
+
+document.getElementById('saveStaff')?.addEventListener('click', function() {
+    const name = document.getElementById('sName').value.trim();
+    if (!name) return alert('Nhập họ và tên!');
+
+    const staff = {
+        id: editingStaffId || Date.now(),
+        name,
+        role: document.getElementById('sRole').value.trim() || 'N/A',
+        phone: document.getElementById('sPhone').value.trim() || 'N/A'
+    };
+
+    if (editingStaffId) {
+        // Sửa
+        const index = DB.staff.findIndex(s => s.id === editingStaffId);
+        if (index !== -1) DB.staff[index] = staff;
+        alert('✅ Cập nhật nhân sự thành công!');
+    } else {
+        // Thêm mới
+        DB.staff.unshift(staff);
+        alert('✅ Thêm nhân sự thành công!');
+    }
+
+    saveDB();
+    clearStaffForm();
+    renderStaff();
+});
+
+function clearStaffForm() {
+    document.getElementById('sName').value = '';
+    document.getElementById('sRole').value = '';
+    document.getElementById('sPhone').value = '';
+    editingStaffId = null;
+    document.getElementById('saveStaff').textContent = 'Lưu';
+}
+
 function renderStaff() {
     const tbody = document.querySelector('#tblStaff tbody');
     tbody.innerHTML = '';
@@ -1031,9 +1068,69 @@ function renderStaff() {
             <td>${s.name}</td>
             <td>${s.role}</td>
             <td>${s.phone}</td>
+            <td>
+                <button class="btn-sm" onclick="editStaff(${s.id})">Sửa</button>
+                <button class="btn-sm" onclick="removeStaff(${s.id})">Xóa</button>
+            </td>
         `;
         tbody.appendChild(tr);
     });
+}
+
+function editStaff(id) {
+    const s = DB.staff.find(x => x.id === id);
+    if (!s) return alert('Không tìm thấy nhân sự!');
+    document.getElementById('sName').value = s.name;
+    document.getElementById('sRole').value = s.role;
+    document.getElementById('sPhone').value = s.phone;
+    editingStaffId = id;
+    document.getElementById('saveStaff').textContent = 'Cập nhật';
+}
+
+function removeStaff(id) {
+    if (!confirm('Xóa nhân sự này?')) return;
+    DB.staff = DB.staff.filter(s => s.id !== id);
+    saveDB();
+    renderStaff();
+    alert('🗑️ Đã xóa nhân sự.');
+}
+
+//  THIẾT BỊ 
+let editingEquipId = null;
+
+document.getElementById('saveEquip')?.addEventListener('click', function() {
+    const name = document.getElementById('eName').value.trim();
+    if (!name) return alert('Nhập tên thiết bị!');
+
+    const equip = {
+        id: editingEquipId || Date.now(),
+        name,
+        type: document.getElementById('eType').value.trim() || 'N/A',
+        status: document.getElementById('eStatus').value
+    };
+
+    if (editingEquipId) {
+        // Sửa
+        const index = DB.equip.findIndex(q => q.id === editingEquipId);
+        if (index !== -1) DB.equip[index] = equip;
+        alert('✅ Cập nhật thiết bị thành công!');
+    } else {
+        // Thêm mới
+        DB.equip.unshift(equip);
+        alert('✅ Thêm thiết bị thành công!');
+    }
+
+    saveDB();
+    clearEquipForm();
+    renderEquip();
+});
+
+function clearEquipForm() {
+    document.getElementById('eName').value = '';
+    document.getElementById('eType').value = '';
+    document.getElementById('eStatus').value = 'Available';
+    editingEquipId = null;
+    document.getElementById('saveEquip').textContent = 'Lưu';
 }
 
 function renderEquip() {
@@ -1046,9 +1143,31 @@ function renderEquip() {
             <td>${q.name}</td>
             <td>${q.type}</td>
             <td>${q.status}</td>
+            <td>
+                <button class="btn-sm" onclick="editEquip(${q.id})">Sửa</button>
+                <button class="btn-sm" onclick="removeEquip(${q.id})">Xóa</button>
+            </td>
         `;
         tbody.appendChild(tr);
     });
+}
+
+function editEquip(id) {
+    const q = DB.equip.find(x => x.id === id);
+    if (!q) return alert('Không tìm thấy thiết bị!');
+    document.getElementById('eName').value = q.name;
+    document.getElementById('eType').value = q.type;
+    document.getElementById('eStatus').value = q.status;
+    editingEquipId = id;
+    document.getElementById('saveEquip').textContent = 'Cập nhật';
+}
+
+function removeEquip(id) {
+    if (!confirm('Xóa thiết bị này?')) return;
+    DB.equip = DB.equip.filter(q => q.id !== id);
+    saveDB();
+    renderEquip();
+    alert('🗑️ Đã xóa thiết bị.');
 }
 
 // --- Misc UI ---
