@@ -33,7 +33,12 @@
         function getDisplayValue(module, id) {
             return displayMaps[module]?.[id] || id || '';
         }
-
+        function getContainerCountInWarehouse(warehouseId) {
+            return appData.containers.filter(c => 
+                c.warehouseId === warehouseId && 
+                ['Rỗng', 'Đã đóng hàng', 'Cần bảo trì'].includes(c.status) 
+            ).length;
+        }
         // ====== HIỂN THỊ MODULE ======
         function showModule(moduleId) {
             document.querySelectorAll('.module-content').forEach(m => {
@@ -56,7 +61,7 @@
             containers: { fields: ['id', 'itemTypeId', 'weight', 'status', 'warehouseId', 'vehicleId', 'contractId'] },
             itemTypes: { fields: ['id', 'name', 'description','category'] },
             containerhistory: { fields: ['id', 'containerId', 'action', 'time', 'location'] },
-            warehouses: { fields: ['id', 'name', 'capacity', 'location', 'manager'] },
+            warehouses: { fields: ['id', 'name', 'capacity', 'location', 'manager','containerCount'] },
             customers: { fields: ['id', 'name', 'email', 'phone','address'] },
             vehicles: {
                 fields: ['id','vehicleType','licensePlate','image', 'capacity', 'status', 'description']
@@ -119,7 +124,14 @@
                 config.fields.forEach(f => {
                     const cell = document.createElement('td');
                     let value = item[f];
-                
+                    
+                    if (f === 'containerCount' && moduleId === 'warehouses') {
+                        value = getContainerCountInWarehouse(item.id);
+                        cell.textContent = value;
+                        cell.style.fontWeight = 'bold'; 
+                        cell.style.color = value > 0 ? '#2c3e50' : '#999';
+                    }
+
                     if (f === 'description') {
                         cell.innerHTML = `<div style="max-width:300px; white-space:normal; line-height:1.5; color:#555;">${value || '-'}</div>`;
                     }
@@ -266,7 +278,13 @@
                 { id: 'name', label: 'Tên kho', type: 'text'},
                 { id: 'capacity', label: 'Sức chứa (tấn)', type: 'number', min:'1' },
                 { id: 'location', label: 'Vị trí', type: 'text'},
-                { id: 'manager', label: 'Người phụ trách', type: 'text' }
+                { id: 'manager', label: 'Người phụ trách', type: 'text' },
+                { 
+                    id: 'containerCount', 
+                    label: 'Số container hiện tại', 
+                    type: 'text', 
+                    disabled: true 
+                }
             ],
             customers: [
                 { id: 'name', label: 'Tên khách hàng', type: 'text', required: true, pattern: '^[\\p{L}\\s]+$', maxLength: 50, title:'Vui lòng nhập tên khách hàng' },
@@ -276,8 +294,7 @@
             ],
             vehicles: [
                 { id: 'vehicleType', label: 'Loại xe', type: 'select', options: ['Xe tải', 'Xe container', 'Xe khách', 'Xe đầu kéo'] },
-                { id: 'licensePlate', label: 'Biển số xe', type: 'text', required: true, minLength: 5, pattern: '^[0-9]{2}[A-Z]{1,2}-[0-9]{3}(\\.[0-9]{2})?$', title: 'Ví dụ: 51A-123.45 hoặc 29H-56789'},
-                { id: 'image', label: 'Hình ảnh', type: 'file' },
+                { id: 'licensePlate', label: 'Biển số xe', type: 'text', required: true, minLength: 5, pattern: '^[0-9]{2}[A-Z]{1,2}-[0-9]{3}(\\.[0-9]{2})?$|^[0-9]{2}[A-Z]{1,2}-[0-9]{3,5}$', title: 'Ví dụ: 51A-123, 51A-123.45 hoặc 29H-56789'},                { id: 'image', label: 'Hình ảnh', type: 'file' },
                 { id: 'capacity', label: 'Tải trọng (tấn)', type: 'number' , min: '0.1', max: '20', required: true },
                 { id: 'status', label: 'Trạng thái', type: 'select', options: ['Đang hoạt động', 'Đang bảo trì', 'Đang vận chuyển', 'Ngừng sử dụng'], defaultValue: 'Đang hoạt động' },
                 { id: 'description', label: 'Mô tả chi tiết', type: 'textarea' }
@@ -452,45 +469,39 @@
             if (!fields) return;
         
             const existingItem = id ? appData[moduleId].find(i => i.id === id) : null;
-        
-            // ──────────────────────────────
-            // Logic đặc biệt cho containerhistory khi ADD
-            // ──────────────────────────────
+
             if (moduleId === 'containerhistory' && action === 'add') {
                 fields.forEach(f => {
                     const label = document.createElement('label');
                     label.textContent = f.label;
-        
+            
                     let input;
-        
-                    // Đặc biệt: containerId dùng select để chọn container
+            
                     if (f.id === 'containerId') {
                         input = document.createElement('select');
                         const emptyOpt = document.createElement('option');
                         emptyOpt.value = '';
                         emptyOpt.textContent = '-- Chọn container --';
                         input.appendChild(emptyOpt);
-        
-                        // Lấy danh sách container
+            
                         (appData.containers || []).forEach(c => {
                             const opt = document.createElement('option');
                             opt.value = c.id;
                             opt.textContent = `${c.id} - ${getDisplayValue('containers', c.id) || c.id}`;
                             input.appendChild(opt);
                         });
-        
+            
                         input.required = true;
                         input.id = f.id;
                         input.name = f.id;
                     }
-                    // Các trường select khác (action)
                     else if (f.type === 'select') {
                         input = document.createElement('select');
                         const emptyOpt = document.createElement('option');
                         emptyOpt.value = '';
                         emptyOpt.textContent = '-- Chọn --';
                         input.appendChild(emptyOpt);
-        
+            
                         const options = Array.isArray(f.options) ? f.options : [];
                         options.forEach(opt => {
                             const o = document.createElement('option');
@@ -504,33 +515,43 @@
                             input.appendChild(o);
                         });
                     }
-                    // datetime-local (time)
                     else if (f.type === 'datetime-local') {
                         input = document.createElement('input');
                         input.type = 'datetime-local';
-                        input.value = new Date().toISOString().slice(0, 16); // mặc định thời gian hiện tại
+                        input.value = new Date().toISOString().slice(0, 16); 
                     }
-                    // textarea hoặc input thông thường
                     else {
                         input = document.createElement(f.type === 'textarea' ? 'textarea' : 'input');
                         if (f.type === 'textarea') input.rows = 3;
                     }
-        
+            
                     input.id = f.id;
                     input.name = f.id;
                     if (f.required) input.required = true;
                     if (f.placeholder) input.placeholder = f.placeholder;
-        
+                    if (moduleId === 'containers' && f.id === 'vehicleId') {
+                        if (existingItem && existingItem.status !== 'Rỗng') {
+                            input.disabled = true;
+                            input.title = 'Không thể thay đổi phương tiện khi container không ở trạng thái "Rỗng"';
+                
+                            // Ghi chú nhỏ (tùy chọn)
+                            const note = document.createElement('small');
+                            note.style.color = '#e67e22';
+                            note.style.display = 'block';
+                            note.style.marginTop = '5px';
+                            note.textContent = '(Chỉ container "Rỗng" mới được gắn/xóa phương tiện)';
+                            label.appendChild(note);
+                        }
+                    }
                     formFieldsDiv.append(label, input);
                 });
-        
-                // Thêm ghi chú rõ ràng cho người dùng
+            
                 const note = document.createElement('p');
                 note.style.cssText = 'color: #e67e22; margin-top: 15px; font-size: 14px; font-style: italic;';
                 note.textContent = 'Lưu ý: Nếu container đã có lịch sử, hành động mới sẽ cập nhật vào bản ghi đầu tiên (không tạo thêm dòng mới).';
                 formFieldsDiv.appendChild(note);
-        
-                return; 
+            
+                return;
             }
         
             fields.forEach(f => {
@@ -940,25 +961,31 @@
                     if (moduleId === 'containers') {
                         const vehicleId = newItem.vehicleId;
                         const currentStatus = newItem.status;
-                
+                        
+                        if (!isAdd) {  
+                            const oldContainer = appData.containers.find(c => c.id === id);
+                            if (oldContainer && oldContainer.status !== 'Rỗng') {
+                                alert('❌ Không thể thay đổi kho!\n\nContainer này đang ở trạng thái "' + oldContainer.status + '".\n\n' +
+                                      'Chỉ container ở trạng thái "Rỗng" mới được phép chuyển kho.');
+                                return;  
+                            }
+                        }
+
                         if (currentStatus === 'Đang vận chuyển' && !vehicleId) {
                             alert('Container đang vận chuyển phải được gắn vào một phương tiện!');
                             return;
                         }
                 
                         if (vehicleId) {
-                            const vehicle = appData.vehicles.find(v => v.id === vehicleId);
-                            if (!vehicle) {
-                                alert('Phương tiện không tồn tại!');
-                                return;
-                            }
-                
-                            const currentContainer = isAdd ? null : appData.containers.find(c => c.id === id);
-                
-                            const busyContainer = getContainerOnVehicle(vehicleId);
-                            if (busyContainer && (!currentContainer || busyContainer.id !== currentContainer.id)) {
-                                alert(`Xe ${vehicle.licensePlate || vehicleId} đang chở container ${busyContainer.id} (Đang vận chuyển).\nKhông thể gắn thêm container khác!`);
-                                return;
+                            const existingContainerOnVehicle = appData.containers.find(c => 
+                                c.vehicleId === vehicleId && 
+                                c.id !== id 
+                            );
+                    
+                            if (existingContainerOnVehicle) {
+                                alert(`❌ Xe ${getDisplayValue('vehicles', vehicleId)} đã gắn container ${existingContainerOnVehicle.id}!\n\n` +
+                                      `Không thể gắn container này vào xe đang chở container khác.`);
+                                return; 
                             }
                         }
                 
