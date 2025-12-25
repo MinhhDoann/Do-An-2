@@ -34,7 +34,10 @@
 }
 .banner-right a{
   text-decoration: none;
-
+  color: white;
+}
+.banner-right a:hover{
+  color: red;
 }
 .banner-right #login a {
   color: white;

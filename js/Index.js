@@ -218,6 +218,7 @@
                             title="Dữ liệu lịch sử không được xóa"
                             style="opacity:0.4; cursor:not-allowed">
                             Xóa
+                            
                         </button>
                     `;
                 } else {
@@ -371,6 +372,9 @@
             saveData('trips', appData.trips);
         }
         
+        function getFirstHistoryOfContainer(containerId) {
+            return appData.containerhistory.find(h => h.containerId === containerId);
+        }
         function addContainerHistory(history) {
             const container = appData.containers.find(c => c.id === history.containerId);
             if (!container) {
@@ -438,88 +442,155 @@
             const modalTitle = document.getElementById('modalTitle');
             const formFieldsDiv = document.getElementById('formFields');
             const entityId = document.getElementById('entityId');
-
+        
             modal.style.display = 'block';
             modalTitle.textContent = action === 'add' ? `Thêm ${moduleId}` : `Sửa ${moduleId}`;
             entityId.value = id || '';
             formFieldsDiv.innerHTML = '';
-
+        
             const fields = formFields[moduleId];
             if (!fields) return;
-
+        
             const existingItem = id ? appData[moduleId].find(i => i.id === id) : null;
-
+        
+            // ──────────────────────────────
+            // Logic đặc biệt cho containerhistory khi ADD
+            // ──────────────────────────────
+            if (moduleId === 'containerhistory' && action === 'add') {
+                fields.forEach(f => {
+                    const label = document.createElement('label');
+                    label.textContent = f.label;
+        
+                    let input;
+        
+                    // Đặc biệt: containerId dùng select để chọn container
+                    if (f.id === 'containerId') {
+                        input = document.createElement('select');
+                        const emptyOpt = document.createElement('option');
+                        emptyOpt.value = '';
+                        emptyOpt.textContent = '-- Chọn container --';
+                        input.appendChild(emptyOpt);
+        
+                        // Lấy danh sách container
+                        (appData.containers || []).forEach(c => {
+                            const opt = document.createElement('option');
+                            opt.value = c.id;
+                            opt.textContent = `${c.id} - ${getDisplayValue('containers', c.id) || c.id}`;
+                            input.appendChild(opt);
+                        });
+        
+                        input.required = true;
+                        input.id = f.id;
+                        input.name = f.id;
+                    }
+                    // Các trường select khác (action)
+                    else if (f.type === 'select') {
+                        input = document.createElement('select');
+                        const emptyOpt = document.createElement('option');
+                        emptyOpt.value = '';
+                        emptyOpt.textContent = '-- Chọn --';
+                        input.appendChild(emptyOpt);
+        
+                        const options = Array.isArray(f.options) ? f.options : [];
+                        options.forEach(opt => {
+                            const o = document.createElement('option');
+                            const value = typeof opt === 'string' ? opt : (opt.value ?? opt);
+                            const label = typeof opt === 'string' ? opt : (opt.label ?? opt);
+                            o.value = value;
+                            o.textContent = label;
+                            if (f.defaultValue !== undefined && f.defaultValue === value) {
+                                o.selected = true;
+                            }
+                            input.appendChild(o);
+                        });
+                    }
+                    // datetime-local (time)
+                    else if (f.type === 'datetime-local') {
+                        input = document.createElement('input');
+                        input.type = 'datetime-local';
+                        input.value = new Date().toISOString().slice(0, 16); // mặc định thời gian hiện tại
+                    }
+                    // textarea hoặc input thông thường
+                    else {
+                        input = document.createElement(f.type === 'textarea' ? 'textarea' : 'input');
+                        if (f.type === 'textarea') input.rows = 3;
+                    }
+        
+                    input.id = f.id;
+                    input.name = f.id;
+                    if (f.required) input.required = true;
+                    if (f.placeholder) input.placeholder = f.placeholder;
+        
+                    formFieldsDiv.append(label, input);
+                });
+        
+                // Thêm ghi chú rõ ràng cho người dùng
+                const note = document.createElement('p');
+                note.style.cssText = 'color: #e67e22; margin-top: 15px; font-size: 14px; font-style: italic;';
+                note.textContent = 'Lưu ý: Nếu container đã có lịch sử, hành động mới sẽ cập nhật vào bản ghi đầu tiên (không tạo thêm dòng mới).';
+                formFieldsDiv.appendChild(note);
+        
+                return; 
+            }
+        
             fields.forEach(f => {
                 const label = document.createElement('label');
                 label.textContent = f.label;
-            
+        
                 let input;
-            
-                // 🔹 Nếu là khóa ngoại — chuyển sang dropdown
+        
                 const relation = dataRelations[moduleId]?.[f.id];
                 if (relation) {
                     input = document.createElement('select');
-            
-                    // Thêm option rỗng đầu tiên
                     const emptyOpt = document.createElement('option');
                     emptyOpt.value = '';
                     emptyOpt.textContent = '-- Chọn --';
                     input.appendChild(emptyOpt);
-
+        
                     const relatedList = appData[relation] || [];
-                    
                     relatedList.forEach(item => {
                         const opt = document.createElement('option');
                         opt.value = item.id;
-                    
                         const displayName = item.name || item.licensePlate || item.voyageNumber || item.id;
-                        opt.textContent = item.id;                   
-                        opt.dataset.label = displayName;  
-                    
+                        opt.textContent = item.id;
+                        opt.dataset.label = displayName;
+        
                         if (existingItem && existingItem[f.id] == item.id) {
                             opt.selected = true;
-                            input.value = item.id;   
+                            input.value = item.id;
                         }
                         input.appendChild(opt);
                     });
+        
                     if (existingItem && existingItem[f.id]) {
                         const selectedId = existingItem[f.id];
                         const selectedItem = relatedList.find(it => it.id === selectedId);
                         if (selectedItem) {
-                            input.value = selectedId;
                             const selectedOption = Array.from(input.options).find(o => o.value === selectedId);
                             if (selectedOption) {
                                 selectedOption.textContent = selectedItem.name || selectedItem.licensePlate || selectedId;
                             }
                         }
                     }
-                }
-            
-                // 🔹 Nếu là select, textarea, file như cũ
-                else if (f.type === 'select') {
+                } else if (f.type === 'select') {
                     input = document.createElement('select');
-                
                     const emptyOpt = document.createElement('option');
                     emptyOpt.value = '';
                     emptyOpt.textContent = '-- Chọn --';
                     input.appendChild(emptyOpt);
-                
-                    // Chỉ xử lý mảng options tĩnh (string hoặc object)
+        
                     const options = Array.isArray(f.options) ? f.options : [];
                     options.forEach(opt => {
                         const o = document.createElement('option');
                         const value = typeof opt === 'string' ? opt : (opt.value ?? opt);
                         const label = typeof opt === 'string' ? opt : (opt.label ?? opt);
-                
                         o.value = value;
                         o.textContent = label;
-                
                         if (f.defaultValue !== undefined && f.defaultValue == value) {
                             o.selected = true;
                         }
                         input.appendChild(o);
                     });
-
                 } else if (f.type === 'textarea') {
                     input = document.createElement('textarea');
                     input.rows = 3;
@@ -540,14 +611,13 @@
                     input = document.createElement('input');
                     input.type = f.type;
                 }
-            
+        
                 input.id = f.id;
                 input.name = f.id;
-
+        
                 if (f.defaultValue !== undefined && f.defaultValue !== null) {
-                    input.value = f.defaultValue;  
+                    input.value = f.defaultValue;
                 }
-
                 if (f.required) input.required = true;
                 if (f.pattern) input.pattern = f.pattern;
                 if (f.title) input.title = f.title;
@@ -556,19 +626,15 @@
                 if (f.max) input.max = f.max;
                 if (f.minLength) input.minLength = f.minLength;
                 if (f.disabled) input.disabled = true;
-                if (f.placeholder) input.placeholder = f.placeholder; 
-                if (f.defaultValue !== undefined) {
-                    input.value = f.defaultValue;                   
-                }
+                if (f.placeholder) input.placeholder = f.placeholder;
                 if (f.rows && f.type === 'textarea') {
-                    input.rows = f.rows;                            
+                    input.rows = f.rows;
                 }
-                if (f.options && f.type === 'select') {
-                }
-                
+        
                 if (existingItem && f.type !== 'file') {
                     input.value = existingItem[f.id] || '';
                 }
+        
                 if (
                     action === 'edit' &&
                     moduleId === 'containerhistory' &&
@@ -577,15 +643,14 @@
                     input.disabled = true;
                     input.title = "Lịch sử đã ghi nhận không được chỉnh sửa";
                 }
-                
+        
                 if (f.id === "status" && moduleId === "containers") {
                     input.disabled = true;
                 }
-                
-
+        
                 formFieldsDiv.append(label, input);
             });
-        }    
+        }  
 
         function closeModal() {
             const modal = document.getElementById('dynamicModal');
@@ -952,10 +1017,53 @@
                         }
                     }
                     if (isAdd) {
-                        // === CÁC MODULE ĐẶC BIỆT ===
                         if (moduleId === 'containerhistory') {
-                            addContainerHistory(newItem);
-                        } 
+                            const containerId = newItem.containerId.trim();
+                            if (!containerId) {
+                                alert('Vui lòng chọn container!');
+                                return;
+                            }
+                        
+                            const container = appData.containers.find(c => c.id === containerId);
+                            if (!container) {
+                                alert('Không tìm thấy container!');
+                                return;
+                            }
+                        
+                            const action = newItem.action;
+                            if (!action) {
+                                alert('Vui lòng chọn hành động!');
+                                return;
+                            }
+                        
+                            const time = newItem.time || new Date().toISOString();
+                            const location = newItem.location || '';
+                        
+                            const firstHistory = appData.containerhistory.find(h => h.containerId === containerId);
+                        
+                            if (firstHistory) {
+                                firstHistory.action = action;
+                                firstHistory.time = time;
+                                firstHistory.location = location;
+                        
+                                updateRelatedStatus(firstHistory);
+                        
+                                saveData('containerhistory', appData.containerhistory);
+                        
+                                alert(`Đã cập nhật hành động mới cho container ${containerId}:\n→ ${action}`);
+                            } else {
+                                newItem.id = generateHistoryID(appData.containerhistory);
+                                addContainerHistory(newItem); 
+                            }
+                        
+                            loadTableData('containerhistory', appData.containerhistory);
+                            loadTableData('containers', appData.containers);
+                            loadTableData('vehicles', appData.vehicles);
+                            loadTableData('trips', appData.trips);
+                        
+                            closeModal();
+                            return;
+                        }
                         else if (moduleId === 'costs') {
                             appData.costs.push(newItem);
                             saveData('costs', appData.costs);
