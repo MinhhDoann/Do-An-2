@@ -17,15 +17,12 @@ document.querySelectorAll('.search-input').forEach(input => {
             let match = false;
 
             cells.forEach(cell => {
-                // Bỏ qua cột hành động (thường là nút Sửa/Xóa)
                 if (cell.querySelector('.btn-edit, .btn-delete')) return;
 
                 const text = cell.textContent.toLowerCase();
                 if (text.includes(query)) {
                     match = true;
                 }
-
-                // Đặc biệt xử lý cột có hình ảnh hoặc danh sách thanh toán
                 if (cell.querySelector('img')) {
                     const alt = cell.querySelector('img').alt || '';
                     if (alt.toLowerCase().includes(query)) match = true;
